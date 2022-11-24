@@ -1,20 +1,21 @@
 use std::error::Error;
 use std::path::Path;
 use vidyut_prakriya::ashtadhyayi as A;
-use vidyut_prakriya::constants::{Prayoga, Purusha, Vacana};
+use vidyut_prakriya::constants::{La, Prayoga, Purusha, Vacana};
 use vidyut_prakriya::dhatupatha as D;
 
-const LAKARA: &[&str] = &[
-    "la~w",
-    "li~w",
-    "lu~w",
-    "lf~w",
-    "lo~w",
-    "la~N",
-    "ashir-lin",
-    "li~N",
-    "lu~N",
-    "lf~N",
+const LAKARA: &[La] = &[
+    La::Lat,
+    La::Lit,
+    La::Lut,
+    La::Lrt,
+    La::Let,
+    La::Lot,
+    La::Lan,
+    La::AshirLin,
+    La::VidhiLin,
+    La::Lun,
+    La::Lrn,
 ];
 
 const TIN: &[&str] = &[
@@ -42,7 +43,7 @@ fn run() -> Result<(), Box<dyn Error>> {
                 let p = A::tinanta(
                     &dhatu.upadesha,
                     &dhatu.code(),
-                    la,
+                    *la,
                     Prayoga::Kartari,
                     *purusha,
                     *vacana,

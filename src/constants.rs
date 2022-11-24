@@ -71,6 +71,21 @@ impl Vacana {
     }
 }
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub enum La {
+    Lat,
+    Lit,
+    Lut,
+    Lrt,
+    Let,
+    Lot,
+    Lan,
+    VidhiLin,
+    AshirLin,
+    Lun,
+    Lrn,
+}
+
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum Tag {
