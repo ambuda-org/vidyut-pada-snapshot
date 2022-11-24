@@ -11,7 +11,7 @@ from padmini.term_views import TermView
 from padmini.sounds import s
 
 
-def _causes_guna(n: TermView):
+fn _causes_guna(n: TermView):
     """Lookahead function for the following rules:
 
     6.1.50 minātiminotidīṅāṃ lyapi ca
@@ -31,7 +31,7 @@ def _causes_guna(n: TermView):
     return True
 
 
-def dhatu_adesha_before_pada(p: Prakriya):
+fn dhatu_adesha_before_pada(p: Prakriya):
     """Replace the dhAtu based on the following suffix.
 
     These rules must run before the pada is decided.
@@ -59,7 +59,7 @@ def dhatu_adesha_before_pada(p: Prakriya):
             op.upadesha("2.4.54", p, c, "KyAY")
 
 
-def dhatu_adesha_before_vikarana(p: Prakriya):
+fn dhatu_adesha_before_vikarana(p: Prakriya):
     """Replace the dhAtu based on the following suffix.
 
     These rules must run before the vikarana is added.
@@ -79,48 +79,48 @@ def dhatu_adesha_before_vikarana(p: Prakriya):
     if c.text == "ad":
         if n.any("lu~N", "san"):
             op.upadesha("2.4.37", p, c, "Gasx~")
-        elif n.u in ("GaY", "ap"):
+        } else if  n.u in ("GaY", "ap"):
             op.upadesha("2.4.38", p, c, "Gasx~")
-        elif n.any("li~w"):
+        } else if  n.any("li~w"):
             op.optional(op.upadesha, "2.4.40", p, c, "Gasx~")
-        elif n.u == "lyap" or (n.adi == "t" and n.any("k")):
+        } else if  n.u == "lyap" or (n.adi == "t" and n.any("k")):
             op.upadesha("2.4.36", p, c, "jagDi~")
 
     # Skip 2.4.39 (bahulaM chandasi).
 
-    elif c.u == "ve\\Y" and n.any("li~w"):
+    } else if  c.u == "ve\\Y" and n.any("li~w"):
         op.optional(op.upadesha, "2.4.41", p, c, "vayi~")
-    elif c.text == "han":
+    } else if  c.text == "han":
         if n.any("li~N"):
             op.upadesha("2.4.42", p, c, "vaDa")
-        elif n.any("lu~N"):
+        } else if  n.any("lu~N"):
             if n.any(T.ATMANEPADA):
                 op.optional(op.upadesha, "2.4.44", p, c, "vaDa")
             else:
                 op.upadesha("2.4.43", p, c, "vaDa")
-    elif c.u in {"i\\R", "i\\k"}:
+    } else if  c.u in {"i\\R", "i\\k"}:
         if c.u == "i\\k":
             p.step("2.4.45.v1")
         if n.any("lu~N"):
             op.upadesha("2.4.45", p, c, "gA")
-        elif n.u == "Ric":
+        } else if  n.u == "Ric":
             op.optional(op.upadesha, "2.4.46", p, c, "gami~")
-        elif n.u == "san":
+        } else if  n.u == "san":
             op.optional(op.upadesha, "2.4.47", p, c, "gami~")
-    elif c.u == "i\\N":
+    } else if  c.u == "i\\N":
         if n.u == "san":
             op.upadesha("2.4.48", p, c, "gami~")
-        elif n.any("li~w"):
+        } else if  n.any("li~w"):
             op.upadesha("2.4.49", p, c, "gAN")
-        elif n.any("lu~N", "lf~N"):
+        } else if  n.any("lu~N", "lf~N"):
             op.optional(op.upadesha, "2.4.50", p, c, "gAN")
 
-    elif c.u == "asa~":
+    } else if  c.u == "asa~":
         op.upadesha("2.4.52", p, c, "BU")
-    elif c.u == "brUY":
+    } else if  c.u == "brUY":
         # anudAtta to prevent iT
         op.upadesha("2.4.53", p, c, "va\\ci~")
-    elif c.u == "aja~" and n.u not in ("GaY", "ap"):
+    } else if  c.u == "aja~" and n.u not in ("GaY", "ap"):
         do = True
         if n.u == "lyuw":
             if p.allow("2.4.57"):
@@ -155,7 +155,7 @@ def dhatu_adesha_before_vikarana(p: Prakriya):
             op.upadesha("2.4.56", p, c, "vI\\")
 
 
-def dhatu_adesha_after_vikarana(p: Prakriya):
+fn dhatu_adesha_after_vikarana(p: Prakriya):
     """
     This code depends on the Ric-vikaraNa being present.
     """
@@ -178,7 +178,7 @@ def dhatu_adesha_after_vikarana(p: Prakriya):
             op.optional(op.upadesha, "2.4.50", p, c, "gAN")
 
 
-def aa_adesha(p: Prakriya, index: int):
+fn aa_adesha(p: Prakriya, index: int):
     c = p.terms[index]
     if not c.any(T.DHATU):
         return
@@ -196,9 +196,9 @@ def aa_adesha(p: Prakriya, index: int):
             p.step("6.1.46")
         else:
             op.antya("6.1.45", p, c, "A")
-    elif c.text in {"sPur", "sPul"} and n.u == "GaY":
+    } else if  c.text in {"sPur", "sPul"} and n.u == "GaY":
         op.upadha("6.1.47", p, c, "A")
-    elif c.u in {"qukrI\\Y", "i\\N", "ji\\"} and n.u == "Ric":
+    } else if  c.u in {"qukrI\\Y", "i\\N", "ji\\"} and n.u == "Ric":
         op.antya("6.1.48", p, c, "A")
     # TODO: 6.1.49
 
@@ -214,22 +214,22 @@ def aa_adesha(p: Prakriya, index: int):
     ashiti_lyapi = not n.any("S") or n.u == "lyap"
     if c.u in {"mI\\Y", "qu\\mi\\Y", "dI\\N"} and ashiti_lyapi and _causes_guna(n):
         op.antya("6.1.50", p, c, "A")
-    elif c.text == "lI" and ashiti_lyapi and _causes_guna(n) and c.gana != 10:
+    } else if  c.text == "lI" and ashiti_lyapi and _causes_guna(n) and c.gana != 10:
         # līyateriti yakā nirdeśo na tu śyanā. līlīṅorātvaṃ vā syādejviṣaye
         # lyapi ca. (SK)
         op.optional(op.antya, "6.1.51", p, c, "A")
     # TODO: 6.1.52 - 6.1.53
-    elif c.u in {"ciY", "ci\\Y", "sPura~"} and n.u == "Ric":
+    } else if  c.u in {"ciY", "ci\\Y", "sPura~"} and n.u == "Ric":
         if c.text == "sPura~":
             op.optional(op.upadha, "6.1.54", p, c, "A")
         else:
             op.optional(op.antya, "6.1.54", p, c, "A")
     # TODO: 6.1.55 - 6.1.56
-    elif c.text == "smi" and n.u == "Ric":
+    } else if  c.text == "smi" and n.u == "Ric":
         op.optional(op.antya, "6.1.57", p, c, "A")
 
 
-def am_agama_for_term(p: Prakriya, index: int):
+fn am_agama_for_term(p: Prakriya, index: int):
     c = p.terms[index]
     if not c.any(T.DHATU):
         return
@@ -240,15 +240,15 @@ def am_agama_for_term(p: Prakriya, index: int):
     if n.adi in s("Jal") and not n.any("k"):
         if c.text in {"sfj", "dfS"}:
             op.mit("6.1.58", p, c, "a")
-        elif c.all(T.ANUDATTA) and c.upadha == "f":
+        } else if  c.all(T.ANUDATTA) and c.upadha == "f":
             op.optional(op.mit, "6.1.59", p, c, "a")
 
 
-def run_before_vikarana(p: Prakriya):
+fn run_before_vikarana(p: Prakriya):
     dhatu_adesha_before_vikarana(p)
 
 
-def run_before_dvitva(p: Prakriya):
+fn run_before_dvitva(p: Prakriya):
     """Replace the dhAtu based on the following suffix.
 
     These rules must run after the vikarana is added and before dvitva.
@@ -259,6 +259,6 @@ def run_before_dvitva(p: Prakriya):
         aa_adesha(p, i)
 
 
-def am_agama(p: Prakriya):
+fn am_agama(p: Prakriya):
     for i, _ in enumerate(p.terms):
         am_agama_for_term(p, i)

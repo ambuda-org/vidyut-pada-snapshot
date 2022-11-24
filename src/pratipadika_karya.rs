@@ -5,7 +5,7 @@ from padmini.prakriya import Term, Prakriya
 from . import it_samjna
 
 
-def run(p: Prakriya, pratipadika: str, linga: str):
+fn run(p: Prakriya, pratipadika: str, linga: str):
     pratipadika = Term.make_term(pratipadika)
 
     # The prAtipadika enters the prakriyA

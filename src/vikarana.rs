@@ -74,10 +74,10 @@ fn maybe_add_lun_vikarana(p: &mut Prakriya) {
     if tin.all(T.PARASMAIPADA) and cli.u == "cli~" and pushadi_dyutadi_ldit:
         op.upadesha_no_it("3.1.55", p, cli, "aN")
 
-    elif shal_igupadha_anit:
+    } else if  shal_igupadha_anit:
         if dhatu.text == "dfS":
             p.step("3.1.47")
-        elif dhatu.text == "Sliz" and dhatu.gana == 4:
+        } else if  dhatu.text == "Sliz" and dhatu.gana == 4:
             op.optional(op.upadesha_no_it, "3.1.46", p, cli, "ksa")
         else:
             if dhatu.all("U"):
@@ -94,14 +94,14 @@ fn maybe_add_lun_vikarana(p: &mut Prakriya) {
     shri_dru_sru = dhatu.text in ("Sri", "dru", "sru")
     if p.all(T.KARTARI) and (dhatu.u in ("Ric", "RiN") or shri_dru_sru):
         op.upadesha_no_it("3.1.48", p, cli, "caN")
-    elif dhatu.u == "kamu~\\":
+    } else if  dhatu.u == "kamu~\\":
         op.upadesha_no_it("3.1.48.v1", p, cli, "caN")
-    elif dhatu.text in ("De", "Svi"):
+    } else if  dhatu.text in ("De", "Svi"):
         op.optional(op.upadesha_no_it, "3.1.49", p, cli, "caN")
     // TODO: 3.1.50 - 3.1.51
-    elif dhatu.u == "asu~" or dhatu.text in {"vac", "KyA"}:
+    } else if  dhatu.u == "asu~" or dhatu.text in {"vac", "KyA"}:
         op.upadesha_no_it("3.1.52", p, cli, "aN")
-    elif dhatu.text in {"lip", "sic", "hve"}:
+    } else if  dhatu.text in {"lip", "sic", "hve"}:
         skip = False
         if tin.all(T.ATMANEPADA):
             if p.allow("3.1.54"):
@@ -117,18 +117,18 @@ fn maybe_add_lun_vikarana(p: &mut Prakriya) {
     if tin.all(T.PARASMAIPADA) and cli.u == "cli~":
         if dhatu.text in {"sf", "SAs", "f"}:
             op.upadesha_no_it("3.1.56", p, cli, "aN")
-        elif dhatu.all("ir"):
+        } else if  dhatu.all("ir"):
             op.optional(op.upadesha_no_it, "3.1.57", p, cli, "aN")
-        elif dhatu.text in jr_stambhu:
+        } else if  dhatu.text in jr_stambhu:
             op.optional(op.upadesha_no_it, "3.1.58", p, cli, "aN")
-        elif dhatu.text in {"kf", "mf", "df", "ruh"} and p.all(T.CHANDASI):
+        } else if  dhatu.text in {"kf", "mf", "df", "ruh"} and p.all(T.CHANDASI):
             op.upadesha_no_it("3.1.59", p, cli, "aN")
 
     // TODO: ciN (3.1.60 - 3.1.66)
     if tin.u == "ta":
         if dhatu.text == "pad":
             op.upadesha_no_it("3.1.60", p, cli, "ciR")
-        elif dhatu.text in {"dIp", "jan", "buD", "pUr", "tAy", "pyAy"}:
+        } else if  dhatu.text in {"dIp", "jan", "buD", "pUr", "tAy", "pyAy"}:
             op.optional(op.upadesha_no_it, "3.1.61", p, cli, "ciR")
 
     // Base case
@@ -136,27 +136,27 @@ fn maybe_add_lun_vikarana(p: &mut Prakriya) {
         op.upadesha_no_it("3.1.44", p, cli, "si~c")
 }
 
-def am_pratyaya_lit(p: Prakriya):
+fn am_pratyaya_lit(p: Prakriya):
     _, dhatu = p.find_last(T.DHATU)
     la = p.terms[-1]
 
     if dhatu.text == "kAs" or dhatu.all(T.PRATYAYA):
         _add_am("3.1.35", p)
     // jAgf is handled separately below.
-    elif not f.is_eka_ac(dhatu) and dhatu.text not in {"jAgf", "UrRu"}:
+    } else if  not f.is_eka_ac(dhatu) and dhatu.text not in {"jAgf", "UrRu"}:
         _add_am("3.1.35.v1", p)
-    elif dhatu.adi in s("ic") and f.is_guru(dhatu) and dhatu.u != "fCa~":
+    } else if  dhatu.adi in s("ic") and f.is_guru(dhatu) and dhatu.u != "fCa~":
         _add_am("3.1.36", p)
-    elif dhatu.text in {"day", "ay", "As"}:
+    } else if  dhatu.text in {"day", "ay", "As"}:
         _add_am("3.1.37", p)
-    elif dhatu.text in {"uz", "jAgf"} or (dhatu.text == "vid" and dhatu.gana == 2):
+    } else if  dhatu.text in {"uz", "jAgf"} or (dhatu.text == "vid" and dhatu.gana == 2):
         if op.optional(_add_am, "3.1.38", p):
             if dhatu.text == "vid":
                 // vid does not go through guNa.
                 dhatu.add_tags(T.F_GUNA_APAVADA)
         else:
             return
-    elif dhatu.text in {"BI", "hrI", "hu"} or dhatu.u == "quBf\\Y":
+    } else if  dhatu.text in {"BI", "hrI", "hu"} or dhatu.u == "quBf\\Y":
         am = Term.make_upadesha("Am")
         am.add_tags(T.PRATYAYA, T.SLU)
         if not op.optional(_add_am, "3.1.39", p, am):
@@ -172,7 +172,7 @@ def am_pratyaya_lit(p: Prakriya):
     p.step("3.1.40")
 
 
-def am_pratyaya_lot(p: Prakriya):
+fn am_pratyaya_lot(p: Prakriya):
     _, dhatu = p.find_last(T.DHATU)
     la = p.terms[-1]
 
@@ -236,7 +236,7 @@ fn sarvadhatuka_vikarana(p: &mut Prakriya) {
     } else if dhatu.gana == 7 {
         dhatu.add_tags("Snam")
         op.mit("3.1.78", p, dhatu, "na")
-    } else ifelif dhatu.gana == 8 or dhatu.u == "qukf\\Y" {
+    } else if} else if  dhatu.gana == 8 or dhatu.u == "qukf\\Y" {
         _add("3.1.79", p, "u")
     } else if dhatu.u in ("Divi~", "kfvi~") {
         dhatu.text = dhatu.text[:-1] + "a"
@@ -249,7 +249,7 @@ fn sarvadhatuka_vikarana(p: &mut Prakriya) {
 }
 
 
-def optional_rule(rule: str, p: Prakriya):
+fn optional_rule(rule: str, p: Prakriya):
     if p.allow(rule):
         return rule
     else:
@@ -257,7 +257,7 @@ def optional_rule(rule: str, p: Prakriya):
         return None
 
 
-def vikarana_lopa(p: Prakriya):
+fn vikarana_lopa(p: Prakriya):
     """For certain roots and gaNas, delete the vikaraNa.
 
     (2.4.72 - 2.4.82)
@@ -274,9 +274,9 @@ def vikarana_lopa(p: Prakriya):
     if vikarana.u == "Sap":
         if dhatu.gana == 2:
             op.luk("2.4.72", p, vikarana)
-        elif dhatu.gana == 3:
+        } else if  dhatu.gana == 3:
             op.slu("2.4.75", p, vikarana)
-    elif vikarana.u == "si~c" and tin.all(T.PARASMAIPADA):
+    } else if  vikarana.u == "si~c" and tin.all(T.PARASMAIPADA):
         luk = aluk = None
         if dhatu.text in {"GrA", "De", "So", "Co", "so"}:
             // De takes luk by 2.4.77, so this allows aluk.
@@ -298,14 +298,14 @@ def vikarana_lopa(p: Prakriya):
         assert not (luk and aluk)
         if luk:
             op.luk(luk, p, vikarana)
-        elif aluk:
+        } else if  aluk:
             p.step(aluk)
-    elif vikarana.u == "si~c" and tin.text in {"ta", "TAs"}:
+    } else if  vikarana.u == "si~c" and tin.text in {"ta", "TAs"}:
         if dhatu.u in TAN_ADI:
             op.optional(op.luk, "2.4.79", p, vikarana)
 
 
-def run(p: Prakriya):
+fn run(p: Prakriya):
     tin = p.terms[-1]
 
     if tin.any("lf~w", "lf~N", "lu~w"):
@@ -313,9 +313,9 @@ def run(p: Prakriya):
             _add("3.1.33", p, "sya")
         else:
             _add("3.1.33", p, "tAsi~")
-    elif tin.any("lu~N"):
+    } else if  tin.any("lu~N"):
         lun_vikarana(p)
-    elif tin.any("li~w"):
+    } else if  tin.any("li~w"):
         am_pratyaya_lit(p)
     else:
         if tin.any("lo~w"):

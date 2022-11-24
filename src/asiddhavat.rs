@@ -22,7 +22,7 @@ from padmini.term_views import TermView, StringView
 from padmini.dhatu_gana import TAN_ADI, PHAN_ADI
 
 
-def run_kniti_ardhadhatuka(p: Prakriya, index: int):
+fn run_kniti_ardhadhatuka(p: Prakriya, index: int):
     c = p.terms[index]
     n = TermView.make(p, index)
 
@@ -58,20 +58,20 @@ def run_kniti_ardhadhatuka(p: Prakriya, index: int):
                 op.antya("6.4.67", p, c, "e")
             else:
                 op.antya("6.4.66", p, c, "I")
-        elif f.samyogadi(c):
+        } else if  f.samyogadi(c):
             dhatu = TermView.make_dhatu(p, index)
             if dhatu and dhatu.antya not in s("ac"):
                 # HACK: skip dhatus with agama
                 pass
-            elif n.u == "lyap":
+            } else if  n.u == "lyap":
                 p.step("6.4.69")
-            elif n.all("li~N"):
+            } else if  n.all("li~N"):
                 op.optional(op.antya, "6.4.68", p, c, "e")
-        elif n.u == "yat":
+        } else if  n.u == "yat":
             op.antya("6.4.65", p, c, "I")
 
 
-def run_kniti(p: Prakriya, index):
+fn run_kniti(p: Prakriya, index):
     """Rules conditioned on a following `kit` or `Nit` suffix.
 
     (6.4.98 - 6.4.126)
@@ -93,13 +93,13 @@ def run_kniti(p: Prakriya, index):
     _gama_hana = {"gam", "han", "jan", "Kan", "Gas"}
     if c.text in _gama_hana and n.adi in s("ac") and n.terms[0].u != "aN":
         op.upadha("6.4.98", p, c, "")
-    elif (c.text == "hu" or c.antya in s("Jal")) and n.terms[-1].text == "hi":
+    } else if  (c.text == "hu" or c.antya in s("Jal")) and n.terms[-1].text == "hi":
         op.text("6.4.101", p, n.terms[-1], "Di")
-    elif c.u == "ciR":
+    } else if  c.u == "ciR":
         op.luk("6.4.104", p, n.terms[0])
-    elif c.antya == "a" and n.terms[0].text == "hi":
+    } else if  c.antya == "a" and n.terms[0].text == "hi":
         op.luk("6.4.105", p, n.terms[0])
-    elif c.antya == "u" and not samyogapurva and n.terms[0].text == "hi":
+    } else if  c.antya == "u" and not samyogapurva and n.terms[0].text == "hi":
         op.luk("6.4.106", p, n.terms[0])
 
     n = TermView.make(p, index)
@@ -111,9 +111,9 @@ def run_kniti(p: Prakriya, index):
         if prev and prev.text in ("kar", "kur"):
             if n.adi in s("m v"):
                 op.luk("6.4.108", p, c)
-            elif n.adi in s("y"):
+            } else if  n.adi in s("y"):
                 op.luk("6.4.109", p, c)
-        elif n.adi in s("m v") and not samyogapurva:
+        } else if  n.adi in s("m v") and not samyogapurva:
             op.optional(op.antya, "6.4.107", p, c, "")
 
     sarvadhatuka = n.all(T.SARVADHATUKA)
@@ -130,16 +130,16 @@ def run_kniti(p: Prakriya, index):
             c.text = c.text.replace("na", "n")
             p.step("6.4.111")
         # Match on the upadesha so we don't include asu~ (asyati).
-        elif c.u == "asa~":
+        } else if  c.u == "asa~":
             c.text = c.text.replace("a", "")
             p.step("6.4.111")
 
-        elif c.u == "SnA" or c.all(T.ABHYASTA):
+        } else if  c.u == "SnA" or c.all(T.ABHYASTA):
             if c.text == "daridrA" and n.adi in s("hal"):
                 op.antya("6.4.114", p, c, "i")
-            elif c.u == "YiBI\\" and n.adi in s("hal"):
+            } else if  c.u == "YiBI\\" and n.adi in s("hal"):
                 op.optional(op.antya, "6.4.115", p, c, "i")
-            elif c.antya == "A":
+            } else if  c.antya == "A":
                 p.debug("aa")
                 if c.u == "o~hA\\k" and n.adi in s("hal"):
                     if n.adi == "y":
@@ -152,13 +152,13 @@ def run_kniti(p: Prakriya, index):
                         if do:
                             op.optional(op.antya, "6.4.116", p, c, "i")
                     p.debug("A", c.u, n.text)
-                elif n.adi in s("hal") and not c.all("ghu"):
+                } else if  n.adi in s("hal") and not c.all("ghu"):
                     op.antya("6.4.113", p, c, "I")
                 else:
                     op.antya("6.4.112", p, c, "")
 
 
-def lit_et(p: Prakriya, index: int):
+fn lit_et(p: Prakriya, index: int):
     """Replacement with e and abhyasa-lopa."""
     c = p.terms[index]
     if not c.all(T.DHATU, T.ABHYASTA):
@@ -189,38 +189,38 @@ def lit_et(p: Prakriya, index: int):
     if c.text == "daB" and c.u == "danBu~":
         abhyasa.text = ""
         op.upadha("6.4.120.v1", p, c, "e")
-    elif c.u == "tF" or c.text in {"Pal", "Baj", "trap"}:
+    } else if  c.u == "tF" or c.text in {"Pal", "Baj", "trap"}:
         abhyasa.text = ""
         op.upadha("6.4.122", p, c, "e")
-    elif c.text == "SraT" and c.u == "SranTa~":
+    } else if  c.text == "SraT" and c.u == "SranTa~":
         abhyasa.text = ""
         op.upadha("6.4.122.v1", p, c, "e")
-    elif c.text == "graT":
+    } else if  c.text == "graT":
         abhyasa.text = ""
         # TODO: attested, but can't find the rule for it.
         op.upadha("???", p, c, "e")
-    elif c.text == "rAD":
+    } else if  c.text == "rAD":
         if p.allow("6.4.123"):
             abhyasa.text = ""
             op.upadha("6.4.123", p, c, "e")
         else:
             p.decline("6.4.123")
-    elif c.u == "jF" or c.text in {"Bram", "tras"}:
+    } else if  c.u == "jF" or c.text in {"Bram", "tras"}:
         if p.allow("6.4.124"):
             abhyasa.text = ""
             op.upadha("6.4.124", p, c, "e")
         else:
             p.decline("6.4.124")
-    elif c.u in PHAN_ADI:
+    } else if  c.u in PHAN_ADI:
         if p.allow("6.4.125"):
             abhyasa.text = ""
             op.upadha("6.4.125", p, c, "e")
         else:
             p.decline("6.4.125")
     # General cases
-    elif c.text in {"Sas", "dad"} or c.adi == "v" or c.any(T.F_GUNA):
+    } else if  c.text in {"Sas", "dad"} or c.adi == "v" or c.any(T.F_GUNA):
         p.step("6.4.126")
-    elif ekahalmadhya and c.upadha == "a" and n.all("li~w") and anadeshadi:
+    } else if  ekahalmadhya and c.upadha == "a" and n.all("li~w") and anadeshadi:
         if kniti:
             code = "6.4.120"
         else:
@@ -229,7 +229,7 @@ def lit_et(p: Prakriya, index: int):
         op.upadha(code, p, c, "e")
 
 
-def ardhadhatuke(p: Prakriya, index: int):
+fn ardhadhatuke(p: Prakriya, index: int):
     """Rules conditioned on a following ardhadhatuka suffix.
 
     (6.4.46 - 6.4.70)
@@ -245,14 +245,14 @@ def ardhadhatuke(p: Prakriya, index: int):
     if c.text == "Brasj":
         op.optional(op.text, "6.4.47", p, c, "Barj")
 
-    elif c.antya == "a":
+    } else if  c.antya == "a":
         op.antya("6.4.48", p, c, "")
         c.add_tags(T.F_AT_LOPA)
         # TODO: remove P F_AT_LOPA
         p.add_tags(T.F_AT_LOPA)
 
 
-def run_dirgha(p: Prakriya):
+fn run_dirgha(p: Prakriya):
     """6.4.2 - 6.4.19"""
 
     sup = p.terms[-1]
@@ -268,25 +268,25 @@ def run_dirgha(p: Prakriya):
     if sup.text == "Am" and has_num:
         if anga.text in {"tisf", "catasf"}:
             p.step("6.4.3")
-        elif anga.text == "nf":
+        } else if  anga.text == "nf":
             op.optional(op.antya, "6.4.4", p, anga, sounds.dirgha(anga.antya))
-        elif anga.antya == "n":
+        } else if  anga.antya == "n":
             op.upadha("6.4.5", p, anga, sounds.dirgha(anga.upadha))
-        elif anga.antya in s("ac"):
+        } else if  anga.antya in s("ac"):
             op.antya("6.4.2", p, anga, sounds.dirgha(anga.antya))
 
-    elif sup.any(T.SARVANAMASTHANA) and not sup.any(T.SAMBUDDHI):
+    } else if  sup.any(T.SARVANAMASTHANA) and not sup.any(T.SAMBUDDHI):
         tr_exclude = {"pitf", "pitar", "jAmAtf", "jAmAtar", "BrAtf", "BrAtar"}
         if anga.antya == "n":
             op.upadha("6.4.8", p, anga, sounds.dirgha(anga.upadha))
         # TODO: restrict
-        elif (
+        } else if  (
             anga.antya == "f" or anga.text.endswith("ar")
         ) and anga.text not in tr_exclude:
             op.upadha("6.4.11", p, anga, sounds.dirgha(anga.upadha))
 
 
-def antya_nalopa(p: Prakriya, index):
+fn antya_nalopa(p: Prakriya, index):
     """Rules that delete the final n of a term.
 
     (6.4.37 - )
@@ -307,20 +307,20 @@ def antya_nalopa(p: Prakriya, index):
         # jan + Syan should always be jAyate.
         if (n.adi == "y" and kniti) and not (c.text == "jan" and n.u == "Syan"):
             op.optional(op.antya, "6.4.38", p, c, "A")
-        elif (jhali and kniti) or n.u == "san":
+        } else if  (jhali and kniti) or n.u == "san":
             op.antya("6.4.37", p, c, "A")
 
-    elif c.text == "tan" and n.u == "yak":
+    } else if  c.text == "tan" and n.u == "yak":
         op.optional(op.antya, "6.4.39", p, c, "A")
 
-    elif c.antya in s("Yam") and anudatta_tanadi_van and jhali and kniti:
+    } else if  c.antya in s("Yam") and anudatta_tanadi_van and jhali and kniti:
         if n.u == "lyap":
             op.optional(op.antya, "6.4.37", p, c, "")
         else:
             op.antya("6.4.37", p, c, "")
 
 
-def run_before_guna(p: Prakriya, index):
+fn run_before_guna(p: Prakriya, index):
     c = p.terms[index]
     n = TermView.make(p, index)
     if not n:
@@ -346,13 +346,13 @@ def run_before_guna(p: Prakriya, index):
         if do:
             op.upadha("6.4.24", p, c, "")
 
-    elif c.text in ("danS", "sanj", "svanj") and n.u == "Sap":
+    } else if  c.text in ("danS", "sanj", "svanj") and n.u == "Sap":
         op.upadha("6.4.25", p, c, "")
 
-    elif c.text == "ranj" and n.u == "Sap":
+    } else if  c.text == "ranj" and n.u == "Sap":
         op.upadha("6.4.26", p, c, "")
 
-    elif c.text == "SAs" and kniti and (n.u == "aN" or n.adi in s("hal")):
+    } else if  c.text == "SAs" and kniti and (n.u == "aN" or n.adi in s("hal")):
         op.upadha("6.4.34", p, c, "i")
 
     antya_nalopa(p, index)
@@ -399,7 +399,7 @@ def run_before_guna(p: Prakriya, index):
         op.luk("6.4.104", p, n.terms[0])
 
     # 6.4.114 has a vArttika for ArdhadhAtuke:
-    elif c.u == "daridrA" and n.any(T.ARDHADHATUKA):
+    } else if  c.u == "daridrA" and n.any(T.ARDHADHATUKA):
         if p.terms[-1].all("lu~N"):
             if p.allow("6.4.114.v2"):
                 p.step("6.4.114.v2")
@@ -413,7 +413,7 @@ def run_before_guna(p: Prakriya, index):
         op.text("6.4.114.v1", p, c, "daridr")
 
 
-def run_aci(p: Prakriya, index: int):
+fn run_aci(p: Prakriya, index: int):
     """Apply sound changes when a vowel follows.
 
     6.4.77 - 6.4.100
@@ -465,7 +465,7 @@ def run_aci(p: Prakriya, index: int):
             and not samyogapurva
         ):
             op.antya("6.4.82", p, c, "y")
-        elif c.text == "strI":
+        } else if  c.text == "strI":
             if n.terms[0].u in ("am", "Sas"):
                 if p.allow("6.4.80"):
                     pass
@@ -475,20 +475,20 @@ def run_aci(p: Prakriya, index: int):
             else:
                 op.antya("6.4.79", p, c, iyuv[c.antya])
 
-        elif c.all(T.DHATU) or c.u in ("Snu", "BrU"):
+        } else if  c.all(T.DHATU) or c.u in ("Snu", "BrU"):
             if c.u == "i\\R":
                 op.antya("6.4.81", p, c, "y")
             # Some grammarians include ik in the scope of 6.4.81.
-            elif c.u == "i\\k":
+            } else if  c.u == "i\\k":
                 op.optional(op.antya, "6.4.81", p, c, "y")
 
             if c.antya != "y":
                 op.antya("6.4.77", p, c, iyuv[c.antya])
-        elif c.all(T.ABHYASA) and n.adi not in sounds.savarna(c.antya):
+        } else if  c.all(T.ABHYASA) and n.adi not in sounds.savarna(c.antya):
             op.antya("6.4.78", p, c, iyuv[c.antya])
 
 
-def run_nau(p: Prakriya, index: int):
+fn run_nau(p: Prakriya, index: int):
     """Asiddhavat rules conditioned on a following Ri suffix."""
 
     c = p.terms[index]
@@ -514,7 +514,7 @@ def run_nau(p: Prakriya, index: int):
         op.upadha("6.4.92", p, c, sounds.hrasva(c.upadha))
 
 
-def run_after_guna(p: Prakriya, index: int):
+fn run_after_guna(p: Prakriya, index: int):
     c = p.terms[index]
     n = TermView.make(p, index)
     if not n:

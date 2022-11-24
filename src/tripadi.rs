@@ -27,7 +27,7 @@ from padmini.constants import Tag as T
 ADESHA_CACHE = {}
 
 
-def al_adesha(
+fn al_adesha(
     rule: str,
     p: Prakriya,
     index: int,
@@ -85,7 +85,7 @@ def al_adesha(
     return adesha
 
 
-def na_lopa(p: Prakriya):
+fn na_lopa(p: Prakriya):
     sup = p.terms[-1]
     if not sup.any(T.SUP):
         return
@@ -95,7 +95,7 @@ def na_lopa(p: Prakriya):
         op.antya("8.2.7", p, anga, "")
 
 
-def ra_to_la(p: Prakriya):
+fn ra_to_la(p: Prakriya):
     """Change of r to l. (8.2.18 - 8.2.20)"""
     for c, n in per_term(p):
         if not n:
@@ -104,16 +104,16 @@ def ra_to_la(p: Prakriya):
         if c.u.startswith("kfp") and c.u != "kfpa":
             c.text = c.text.replace("f", "x").replace("r", "l")
             p.step("8.2.18")
-        elif c.u == "gF" and n.u == "yaN":
+        } else if  c.u == "gF" and n.u == "yaN":
             c.text = c.text.replace("r", "l")
             p.step("8.2.20")
         # TODO: where is it specified that this is only for gF/girati?
-        elif c.u == "gF" and c.gana == 6 and n.adi in s("ac"):
+        } else if  c.u == "gF" and c.gana == 6 and n.adi in s("ac"):
             res = c.text.replace("r", "l")
             op.optional(op.text, "8.2.21", p, c, res)
 
 
-def samyoganta_and_salopa(p: Prakriya):
+fn samyoganta_and_salopa(p: Prakriya):
     """Final samyoga. (8.2.23 - 8.2.29)"""
 
     # Exception to 8.2.23.
@@ -169,7 +169,7 @@ def samyoganta_and_salopa(p: Prakriya):
             op.adi("8.2.24", p, n, "")
         # Per kAzikA, applies only to s of si~c. But this seems to cause
         # problems e.g. for tAs + Dve.
-        elif c.antya == "s" and n.adi == "D":
+        } else if  c.antya == "s" and n.adi == "D":
             op.antya("8.2.25", p, c, "")
 
     # hrasvAd aGgAt
@@ -204,7 +204,7 @@ def samyoganta_and_salopa(p: Prakriya):
         p.step("8.2.23")
 
 
-def ha_adesha(p: Prakriya):
+fn ha_adesha(p: Prakriya):
     for index, (c, n) in enumerate(per_term(p)):
         is_dhatu = c.all(T.DHATU)
         # TODO: implement padAnta
@@ -212,11 +212,11 @@ def ha_adesha(p: Prakriya):
         druha_muha = {"dru\\ha~", "mu\\ha~", "zRu\\ha~", "zRi\\ha~"}
         if is_dhatu and c.u in druha_muha:
             op.optional(al_adesha, "8.2.33", p, index, None, "h", "Jal", "G")
-        elif is_dhatu and c.u == "Ra\\ha~^" and c.antya == "h":
+        } else if  is_dhatu and c.u == "Ra\\ha~^" and c.antya == "h":
             al_adesha("8.2.34", p, index, None, "h", "Jal", "D")
-        elif is_dhatu and c.text == "Ah":
+        } else if  is_dhatu and c.text == "Ah":
             al_adesha("8.2.35", p, index, None, "h", "Jal", "T")
-        elif is_dhatu and c.adi == "d":
+        } else if  is_dhatu and c.adi == "d":
             al_adesha("8.2.32", p, index, None, "h", "Jal", "G")
 
         al_adesha("8.2.31", p, index, None, "h", "Jal", "Q")
@@ -224,7 +224,7 @@ def ha_adesha(p: Prakriya):
             op.antya("8.2.31", p, c, "Q")
 
 
-def per_term_1b(p: Prakriya, index: int):
+fn per_term_1b(p: Prakriya, index: int):
     c = p.terms[index]
     try:
         n = [u for u in p.terms[index + 1 :] if u.text][0]
@@ -292,7 +292,7 @@ def per_term_1b(p: Prakriya, index: int):
         # Exception to general rule 8.2.66 below
         op.antya("8.2.73", p, c, "d")
 
-    elif c.antya == "s" and (not n or (next_is_last and rn.text == "")):
+    } else if  c.antya == "s" and (not n or (next_is_last and rn.text == "")):
         op.antya("8.2.66", p, c, "ru~")
 
     if c.antya in s("s d") and rn and rn.text == "" and rn.u == "sip":
@@ -308,11 +308,11 @@ def per_term_1b(p: Prakriya, index: int):
         if c.text in ("kur", "Cur"):
             # Do nothing.
             p.step("8.2.79")
-        elif c.antya in s("r v"):
+        } else if  c.antya in s("r v"):
             if c.upadha in {"i", "u", "f", "x"}:
                 if n and n.adi in s("hal"):
                     op.upadha("8.2.77", p, c, sounds.dirgha(c.upadha))
-                elif not n:
+                } else if  not n:
                     op.upadha("8.2.76", p, c, sounds.dirgha(c.upadha))
         if (
             len(c.text) >= 3
@@ -333,7 +333,7 @@ def per_term_1b(p: Prakriya, index: int):
         p.step("8.3.15")
 
 
-def natva(p: Prakriya):
+fn natva(p: Prakriya):
     """Rules that change `n` to `R`. (8.4.1 - 8.4.39)
 
     :param p: the prakriya
@@ -367,7 +367,7 @@ def natva(p: Prakriya):
                     p.step("8.4.1-v")
 
 
-def stoh_scuna_stuna(p):
+fn stoh_scuna_stuna(p):
     view = StringView(p.terms)
     scu = s("S cu~")
     swu = s("z wu~")
@@ -406,7 +406,7 @@ def stoh_scuna_stuna(p):
         p.step("8.4.41")
 
 
-def murdhanya(p: Prakriya):
+fn murdhanya(p: Prakriya):
     """mUrdhanya when preceded by certain sounds.
 
     (8.3.55 - 8.3.119)
@@ -421,7 +421,7 @@ def murdhanya(p: Prakriya):
         if c.antya in inku and n.adi == "s" and adesha_pratyaya and apadanta:
             op.adi("8.3.59", p, n, "z")
 
-        elif c.u in {"va\\sa~", "SAsu~", "Gasx~"} and c.upadha in inku:
+        } else if  c.u in {"va\\sa~", "SAsu~", "Gasx~"} and c.upadha in inku:
             op.antya("8.3.60", p, c, "z")
 
         # HACK
@@ -455,7 +455,7 @@ def murdhanya(p: Prakriya):
                 p.step("8.3.78")
 
 
-def overall_1(p: Prakriya):
+fn overall_1(p: Prakriya):
     """Rules that apply to the overall prakriya."""
 
     view = StringView(p.terms)
@@ -469,7 +469,7 @@ def overall_1(p: Prakriya):
         p.step("8.3.24")
 
 
-def dha(p: Prakriya):
+fn dha(p: Prakriya):
     """Rules for retroflex Dha."""
     view = StringView(p.terms)
     # Save the text before Dha-lopa for a cleaner comparison below.
@@ -495,7 +495,7 @@ def dha(p: Prakriya):
                 p.step("6.3.111")
 
 
-def savarna(p):
+fn savarna(p):
     """Rules dealing with savarna letters."""
 
     view = StringView(p.terms)
@@ -508,13 +508,13 @@ def savarna(p):
         replacement = None
         if para in s("ku~"):
             replacement = "N"
-        elif para in s("cu~"):
+        } else if  para in s("cu~"):
             replacement = "Y"
-        elif para in s("wu~"):
+        } else if  para in s("wu~"):
             replacement = "R"
-        elif para in s("tu~"):
+        } else if  para in s("tu~"):
             replacement = "n"
-        elif para in s("pu~"):
+        } else if  para in s("pu~"):
             replacement = "m"
         else:
             raise VyakaranaException(f"Unknown following sound {para}.")
@@ -548,7 +548,7 @@ def savarna(p):
                 p.decline("8.4.65")
 
 
-def per_term_2(p: Prakriya, index: int):
+fn per_term_2(p: Prakriya, index: int):
     try:
         n = [u for u in p.terms[index + 1 :] if u.text][0]
     except IndexError:
@@ -575,7 +575,7 @@ def per_term_2(p: Prakriya, index: int):
         op.optional(op.antya, "8.4.56", p, c, mapping[c.antya])
 
 
-def run(p: Prakriya):
+fn run(p: Prakriya):
     na_lopa(p)
     ra_to_la(p)
     samyoganta_and_salopa(p)

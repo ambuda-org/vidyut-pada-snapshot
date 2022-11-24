@@ -31,13 +31,13 @@ from . import atidesha
 from . import it_samjna
 
 
-def eka_ac(t: Term) -> bool:
+fn eka_ac(t: Term) -> bool:
     num_vowels = sum(1 for L in t.text if L in s("ac"))
     # HACK to have ekac apply for am-Agama
     return num_vowels == 1 or "fa" in t.text
 
 
-def optional_rule(rule: str, p: Prakriya):
+fn optional_rule(rule: str, p: Prakriya):
     if p.allow(rule):
         return rule
     else:
@@ -45,7 +45,7 @@ def optional_rule(rule: str, p: Prakriya):
         return None
 
 
-def general_anit(p: Prakriya, index: int) -> bool:
+fn general_anit(p: Prakriya, index: int) -> bool:
     """General rules that prevent iT-Agama.
 
     (7.2.8 - 7.2.34)
@@ -58,15 +58,15 @@ def general_anit(p: Prakriya, index: int) -> bool:
 
     if n.any(T.KRT) and n.adi in s("vaS"):
         anit_rule = "7.2.8"
-    elif eka_ac(c) and (c.text == "Sri" or c.antya in s("uk")) and n.any("k"):
+    } else if  eka_ac(c) and (c.text == "Sri" or c.antya in s("uk")) and n.any("k"):
         anit_rule = "7.2.11"
-    elif n.terms[0].u == "san" and c.text in {"Sri", "grah", "guh"}:
+    } else if  n.terms[0].u == "san" and c.text in {"Sri", "grah", "guh"}:
         anit_rule = "7.2.12"
-    elif (c.text == "Svi" or c.any("I")) and n.any(T.NISTHA):
+    } else if  (c.text == "Svi" or c.any("I")) and n.any(T.NISTHA):
         anit_rule = "7.2.14"
 
     # TODO: 7.2.15
-    elif c.any("A") and n.any(T.NISTHA):
+    } else if  c.any("A") and n.any(T.NISTHA):
         if p.all(T.BHAVE.T.KARMANI) and p.allow("7.2.17"):
             pass
         else:
@@ -81,7 +81,7 @@ def general_anit(p: Prakriya, index: int) -> bool:
         return False
 
 
-def lit_it(p: Prakriya, index: int) -> bool:
+fn lit_it(p: Prakriya, index: int) -> bool:
     """iT rules specific to liT."""
 
     c = p.terms[index]
@@ -106,7 +106,7 @@ def lit_it(p: Prakriya, index: int) -> bool:
     # - However, there are the following exceptions for Tal:
     #   - roots ending in R (except R) are aniT.
     #   - roots ending in a vowel, or with a middle 'a', are veT.
-    elif c.antya in s("ac") and n.u == "Tal" and _7_2_10:
+    } else if  c.antya in s("ac") and n.u == "Tal" and _7_2_10:
         # 7.2.63 Rto bhAradvAjasya
         # In Bharadvaja's opinion, this applies only for final R. So for all
         # other roots, this condition is optional:
@@ -122,7 +122,7 @@ def lit_it(p: Prakriya, index: int) -> bool:
                 set_rule = "7.2.66"
             else:
                 anit_rule = "7.2.61"
-    elif c.text in {"sfj", "dfS"} and n.u == "Tal":
+    } else if  c.text in {"sfj", "dfS"} and n.u == "Tal":
         # By default, these will be seT. So the option allows aniT.
         code = "7.2.65"
         if p.allow(code):
@@ -140,12 +140,12 @@ def lit_it(p: Prakriya, index: int) -> bool:
     assert not (anit_rule and set_rule)
     if anit_rule:
         p.step(anit_rule)
-    elif set_rule:
+    } else if  set_rule:
         op.insert_agama_after(set_rule, p, index, "iw")
     return True
 
 
-def ardhadhatuke(p: Prakriya, index: int):
+fn ardhadhatuke(p: Prakriya, index: int):
     """iT rules that condition on a following ArdhadhAtuka suffix.
 
     (7.2.35 - 7.2.36 and 7.2.41 - 7.2.75)
@@ -165,7 +165,7 @@ def ardhadhatuke(p: Prakriya, index: int):
     if (c.antya == "f" or c.text == "han") and n.u == "sya":
         # Takes priority over 7.2.44 below.
         set_rule = "7.2.70"
-    elif n.u == "si~c":
+    } else if  n.u == "si~c":
         if c.text == "aYj" and n.u == "si~c":
             set_rule = "7.2.71"
 
@@ -173,21 +173,21 @@ def ardhadhatuke(p: Prakriya, index: int):
         if para:
             if c.u in {"zwu\\Y", "zu\\Y", "DUY"}:
                 set_rule = "7.2.72"
-            elif c.text in {"yam", "ram", "nam"}:
+            } else if  c.text in {"yam", "ram", "nam"}:
                 c.text += "s"
                 set_rule = "7.2.73"
-            elif c.antya == "A":
+            } else if  c.antya == "A":
                 # Handle this after running Attva. See the run_after_attva
                 # function for details.
                 return
 
-    elif c.text == "IS" and n.adi == "s":
+    } else if  c.text == "IS" and n.adi == "s":
         set_rule = "7.2.77"
         op.insert_agama_after(set_rule, p, index, "iw")
         p.step(set_rule)
         return
 
-    elif c.text in {"IS", "Iq", "jan"} and (n.adi == "s" or n.terms[-1].u == "Dvam"):
+    } else if  c.text in {"IS", "Iq", "jan"} and (n.adi == "s" or n.terms[-1].u == "Dvam"):
         # See kAshika on 7.2.78 for inclusion of IS here.
         set_rule = "7.2.78"
         op.insert_agama_after(set_rule, p, index, "iw")
@@ -203,28 +203,28 @@ def ardhadhatuke(p: Prakriya, index: int):
     if set_rule or anit_rule:
         pass
 
-    elif c.u in RADH_ADI and n.adi in s("val"):
+    } else if  c.u in RADH_ADI and n.adi in s("val"):
         # All of these roots are in scope for 7.2.10 (aniT).
         # So, this option allows seT-tva.
         set_rule = optional_rule("7.2.45", p)
 
-    elif c.u in {"izu~", "zaha~\\", "luBa~", "ruza~", "riza~"} and n.adi == "t":
+    } else if  c.u in {"izu~", "zaha~\\", "luBa~", "ruza~", "riza~"} and n.adi == "t":
         anit_rule = optional_rule("7.2.48", p)
 
-    elif c.text in krta_crta and n.adi == "s" and n.u != "si~c":
+    } else if  c.text in krta_crta and n.adi == "s" and n.u != "si~c":
         anit_rule = optional_rule("7.2.57", p)
 
-    elif c.text == "gam" and antya_para and n.adi == "s":
+    } else if  c.text == "gam" and antya_para and n.adi == "s":
         set_rule = "7.2.58"
 
-    elif c.u in VRDBHYAH and c.gana == 1 and antya_para and n.adi == "s":
+    } else if  c.u in VRDBHYAH and c.gana == 1 and antya_para and n.adi == "s":
         anit_rule = "7.2.59"
 
-    elif c.u == "kfpU~\\" and antya_para and (n.adi == "s" or n.u == "tAsi~"):
+    } else if  c.u == "kfpU~\\" and antya_para and (n.adi == "s" or n.u == "tAsi~"):
         anit_rule = "7.2.60"
 
     # TODO: not sure I undesrtand the scope of this rule.
-    elif c.text in {"snu", "kram"} and n.adi in s("val"):
+    } else if  c.text in {"snu", "kram"} and n.adi in s("val"):
         if p.terms[-1].all(T.ATMANEPADA) and n.terms[0].u == "sIyu~w":
             anit_rule = "7.2.36"
 
@@ -232,22 +232,22 @@ def ardhadhatuke(p: Prakriya, index: int):
 
     if anit_rule or set_rule:
         pass
-    elif n.adi in s("val"):
+    } else if  n.adi in s("val"):
         if c.u in ("svf", "zUN", "DUY") or c.any("U"):
             # Synchronize choice of "it" with the choice of lun-vikarana.
             if p.all(T.F_ANIT_KSA):
                 anit_rule = "7.2.44"
-            elif p.all(T.F_SET_SIC):
+            } else if  p.all(T.F_SET_SIC):
                 pass
             else:
                 anit_rule = optional_rule("7.2.44", p)
-        elif (n.any("li~N") or n.u == "si~c") and p.terms[-1].any(T.ATMANEPADA):
+        } else if  (n.any("li~N") or n.u == "si~c") and p.terms[-1].any(T.ATMANEPADA):
             vrt = c.text == "vf" or c.antya == "F"
             if vrt and n.any(T.ARDHADHATUKA):
                 # By default, all of these roots are seT.
                 # So, the option allows anit.
                 anit_rule = optional_rule("7.2.42", p)
-            elif c.antya == "f" and f.samyogadi(c):
+            } else if  c.antya == "f" and f.samyogadi(c):
                 if c.all(T.ANUDATTA):
                     # For anit roots, optional seT.
                     set_rule = optional_rule("7.2.43", p)
@@ -263,9 +263,9 @@ def ardhadhatuke(p: Prakriya, index: int):
     # ArdhadhAtuka suffixes. So we add a check for ArdhadhAtukatva here.
     #
     # Any li~w root not explictly included in 7.2.13 is also iT.
-    elif c.any(T.ANUDATTA) and eka_ac(c) and not n.any("li~w"):
+    } else if  c.any(T.ANUDATTA) and eka_ac(c) and not n.any("li~w"):
         anit_rule = "7.2.10"
-    elif n.adi in s("val") and n.any(T.ARDHADHATUKA):
+    } else if  n.adi in s("val") and n.any(T.ARDHADHATUKA):
         set_rule = "7.2.35"
 
     assert not (
@@ -280,7 +280,7 @@ def ardhadhatuke(p: Prakriya, index: int):
         return False
 
 
-def sarvadhatuke(p: Prakriya, index: int):
+fn sarvadhatuke(p: Prakriya, index: int):
     c = p.terms[index]
     n = TermView.make_pratyaya(p, index)
     if not n:
@@ -294,7 +294,7 @@ def sarvadhatuke(p: Prakriya, index: int):
             return
 
 
-def it_dirgha(p: Prakriya, c: Term, n: TermView):
+fn it_dirgha(p: Prakriya, c: Term, n: TermView):
     """Rules that lengthen the iṭ.
 
     (7.2.37 - 7.2.40)
@@ -307,16 +307,16 @@ def it_dirgha(p: Prakriya, c: Term, n: TermView):
         if c.text == "grah":
             it.text = "I"
             p.step("7.2.37")
-        elif c.antya == "F" or c.text == "vf":
+        } else if  c.antya == "F" or c.text == "vf":
             if la.any("li~N"):
                 p.step("7.2.39")
-            elif any(x.u == "si~c" for x in n.terms) and la.any(T.PARASMAIPADA):
+            } else if  any(x.u == "si~c" for x in n.terms) and la.any(T.PARASMAIPADA):
                 p.step("7.2.40")
             else:
                 op.optional(op.text, "7.2.38", p, it, "I")
 
 
-def run_for_index(p: Prakriya, index: int):
+fn run_for_index(p: Prakriya, index: int):
     c = p.terms[index]
 
     # Abhyasa might come second
@@ -344,7 +344,7 @@ def run_for_index(p: Prakriya, index: int):
         it_dirgha(p, c, n)
 
 
-def run_after_attva_for_index(p: Prakriya, index: int):
+fn run_after_attva_for_index(p: Prakriya, index: int):
     c = p.terms[index]
     n = TermView.make_pratyaya(p, index)
     if not n or not n.all(T.ARDHADHATUKA):
@@ -358,11 +358,11 @@ def run_after_attva_for_index(p: Prakriya, index: int):
                 op.insert_agama_after("7.2.73", p, index, "iw")
 
 
-def run_before_attva(p: Prakriya):
+fn run_before_attva(p: Prakriya):
     for index, _ in enumerate(p.terms):
         run_for_index(p, index)
 
 
-def run_after_attva(p: Prakriya):
+fn run_after_attva(p: Prakriya):
     for index, _ in enumerate(p.terms):
         run_after_attva_for_index(p, index)

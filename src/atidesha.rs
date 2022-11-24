@@ -7,7 +7,7 @@ from padmini.sounds import s
 from padmini.term_views import TermView
 
 
-def run_for_index(p: Prakriya, index: int):
+fn run_for_index(p: Prakriya, index: int):
     # Should run after it-Agama has been added.
     c = p.terms[index]
     n = TermView.make_pratyaya(p, index)
@@ -23,25 +23,25 @@ def run_for_index(p: Prakriya, index: int):
         op.tag("1.2.1", p, n.terms[0], "N")
 
     # Must check for AGAMA specifically because of the tiN ending "iw".
-    elif c.text == "vij" and iti:
+    } else if  c.text == "vij" and iti:
         op.tag("1.2.2", p, n.terms[-1], "N")
-    elif c.text == "UrRu" and iti:
+    } else if  c.text == "UrRu" and iti:
         if p.allow("1.2.3"):
             p.step("1.2.3")
         else:
             n.terms[-1].add_tags("N")
             p.decline("1.2.3")
 
-    elif n.all(T.SARVADHATUKA) and not n.all("p"):
+    } else if  n.all(T.SARVADHATUKA) and not n.all("p"):
         op.tag("1.2.4", p, n.terms[-1], "N")
 
-    elif c.any(T.DHATU) and not f.samyoganta(c) and n.all("li~w") and not n.all("p"):
+    } else if  c.any(T.DHATU) and not f.samyoganta(c) and n.all("li~w") and not n.all("p"):
         op.tag("1.2.5", p, n.terms[-1], "k")
 
-    elif c.text in {"BU", "inD"} and n.all("li~w"):
+    } else if  c.text in {"BU", "inD"} and n.all("li~w"):
         op.tag("1.2.6", p, n.terms[-1], "k")
 
-    elif n.all("li~w") and c.text in {"SranT", "granT", "danB", "svanj"}:
+    } else if  n.all("li~w") and c.text in {"SranT", "granT", "danB", "svanj"}:
         # TODO: rule seems obligatory; where is optionality defined?
         op.optional(op.tag, "1.2.6.v1", p, n.terms[-1], "k")
 
@@ -54,11 +54,11 @@ def run_for_index(p: Prakriya, index: int):
 
         if is_dhatu and ik_halantat:
             op.tag("1.2.11", p, n.terms[-1], "k")
-        elif is_dhatu and c.antya in s("f"):
+        } else if  is_dhatu and c.antya in s("f"):
             op.tag("1.2.12", p, n.terms[-1], "k")
 
 
-def attva_atidesha_for_index(p: Prakriya, index: int):
+fn attva_atidesha_for_index(p: Prakriya, index: int):
     """Atidesha rules that apply only if the root ends in long A.
 
     If we don't use a separate function for these rules, we have a dependency
@@ -97,13 +97,13 @@ def attva_atidesha_for_index(p: Prakriya, index: int):
         op.antya("1.2.17", p, c, "i")
 
 
-def run_before_attva(p: Prakriya):
+fn run_before_attva(p: Prakriya):
     """Run before the rule "Adeca upadeze 'ziti"."""
     for i, _ in enumerate(p.terms):
         run_for_index(p, i)
 
 
-def run_after_attva(p: Prakriya):
+fn run_after_attva(p: Prakriya):
     """Run after the rule "Adeca upadeze 'ziti"."""
     for i, _ in enumerate(p.terms):
         attva_atidesha_for_index(p, i)

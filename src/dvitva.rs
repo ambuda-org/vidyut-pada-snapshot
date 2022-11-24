@@ -7,7 +7,7 @@ from padmini.term_views import TermView
 from padmini.prakarana.utils import eka_ac
 
 
-def _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
+fn _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
     # Special logic for Nic.
     if (
         dhatu.adi in s("ac")
@@ -34,7 +34,7 @@ def _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
         third.add_tags(T.ABHYASTA)
         p.step("6.1.5")
 
-    elif eka_ac(dhatu) or dhatu.adi in s("hal"):
+    } else if  eka_ac(dhatu) or dhatu.adi in s("hal"):
         # TODO: correctly double jAgR
         abhyasa = Term.make_term(dhatu.text)
         op.insert_before(rule, p, dhatu, abhyasa)
@@ -79,7 +79,7 @@ def _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
         p.step("6.1.5")
 
 
-def run_for_each(p: Prakriya, dhatu: Term, i: int):
+fn run_for_each(p: Prakriya, dhatu: Term, i: int):
     n = TermView.make_pratyaya(p, i)
     if not n:
         return
@@ -102,15 +102,15 @@ def run_for_each(p: Prakriya, dhatu: Term, i: int):
             op.text("7.4.9", p, dhatu, "digi")
         else:
             _double("6.1.8", p, dhatu, i)
-    elif n.u in ("san", "yaN"):
+    } else if  n.u in ("san", "yaN"):
         _double("6.1.9", p, dhatu, i)
-    elif n.terms[0].any(T.SLU):
+    } else if  n.terms[0].any(T.SLU):
         _double("6.1.10", p, dhatu, i)
-    elif n.u == "caN":
+    } else if  n.u == "caN":
         _double("6.1.11", p, dhatu, i)
 
 
-def run(p: Prakriya):
+fn run(p: Prakriya):
     i = 0
     num_terms = len(p.terms)
     while i < num_terms:

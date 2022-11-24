@@ -17,7 +17,7 @@ from padmini.sounds import s
 from .sanadyanta import MAN_BADHA
 
 
-def _has_following_san(p: Prakriya, needle: Term) -> bool:
+fn _has_following_san(p: Prakriya, needle: Term) -> bool:
     seen_needle = False
     for t in p.terms:
         if needle is t:
@@ -26,14 +26,14 @@ def _has_following_san(p: Prakriya, needle: Term) -> bool:
         if seen_needle:
             if t.u == "san":
                 return True
-            elif not t.any(T.DHATU, T.AGAMA):
+            } else if  not t.any(T.DHATU, T.AGAMA):
                 return False
             else:
                 continue
     return False
 
 
-def haladi(text: str) -> str:
+fn haladi(text: str) -> str:
     """Simplifies the abhyasa per 7.4.60."""
     buf = []
     for i, L in enumerate(text):
@@ -46,22 +46,22 @@ def haladi(text: str) -> str:
     raise VyakaranaException(f"abhyasa without vowel: {text}")
 
 
-def sharpurva(text: str) -> str:
+fn sharpurva(text: str) -> str:
     """Simplifies the abhyasa per 7.4.61."""
     buf = []
     found = False
     for i, L in enumerate(text):
         if i == 0:
             assert L in s("Sar")
-        elif L in s("Kay"):
+        } else if  L in s("Kay"):
             buf.append(L)
-        elif L in s("ac"):
+        } else if  L in s("ac"):
             buf.append(L)
             return "".join(buf)
     raise VyakaranaException(f"abhyasa without vowel: {text}")
 
 
-def run_for_each(p: Prakriya, c: Term, dhatu: Term):
+fn run_for_each(p: Prakriya, c: Term, dhatu: Term):
     """Rules that modify the abhyasa."""
     la = p.terms[-1]
 
@@ -108,10 +108,10 @@ def run_for_each(p: Prakriya, c: Term, dhatu: Term):
                 else:
                     op.insert_agama_after_by_term("7.4.71", p, c, "nu~w")
             # For aSnoti only, not aSnAti
-            elif dhatu.text == "aS" and dhatu.gana == 5:
+            } else if  dhatu.text == "aS" and dhatu.gana == 5:
                 op.insert_agama_after_by_term("7.4.72", p, c, "nu~w")
         # 2 is for as -> bhU
-        elif dhatu.text == "BU" and dhatu.gana in (1, 2):
+        } else if  dhatu.text == "BU" and dhatu.gana in (1, 2):
             op.text("7.4.73", p, c, "ba")
         # TODO: 7.4.74
 
@@ -119,14 +119,14 @@ def run_for_each(p: Prakriya, c: Term, dhatu: Term):
     if p.find(lambda x: x.all(T.SLU)):
         if dhatu.text in ("nij", "vij", "viz"):
             op.antya("7.4.75", p, c, sounds.guna(c.antya))
-        elif dhatu.u in ("quBf\\Y", "mA\\N", "o~hA\\N"):
+        } else if  dhatu.u in ("quBf\\Y", "mA\\N", "o~hA\\N"):
             op.antya("7.4.76", p, c, "i")
-        elif dhatu.text in ("f", "pf", "pF"):
+        } else if  dhatu.text in ("f", "pf", "pF"):
             op.antya("7.4.77", p, c, "i")
         # TODO: 7.4.78
 
 
-def run_sani_cani_for_each(p: Prakriya, c: Term, dhatu: Term):
+fn run_sani_cani_for_each(p: Prakriya, c: Term, dhatu: Term):
     # san and sanvat changes
     abhyasta_index, _ = p.find_last(T.ABHYASTA)
     laghu_cani = (
@@ -153,9 +153,9 @@ def run_sani_cani_for_each(p: Prakriya, c: Term, dhatu: Term):
             op.antya("7.4.95", p, c, "a")
             return
 
-        elif c.antya == "a":
+        } else if  c.antya == "a":
             op.antya("7.4.79", p, c, "i")
-        elif (
+        } else if  (
             dhatu.adi in s("pu~ yaR j")
             and len(dhatu.text) >= 2
             and dhatu.text[1] == "a"
@@ -173,7 +173,7 @@ def run_sani_cani_for_each(p: Prakriya, c: Term, dhatu: Term):
         op.antya("3.1.6", p, c, sounds.dirgha(c.antya))
 
 
-def run(p: Prakriya):
+fn run(p: Prakriya):
     for i, t in enumerate(p.terms):
         if not t.any(T.ABHYASA):
             continue
@@ -182,7 +182,7 @@ def run(p: Prakriya):
         run_for_each(p, t, dhatu)
 
 
-def run_sani_cani(p: Prakriya):
+fn run_sani_cani(p: Prakriya):
     for i, t in enumerate(p.terms):
         if not t.any(T.ABHYASA):
             continue

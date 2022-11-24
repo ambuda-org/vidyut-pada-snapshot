@@ -105,7 +105,7 @@ fn jher_jus(p: &mut Prakriya, i: usize, la: La) {
         } else if la == La::Lan {
             if dhatu.text == "dviz":
                 op.optional(op.upadesha, "3.4.112", p, la, "jus")
-            elif prev.antya == "A" and prev.any(T::DHATU):
+            } else if  prev.antya == "A" and prev.any(T::DHATU):
                 op.optional(op.upadesha, "3.4.111", p, la, "jus")
         }
     }
@@ -151,15 +151,15 @@ pub fn siddhi(p: &mut Prakriya, la: La) {
     if la.all(T::ATMANEPADA) and la.any(*la_wit):
         if la.all("li~w") and la.text in TAJHAYOH:
             op.upadesha("3.4.81", p, la, TAJHAYOH[la.text])
-        elif la.text == "TAs":
+        } else if  la.text == "TAs":
             op.upadesha("3.4.80", p, la, "se")
         else:
             op.ti("3.4.79", p, la, "e")
 
-    elif la.all("li~w") and la.all(T::PARASMAIPADA):
+    } else if  la.all("li~w") and la.all(T::PARASMAIPADA):
         op.upadesha("3.4.82", p, la, TIN_NAL_MAPPING[la.text])
 
-    elif la.all("la~w") and la.all(T::PARASMAIPADA):
+    } else if  la.all("la~w") and la.all(T::PARASMAIPADA):
         if dhatu.u == "vida~" and la.text in TIN_PARA:
             op.optional(op.upadesha, "3.4.83", p, la, TIN_NAL_MAPPING[la.text])
         if dhatu.text == "brU" and la.text in TIN_PARA[:5]:
@@ -178,17 +178,17 @@ pub fn siddhi(p: &mut Prakriya, la: La) {
             if p.all(T::CHANDASI):
                 op.optional(op.tag, "3.4.88", p, la, "p")
 
-        elif la.text == "mi":
+        } else if  la.text == "mi":
             op.text("3.4.89", p, la, "ni")
-        elif la.antya == "i":
+        } else if  la.antya == "i":
             op.antya("3.4.86", p, la, "u")
-        elif la.antya == "e":
+        } else if  la.antya == "e":
             last_two = la.text[-2:]
 
             if la.all(T::UTTAMA) and la.text.endswith("e"):
                 op.antya("3.4.93", p, la, "E")
 
-            elif last_two in ("se", "ve"):
+            } else if  last_two in ("se", "ve"):
                 if last_two == "se":
                     la.text = la.text[:-2] + "sva"
                 else:
@@ -250,7 +250,7 @@ pub fn siddhi(p: &mut Prakriya, la: La) {
 
             if la.u == "Ja":
                 op.upadesha("3.4.105", p, la, "ran")
-            elif la.u == "iw":
+            } else if  la.u == "iw":
                 op.upadesha("3.4.106", p, la, "a")
 
         if "t" in la.text or "T" in la.text:

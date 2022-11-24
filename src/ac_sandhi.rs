@@ -13,7 +13,7 @@ from padmini.constants import Tag as T
 from padmini.term_views import StringView
 
 
-def sup_sandhi_before_angasya(p: Prakriya):
+fn sup_sandhi_before_angasya(p: Prakriya):
     n = p.terms[-1]
     if not n.all(T.SUP):
         return
@@ -24,7 +24,7 @@ def sup_sandhi_before_angasya(p: Prakriya):
         op.antya("6.1.93", p, c, "A")
 
 
-def find_all_matches(pattern: str, view):
+fn find_all_matches(pattern: str, view):
     """Used because `view` might be mutated per match."""
     match = re.search(pattern, view.text)
     i = 0
@@ -40,7 +40,7 @@ def find_all_matches(pattern: str, view):
             return
 
 
-def general_vowel_sandhi(p: Prakriya, terms=None):
+fn general_vowel_sandhi(p: Prakriya, terms=None):
     """
 
     :param terms: optional. Used as a hack to apply ac-sandhi before Ni-lopa
@@ -105,7 +105,7 @@ def general_vowel_sandhi(p: Prakriya, terms=None):
         match = re.search(f"({a})({ic})", view.text)
 
 
-def sup_sandhi_after_angasya(p: Prakriya):
+fn sup_sandhi_after_angasya(p: Prakriya):
     # Program cannot model "antAdivacca" so split the rule.
     n = p.terms[-1]
     if not n.all(T.SUP):
@@ -115,11 +115,11 @@ def sup_sandhi_after_angasya(p: Prakriya):
     if c.antya in s("ak") and n.any(T.V1, T.V2):
         if n.text == "am":
             op.adi("6.1.107", p, n, "")
-        elif c.antya in s("a") and n.adi in s("ic"):
+        } else if  c.antya in s("a") and n.adi in s("ic"):
             p.step("6.1.104")
-        elif c.antya in sounds.DIRGHA and (n.adi in s("ic") or n.u == "jas"):
+        } else if  c.antya in sounds.DIRGHA and (n.adi in s("ic") or n.u == "jas"):
             p.step("6.1.105")
-        elif n.adi in s("ac"):
+        } else if  n.adi in s("ac"):
             antya = c.antya
             c.text = c.text[:-1]
             op.adi("6.1.102", p, n, sounds.dirgha(antya))
@@ -127,15 +127,15 @@ def sup_sandhi_after_angasya(p: Prakriya):
             if n.u == "Sas" and c.all(T.PUM):
                 op.antya("6.1.103", p, n, "n")
 
-    elif n.u in {"Nasi~", "Nas"}:
+    } else if  n.u in {"Nasi~", "Nas"}:
         if c.antya in s("eN"):
             op.adi("6.1.110", p, n, "")
-        elif c.antya == "f":
+        } else if  c.antya == "f":
             c.text = c.text[:-1] + "ur"
             op.adi("6.1.110", p, n, "")
 
 
-def run_for_term(p: Prakriya, index: int):
+fn run_for_term(p: Prakriya, index: int):
     terms = p.terms
     c = terms[index]
 
@@ -178,12 +178,12 @@ def run_for_term(p: Prakriya, index: int):
 
     # ekaH pUrvapara (6.1.84)
 
-    elif c.u == "Aw" and n.adi in s("ik"):
+    } else if  c.u == "Aw" and n.adi in s("ik"):
         c.text = ""
         op.adi("6.1.90", p, n, sounds.vrddhi(n.adi))
 
 
-def run_common(p: Prakriya):
+fn run_common(p: Prakriya):
     for i, _ in enumerate(p.terms):
         run_for_term(p, i)
 
@@ -202,7 +202,7 @@ def run_common(p: Prakriya):
                 op.upadha("6.4.92", p, c, "a")
 
 
-def run(p: Prakriya):
+fn run(p: Prakriya):
     sup_sandhi_before_angasya(p)
     sup_sandhi_after_angasya(p)
     run_common(p)

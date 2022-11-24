@@ -8,7 +8,7 @@ from padmini.term_views import TermView
 from padmini.dhatu_gana import YAJ_ADI
 
 
-def is_vaci_svapi(dhatu: Term):
+fn is_vaci_svapi(dhatu: Term):
     return (
         dhatu.u in ("va\\ca~", "Yizva\\pa~")
         or dhatu.u in YAJ_ADI
@@ -17,7 +17,7 @@ def is_vaci_svapi(dhatu: Term):
     )
 
 
-def vaci_svapi_samprasarana(rule, p: Prakriya, t: Term):
+fn vaci_svapi_samprasarana(rule, p: Prakriya, t: Term):
     # HACK: hacky samprasarana
     before = (
         "vac",
@@ -40,7 +40,7 @@ def vaci_svapi_samprasarana(rule, p: Prakriya, t: Term):
         op.text(rule, p, t, mapping[t.text])
 
 
-def is_grahi_jya(dhatu: Term):
+fn is_grahi_jya(dhatu: Term):
     # vayi~ replaces ve\\Y in 2.4.41
     return dhatu.u in {
         "graha~^",
@@ -57,7 +57,7 @@ def is_grahi_jya(dhatu: Term):
     }
 
 
-def grahi_jya_samprasarana(rule, p, t: Term):
+fn grahi_jya_samprasarana(rule, p, t: Term):
     before = ("grah", "jyA", "vay", "vyaD", "vaS", "vyac", "vrasc", "praC", "Brasj")
     after = ("gfh", "ji", "uy", "viD", "uS", "vic", "vfSc", "pfC", "Bfsj")
     assert len(before) == len(after)
@@ -67,7 +67,7 @@ def grahi_jya_samprasarana(rule, p, t: Term):
         op.text(rule, p, t, mapping[t.text])
 
 
-def run_for_dhatu(p: Prakriya):
+fn run_for_dhatu(p: Prakriya):
     i, dhatu = p.find_first(T.DHATU)
     if not dhatu:
         return
@@ -81,7 +81,7 @@ def run_for_dhatu(p: Prakriya):
         else:
             vaci_svapi_samprasarana("6.1.15", p, dhatu)
 
-    elif f.is_knit(n) and is_grahi_jya(dhatu):
+    } else if  f.is_knit(n) and is_grahi_jya(dhatu):
         grahi_jya_samprasarana("6.1.16", p, dhatu)
         if dhatu.text == "uy" and dhatu.u == "vayi~":
             op.optional(op.text, "6.1.39", p, dhatu, "uv")
@@ -93,13 +93,13 @@ def run_for_dhatu(p: Prakriya):
 
     if lit_yanoh and dhatu.text == "pyAy":
         op.text("6.1.29", p, dhatu, "pI")
-    elif lit_yanoh and dhatu.text == "Svi":
+    } else if  lit_yanoh and dhatu.text == "Svi":
         op.optional(op.text, "6.1.30", p, dhatu, "Su")
-    elif dhatu.text == "hve" and abhyasta_karana:
+    } else if  dhatu.text == "hve" and abhyasta_karana:
         op.text("6.1.33", p, dhatu, "hu")
 
 
-def run_for_abhyasa(p: Prakriya):
+fn run_for_abhyasa(p: Prakriya):
     i, dhatu = p.find_first(T.DHATU)
     if not dhatu:
         return
@@ -120,5 +120,5 @@ def run_for_abhyasa(p: Prakriya):
                 p.step("6.1.40")
             else:
                 vaci_svapi_samprasarana("6.1.17", p, abhyasa)
-        elif is_grahi_jya(dhatu):
+        } else if  is_grahi_jya(dhatu):
             grahi_jya_samprasarana("6.1.17", p, abhyasa)

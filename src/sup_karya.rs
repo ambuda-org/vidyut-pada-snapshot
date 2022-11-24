@@ -10,7 +10,7 @@ VIBHAKTI = [T.V1, T.V2, T.V3, T.V4, T.V5, T.V6, T.V7]
 VACANA = [T.EKAVACANA, T.DVIVACANA, T.BAHUVACANA]
 
 
-def _make_sup():
+fn _make_sup():
     text = [
         "su~",
         "O",
@@ -47,7 +47,7 @@ def _make_sup():
 SUP = _make_sup()
 
 
-def adesha(p: Prakriya):
+fn adesha(p: Prakriya):
     """Add a sup-pratyaya.
 
     :param p: the prakriya
@@ -71,5 +71,5 @@ def adesha(p: Prakriya):
     it_samjna.run_no_index(p, sup)
 
 
-def run(p: Prakriya):
+fn run(p: Prakriya):
     adesha(p)
