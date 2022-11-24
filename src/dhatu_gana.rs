@@ -18,10 +18,10 @@ pub const GARVADI: &[&str] = &[
 /// they will not cause guṇa changes. The term kuṭādi refers to roots in the
 /// tud-gaṇa starting with kuṭ and ending with kuṅ:
 ///
-///     kuṭādayo'pi 'kuṭa kauṭilye' (tudādigaṇaḥ) ityetadārabhya yāvat
-///     kuṅ śabde (tudādigaṇaḥ) iti.
-///
-///     - kāśikā on 1.2.1 (via ashtadhyayi.com)
+/// > kuṭādayo'pi 'kuṭa kauṭilye' (tudādigaṇaḥ) ityetadārabhya yāvat
+/// > kuṅ śabde (tudādigaṇaḥ) iti.
+/// >
+/// > - kāśikā on 1.2.1 (via ashtadhyayi.com)
 ///
 /// I haven't found a full enumeration of this list, so I created the one below
 /// by copying the items from ``dhatupatha.tsv``. But it seems that this list is
@@ -39,9 +39,9 @@ pub const KUT_ADI: &[&str] = &[
 
 /// Roots from dyuta~ to kfpU~ in bhU-gaNa:
 ///
-///     dyutādayastu kṛpū sāmarthye ityevaṃparyantāḥ (nyAsa)
-///
-///     - nyāsa on 3.1.55 (via ashtadhyayi.com)
+/// > dyutādayastu kṛpū sāmarthye ityevaṃparyantāḥ (nyAsa)
+/// >
+/// > - nyāsa on 3.1.55 (via ashtadhyayi.com)
 ///
 /// For usage, see 1.3.91 and 3.1.55.
 pub const DYUT_ADI: &[&str] = &[
@@ -81,9 +81,9 @@ pub const TAN_ADI: &[&str] = &[
 /// Roots from puza~ to the end of div-Adi. This list refers specifically to
 /// the roots in divAdi:
 ///
-///     puṣādirdivādyantargaṇo gṛhyate, na bhvādikryādyantargaṇaḥ
-///
-///     - kāśikā on 3.1.55 (via ashtadhyayi.com)
+/// > puṣādirdivādyantargaṇo gṛhyate, na bhvādikryādyantargaṇaḥ
+/// >
+/// > - kāśikā on 3.1.55 (via ashtadhyayi.com)
 ///
 /// For usage, see 3.1.55.
 pub const PUSH_ADI: &[&str] = &[
@@ -220,9 +220,9 @@ pub const TRMPH_ADI: &[&str] = &[
 /// Roots from raDa~ to zRiha~. These roots use iT optionally in certain
 /// circumstances:
 ///
-///     radh naś tṛp dṛp druh muh ṣṇuh ṣṇih ebhyo valādyārdhadhātukasya veṭ syāt
-///
-///     - laghu kaumudI on 7.2.45 (via ashtadhyayi.com)
+/// > radh naś tṛp dṛp druh muh ṣṇuh ṣṇih ebhyo valādyārdhadhātukasya veṭ syāt
+/// >
+/// > - laghu kaumudI on 7.2.45 (via ashtadhyayi.com)
 ///
 /// For usage, see 7.2.45.
 pub const RADH_ADI: &[&str] = &[
@@ -231,10 +231,10 @@ pub const RADH_ADI: &[&str] = &[
 
 /// Roots from pUY to plI:
 ///
-///     pūñ-lūñ-stṝñ-kṝñ-vṝñ-dhūñ-śṝ-pṝ-vṝ-bhṝ-mṝ-dṝ-jṝ-jhṝ-dhṝ-nṝ-kṝ-ṝ-
-///     gṝ-jyā-rī-lī-vlī-plīnāṃ caturviṃśateḥ śiti hrasvaḥ
-///
-///     - laghu kaumudI on 7.3.80 (via ashtadhyayi.com)
+/// > pūñ-lūñ-stṝñ-kṝñ-vṝñ-dhūñ-śṝ-pṝ-vṝ-bhṝ-mṝ-dṝ-jṝ-jhṝ-dhṝ-nṝ-kṝ-ṝ-
+/// > gṝ-jyā-rī-lī-vlī-plīnāṃ caturviṃśateḥ śiti hrasvaḥ
+/// >
+/// > - laghu kaumudI on 7.3.80 (via ashtadhyayi.com)
 ///
 /// For usage, see 7.3.80.
 pub const PU_ADI: &[&str] = &[

@@ -1,5 +1,5 @@
 //! tin_pratyaya
-//! ~~~~~~~~~~~~
+//! ============
 //! (3.4.77 - end of 3.4)
 //!
 //! The rules in this section have two main functions:
@@ -15,7 +15,7 @@
 //! All of these rules are found at the end of section 3.4 of the Ashtadhyayi.
 
 use crate::constants::Tag as T;
-use crate::constants::{Purusha, Vacana};
+use crate::constants::{La, Purusha, Vacana};
 use crate::operations as op;
 use crate::prakriya::Prakriya;
 
@@ -86,62 +86,64 @@ pub fn adesha(p: &mut Prakriya, purusha: Purusha, vacana: Vacana) {
 }
 
 /*
-def _jher_jus(p, la):
-    if la.u != "Ji":
-        return
+fn jher_jus(p: &mut Prakriya, i: usize, la: La) {
+    if !p.has(i, |t| t.has_u("Ji")) {
+        return;
+    }
 
-    if la.all("li~N"):
-        op.upadesha("3.4.108", p, la, "jus")
-
-    elif f.is_nit_lakara(la):
-        _, dhatu = p.find_last(T::DHATU)
+    if matches!(la, La::AshirLin | La::VidhiLin) {
+        p.rule("3.4.108", |_| true, |p| op::upadesha(p, i, "jus"));
+    } else if la.is_nit() {
+        let i_dhatu = p.find_last(T::Dhatu);
         prev = [t for t in p.terms[-2::-1] if t.text][0]
 
         _vid = prev.text == "vid" and prev.gana == 2
-        if prev.u == "si~c" or prev.any(T::ABHYASTA) or _vid:
-            op.upadesha("3.4.109", p, la, "jus")
-        elif prev.antya == "A" and p.terms[-2].u == "si~c":
-            op.upadesha("3.4.100", p, la, "jus")
-        elif la.all("la~N"):
+        if prev.u == "si~c" or prev.any(T::ABHYASTA) or _vid {
+            p.rule("3.4.109", |_| true, |p| op::upadesha(p, i, "jus"));
+        } else if prev.antya == "A" and p.terms[-2].u == "si~c" {
+            p.rule("3.4.110", |_| true, |p| op::upadesha(p, i, "jus"));
+        } else if la == La::Lan {
             if dhatu.text == "dviz":
                 op.optional(op.upadesha, "3.4.112", p, la, "jus")
             elif prev.antya == "A" and prev.any(T::DHATU):
                 op.optional(op.upadesha, "3.4.111", p, la, "jus")
+        }
+    }
+}
 
+fn lut_adesha(p: &mut Prakriya, i_la: usize, la: La) {
+    if p.has(i_la, |t| t.has_tag(T::Prathama) && la == La::Lut) {
+        if let Some(tin) = p.get_mut(i_la) {
+            let ending = if tin.has_tag(T::Ekavacana) {
+                "qA"
+            } else if tin.has_tag(T::Dvivacana) {
+                "rO"
+            } else if tin.has_tag(T::Bahuvacana) {
+                "ras"
+            } else {
+                panic!("Unknown state");
+            };
+            p.apply("2.4.85", |p| op::upadesha(p, i_la, ending));
+        }
+    }
+}
 
-def ardhadhatuka_siddhi(p: Prakriya):
-    terms = p.terms
-    assert len(terms) >= 2, terms
-    _, dhatu = p.find_last(T::DHATU)
-    la = terms[-1]
+/// Applies substitutions to the given tin suffix.
+///
+/// Due to rule 3.4.109 ("sic-abhyasta-vidibhyaH ca"), this should run after dvitva and the
+/// insertion of vikaraNas.
+pub fn siddhi(p: &mut Prakriya, la: La) {
+    let i_dhatu = match p.find_last(T::Dhatu) {
+        Some(i) => i,
+        None => return,
+    };
+    let i_la = match p.find_last(T::Tin) {
+        Some(i) => i,
+        None => return,
+    };
 
-
-def siddhi(p: Prakriya):
-    """Apply substitutions to the given tin suffix.
-
-    Due to rule 3.4.109 ("sic-abhyasta-vidibhyaH ca"), this should run after
-    dvitva and the insertion of vikaraNas.
-
-    :param p: the prakriya
-    """
-
-    terms = p.terms
-    assert len(terms) >= 2, terms
-    _, dhatu = p.find_last(T::DHATU)
-    la = terms[-1]
-
-    // 2.4.85 is a special case.
-    if la.all("lu~w") and la.all(T::PRATHAMA):
-        if la.all(T::EKAVACANA):
-            ending = "qA"
-        elif la.all(T::DVIVACANA):
-            ending = "rO"
-        elif la.all(T::BAHUVACANA):
-            ending = "ras"
-        else:
-            raise VyakaranaException(f"Term in bad state: {la}")
-        op.upadesha("2.4.85", p, la, ending)
-        return
+    // Special case: handle lut_adesha first.
+    lut_adesha(p, i_la, la);
 
     // Matching for "w" will cause errors because the ending 'iw' has 'w' as an
     // anubandha. So, match the wit-lakAras by name so we can exclude 'iw':
@@ -259,4 +261,5 @@ def siddhi(p: Prakriya):
     // cause many problems when deriving li~T:: So, remove it here.
     if la.u == "eS":
         la.tags.remove("S")
+}
 */

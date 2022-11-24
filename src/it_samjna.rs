@@ -1,5 +1,5 @@
 //! `it_samjna`
-//! ~~~~~~~~~~~
+//! ===========
 //! (1.3.2 - 1.3.9)
 //!
 //! The most "core" prakaraṇa is the it-saṁjñā-prakaraṇa, which identifies remove different `it`

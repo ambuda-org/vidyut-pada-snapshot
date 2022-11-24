@@ -166,6 +166,18 @@ impl Prakriya {
         self.rule(code, |p| p.has(index, &filter), |p| p.set(index, &operator))
     }
 
+    /// Applies the given operator.
+    pub fn apply(
+        &mut self,
+        code: Rule,
+        operator: impl Fn(&mut Prakriya),
+    ) -> bool {
+        operator(self);
+        self.step(code);
+        true
+    }
+
+
     /// Applies the given rule.
     pub fn rule(
         &mut self,

@@ -28,5 +28,14 @@ pub fn tinanta(
     atmanepada::run(&mut p);
     tin_pratyaya::adesha(&mut p, purusha, vacana);
 
+    if la == La::AshirLin {
+        // tin_pratyaya::siddhi(&mut p, la);
+    }
+
+    if la != La::AshirLin {
+        // tin_pratyaya::siddhi(&mut p, la);
+    }
+
+
     Ok(p)
 }

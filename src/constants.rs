@@ -86,6 +86,15 @@ pub enum La {
     Lrn,
 }
 
+impl La {
+    pub fn is_nit(&self) -> bool {
+        matches![self, La::Lan | La::AshirLin | La::VidhiLin | La::Lun | La::Lrn]
+    }
+    pub fn is_tit(&self) -> bool {
+        matches![self, La::Lat | La::Lit | La::Lut | La::Lrt | La::Let | La::Lot]
+    }
+}
+
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum Tag {
