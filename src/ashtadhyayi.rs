@@ -5,11 +5,9 @@ use crate::la_karya;
 use crate::prakriya::Prakriya;
 use crate::sanadi;
 use crate::tin_pratyaya;
+use crate::samjna;
+use crate::vikarana;
 use std::error::Error;
-
-fn is_sarvadhatuka(la: La) -> bool {
-    matches!(la, La::Lat | La::Lot | La::Lan | La::VidhiLin)
-}
 
 pub fn tinanta(
     dhatu: &str,
@@ -23,10 +21,13 @@ pub fn tinanta(
     p.add_tags(&[prayoga.as_tag(), purusha.as_tag(), vacana.as_tag()]);
 
     dhatu_karya::run(&mut p, dhatu, code)?;
-    sanadi::run(&mut p, is_sarvadhatuka(la))?;
+    sanadi::run(&mut p, la.is_sarvadhatuka())?;
     la_karya::run(&mut p, la)?;
     atmanepada::run(&mut p);
     tin_pratyaya::adesha(&mut p, purusha, vacana);
+
+    samjna::run(&mut p);
+    vikarana::run(&mut p);
 
     if la == La::AshirLin {
         // tin_pratyaya::siddhi(&mut p, la);

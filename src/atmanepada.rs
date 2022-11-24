@@ -89,9 +89,9 @@ impl ShortRule {
 
     fn apply(&self, p: &mut Prakriya) {
         match self.pada {
-            Pada::Atmane => p.rule(self.code, |_| true, op_atmanepada),
+            Pada::Atmane => p.op(self.code, op_atmanepada),
             Pada::Ubhaya => p.optional(self.code, |_| true, op_atmanepada),
-            Pada::Parasmai => p.rule(self.code, |_| true, op_parasmaipada),
+            Pada::Parasmai => p.op(self.code, op_parasmaipada),
         };
     }
 }

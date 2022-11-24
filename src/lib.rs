@@ -10,7 +10,9 @@ pub mod dhatu_karya;
 pub mod it_samjna;
 pub mod la_karya;
 pub mod sanadi;
+pub mod samjna;
 pub mod tin_pratyaya;
+pub mod vikarana;
 
 pub mod ashtadhyayi;
 pub mod dhatu_gana;

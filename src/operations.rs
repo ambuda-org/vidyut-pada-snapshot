@@ -52,9 +52,13 @@ pub fn ti(t: &mut Term, sub: &str) {
 
 pub fn upadesha(p: &mut Prakriya, i: usize, sub: &str) {
     if let Some(t) = p.get_mut(i) {
+        if let Some(u) = &t.u {
+            t.lakshana.push(u.to_string());
+        }
         t.u = Some(sub.to_string());
         t.text = sub.to_string();
-        it_samjna::run(p, i);
+
+        it_samjna::run(p, i).unwrap();
     }
 }
 
@@ -93,6 +97,22 @@ pub fn samjna(t: &mut Term, tag: T) {
 }
 
 pub fn none(_t: &mut Term) {}
+
+pub fn t(i: usize, f: impl Fn(&mut Term)) -> impl Fn(&mut Prakriya) {
+    move |p| {
+        if let Some(t) = p.get_mut(i) {
+            f(t);
+        }
+    }
+}
+
+pub fn add_tag(i: usize, tag: T) -> impl Fn(&mut Prakriya) {
+    move |p| {
+        if let Some(t) = p.get_mut(i) {
+            t.add_tag(tag);
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {

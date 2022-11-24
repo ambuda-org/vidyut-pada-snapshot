@@ -92,16 +92,16 @@ fn jher_jus(p: &mut Prakriya, i: usize, la: La) {
     }
 
     if matches!(la, La::AshirLin | La::VidhiLin) {
-        p.rule("3.4.108", |_| true, |p| op::upadesha(p, i, "jus"));
+        p.op("3.4.108", |p| op::upadesha(p, i, "jus"));
     } else if la.is_nit() {
         let i_dhatu = p.find_last(T::Dhatu);
         prev = [t for t in p.terms[-2::-1] if t.text][0]
 
         _vid = prev.text == "vid" and prev.gana == 2
         if prev.u == "si~c" or prev.any(T::ABHYASTA) or _vid {
-            p.rule("3.4.109", |_| true, |p| op::upadesha(p, i, "jus"));
+            p.op("3.4.109", |p| op::upadesha(p, i, "jus"));
         } else if prev.antya == "A" and p.terms[-2].u == "si~c" {
-            p.rule("3.4.110", |_| true, |p| op::upadesha(p, i, "jus"));
+            p.op("3.4.110", |p| op::upadesha(p, i, "jus"));
         } else if la == La::Lan {
             if dhatu.text == "dviz":
                 op.optional(op.upadesha, "3.4.112", p, la, "jus")
@@ -123,7 +123,7 @@ fn lut_adesha(p: &mut Prakriya, i_la: usize, la: La) {
             } else {
                 panic!("Unknown state");
             };
-            p.apply("2.4.85", |p| op::upadesha(p, i_la, ending));
+            p.op("2.4.85", |p| op::upadesha(p, i_la, ending));
         }
     }
 }

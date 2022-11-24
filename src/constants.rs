@@ -93,6 +93,13 @@ impl La {
     pub fn is_tit(&self) -> bool {
         matches![self, La::Lat | La::Lit | La::Lut | La::Lrt | La::Let | La::Lot]
     }
+    pub fn is_sarvadhatuka(&self) -> bool {
+        matches!(self, La::Lat | La::Lot | La::Lan | La::VidhiLin)
+    }
+    pub fn is_ardhadhatuka(&self) -> bool {
+        !self.is_sarvadhatuka()
+    }
+
 }
 
 #[allow(non_camel_case_types)]

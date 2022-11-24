@@ -9,6 +9,7 @@ pub struct Term {
     pub tags: HashSet<Tag>,
     pub gana: Option<i32>,
     pub number: Option<i32>,
+    pub lakshana: Vec<String>,
 }
 
 impl Term {
@@ -19,26 +20,7 @@ impl Term {
             tags: HashSet::new(),
             gana: None,
             number: None,
-        }
-    }
-
-    pub fn make_dhatu(s: &str, gana: i32, number: i32) -> Self {
-        Term {
-            u: Some(s.to_string()),
-            text: s.to_string(),
-            tags: HashSet::new(),
-            gana: Some(gana),
-            number: Some(number),
-        }
-    }
-
-    pub fn make_agama(s: &str) -> Self {
-        Term {
-            u: Some(s.to_string()),
-            text: s.to_string(),
-            tags: vec![Tag::Agama].iter().cloned().collect(),
-            gana: None,
-            number: None,
+            lakshana: Vec::new(),
         }
     }
 
@@ -49,7 +31,21 @@ impl Term {
             tags: HashSet::new(),
             gana: None,
             number: None,
+            lakshana: Vec::new(),
         }
+    }
+
+    pub fn make_dhatu(s: &str, gana: i32, number: i32) -> Self {
+        let mut t = Term::make_upadesha(s);
+        t.gana = Some(gana);
+        t.number = Some(number);
+        t
+    }
+
+    pub fn make_agama(s: &str) -> Self {
+        let mut t = Term::make_upadesha(s);
+        t.add_tag(Tag::Agama);
+        t
     }
 
     // Sound selection
@@ -108,6 +104,10 @@ impl Term {
             Some(u) => items.contains(&u.as_str()),
             None => false,
         }
+    }
+
+    pub fn has_lakshana(&self, u: &str) -> bool{
+        self.lakshana.iter().any(|s| s == u)
     }
 
     pub fn has_text(&self, items: &[&str]) -> bool {

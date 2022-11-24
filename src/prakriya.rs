@@ -167,7 +167,7 @@ impl Prakriya {
     }
 
     /// Applies the given operator.
-    pub fn apply(
+    pub fn op(
         &mut self,
         code: Rule,
         operator: impl Fn(&mut Prakriya),
@@ -177,6 +177,21 @@ impl Prakriya {
         true
     }
 
+    /// Applies the given operator optionally.
+    pub fn op_optional(
+        &mut self,
+        code: Rule,
+        operator: impl Fn(&mut Prakriya),
+    ) -> bool {
+        if self.is_allowed(code) {
+            operator(self);
+            self.step(code);
+            true
+        } else {
+            self.decline(code);
+            false
+        }
+    }
 
     /// Applies the given rule.
     pub fn rule(
@@ -186,15 +201,13 @@ impl Prakriya {
         operator: impl Fn(&mut Prakriya),
     ) -> bool {
         if filter(self) {
-            operator(self);
-            self.step(code);
-            true
+            self.op(code, operator)
         } else {
             false
         }
     }
 
-    /// Applies the given rule.
+    /// Applies the given rule optionally.
     pub fn optional(
         &mut self,
         code: Rule,
@@ -202,14 +215,7 @@ impl Prakriya {
         operator: impl Fn(&mut Prakriya),
     ) -> bool {
         if filter(self) {
-            if self.is_allowed(code) {
-                operator(self);
-                self.step(code);
-                true
-            } else {
-                self.decline(code);
-                false
-            }
+            self.op_optional(code, operator)
         } else {
             false
         }
