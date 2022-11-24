@@ -1,5 +1,4 @@
 use crate::atmanepada;
-use crate::constants::Tag as T;
 use crate::constants::{La, Prayoga, Purusha, Vacana};
 use crate::dhatu_karya;
 use crate::la_karya;

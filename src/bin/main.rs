@@ -37,9 +37,9 @@ const TIN_SEMANTICS: &[(Purusha, Vacana)] = &[
 
 fn run() -> Result<(), Box<dyn Error>> {
     let dhatus = D::load_dhatus(Path::new("data/dhatupatha.tsv"));
-    for dhatu in dhatus?.iter() {
+    for (i, dhatu) in dhatus?.iter().enumerate() {
         if let Some(la) = LAKARA.iter().next() {
-            if let Some((purusha, vacana)) = TIN_SEMANTICS.iter().next() {
+            for (purusha, vacana) in TIN_SEMANTICS {
                 let p = A::tinanta(
                     &dhatu.upadesha,
                     &dhatu.code(),
@@ -50,6 +50,9 @@ fn run() -> Result<(), Box<dyn Error>> {
                 )?;
                 println!("{}", p.text());
             }
+        }
+        if i > 100 {
+            break;
         }
     }
     Ok(())

@@ -63,8 +63,13 @@ pub fn adesha(p: &mut Prakriya, purusha: Purusha, vacana: Vacana) {
 
     if let Some(i) = p.find_last(T::Pratyaya) {
         p.set(i, |t| {
-            t.add_tag(purusha.as_tag());
-            t.add_tag(vacana.as_tag());
+            t.add_tags(&[
+                // 1.4.104
+                T::Vibhakti,
+                T::Tin,
+                purusha.as_tag(),
+                vacana.as_tag(),
+            ]);
         });
         p.rule("3.4.78", |_| true, |p| op::upadesha(p, i, tin));
 

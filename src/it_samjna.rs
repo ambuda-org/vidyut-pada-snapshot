@@ -6,20 +6,29 @@
 //! sounds from an upadeśa. Most derivations use this prakaraṇa at least once.
 use crate::constants::Tag as T;
 use crate::prakriya::Prakriya;
-use crate::sounds::s;
+use crate::sounds::{s, SoundSet};
 use crate::term::Term;
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::error::Error;
 
+
+fn make_re_anunasika_ac() -> Regex {
+    let s_ac = s("ac").items().join("");
+    Regex::new(&format!("([{s_ac}]~[\\\\^]?)")).unwrap()
+}
+
 // 1.3.2 - 1.3.9
 pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
-    let ac = s("ac");
-    let s_ac = ac.items().join("");
-    let hal = s("hal");
-    let tusma = s("tu~ s m");
-    let cutu = s("cu~ wu~");
-    let lashaku = s("l S ku~");
-    let re_anunasika_ac = Regex::new(&format!("([{s_ac}]~[\\\\^]?)")).unwrap();
+    lazy_static! {
+        // FIXME: find a better approach for `s`.
+        static ref AC: SoundSet = s("ac");
+        static ref HAL: SoundSet = s("hal");
+        static ref TUSMA: SoundSet = s("tu~ s m");
+        static ref CUTU: SoundSet = s("cu~ wu~");
+        static ref LASHAKU: SoundSet = s("l S ku~");
+        static ref RE_ANUNASIKA_AC: Regex = make_re_anunasika_ac();
+    }
 
     let upadesha = match p.get(i) {
         Some(t) => match &t.u {
@@ -48,7 +57,7 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
     // 1.3.2 उपदेशे ऽजनुनासिक इत्
     if let Some(t) = p.get_mut(i) {
         let mut tags = vec![];
-        for m in re_anunasika_ac.find_iter(&t.text) {
+        for m in RE_ANUNASIKA_AC.find_iter(&t.text) {
             let s = m.as_str();
             if s.contains('\\') {
                 tags.push(T::anudattet);
@@ -57,7 +66,7 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
             }
             tags.push(T::parse_it(&s[0..1])?);
         }
-        t.text = re_anunasika_ac.replace_all(&t.text, "").to_string();
+        t.text = RE_ANUNASIKA_AC.replace_all(&t.text, "").to_string();
         t.add_tags(&tags);
         p.step("1.3.2");
     }
@@ -74,8 +83,8 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
     }
 
     if let Some(t) = p.get_mut(i) {
-        if u.has_antya(&hal) && !irit {
-            let vibhaktau_tusmah = t.has_tag(T::Vibhakti) && u.has_antya(&tusma);
+        if u.has_antya(&HAL) && !irit {
+            let vibhaktau_tusmah = t.has_tag(T::Vibhakti) && u.has_antya(&TUSMA);
             if !vibhaktau_tusmah {
                 t.add_tag(T::parse_it(&u.antya().unwrap().to_string())?);
                 let n = t.text.len();
@@ -107,7 +116,7 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
                 t.add_tag(T::parse_it(&u.adi().unwrap().to_string())?);
                 t.text = t.text[1..].to_string();
                 p.step("1.3.6")
-            } else if u.has_adi(&cutu) {
+            } else if u.has_adi(&CUTU) {
                 // The sounds C, J, W, and Q are replaced later in the grammar.
                 // If we substitute them now, those rules will become vyartha.
                 if !u.has_adi(&s("C J W Q")) {
@@ -115,7 +124,7 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
                     t.text = t.text[1..].to_string();
                 }
                 p.step("1.3.7");
-            } else if !t.has_tag(T::Taddhita) && t.has_adi(&lashaku) {
+            } else if !t.has_tag(T::Taddhita) && t.has_adi(&LASHAKU) {
                 // Keep the first "l" of the lakAras.
                 // Otherwise, rule 3.4.77 will become vyartha.
                 let lakara = [
