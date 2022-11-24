@@ -142,6 +142,10 @@ impl Term {
         self.tags.extend(tags)
     }
 
+    pub fn remove_tag(&mut self, tag: Tag) {
+        self.tags.remove(&tag);
+    }
+
     pub fn remove_tags(&mut self, tags: &[Tag]) {
         for t in tags {
             self.tags.remove(t);

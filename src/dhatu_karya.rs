@@ -23,7 +23,7 @@ fn init(p: &mut Prakriya, dhatu: &str, code: &str) -> Result<(), Box<dyn Error>>
 
 fn add_samjnas(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
     p.term_rule("1.3.1", i, |_| true, |t| op::samjna(t, T::Dhatu));
-    p_it_samjna::run(p, i)?;
+    it_samjna::run(p, i)?;
     p.term_rule(
         "1.1.20",
         i,

@@ -23,6 +23,54 @@ impl Display for PrakriyaError {
     }
 }
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub enum Prayoga {
+    Kartari,
+    Karmani,
+    Bhave,
+}
+impl Prayoga {
+    pub fn as_tag(&self) -> Tag {
+        match self {
+            Self::Kartari => Tag::Kartari,
+            Self::Karmani => Tag::Karmani,
+            Self::Bhave => Tag::Bhave,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub enum Purusha {
+    Prathama,
+    Madhyama,
+    Uttama,
+}
+impl Purusha {
+    pub fn as_tag(&self) -> Tag {
+        match self {
+            Self::Prathama => Tag::Prathama,
+            Self::Madhyama => Tag::Madhyama,
+            Self::Uttama => Tag::Uttama,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub enum Vacana {
+    Eka,
+    Dvi,
+    Bahu,
+}
+impl Vacana {
+    pub fn as_tag(&self) -> Tag {
+        match self {
+            Self::Eka => Tag::Ekavacana,
+            Self::Dvi => Tag::Dvivacana,
+            Self::Bahu => Tag::Bahuvacana,
+        }
+    }
+}
+
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum Tag {

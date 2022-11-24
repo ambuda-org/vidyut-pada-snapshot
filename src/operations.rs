@@ -1,4 +1,6 @@
 use crate::constants::Tag as T;
+use crate::it_samjna;
+use crate::prakriya::Prakriya;
 use crate::sounds::s;
 use crate::term::Term;
 
@@ -45,6 +47,14 @@ pub fn ti(t: &mut Term, sub: &str) {
     let text = &t.text;
     if let Some(i) = text.rfind(|c| s("ac").contains_char(c)) {
         t.text = String::from(&text[..i]) + sub;
+    }
+}
+
+pub fn upadesha(p: &mut Prakriya, i: usize, sub: &str) {
+    if let Some(t) = p.get_mut(i) {
+        t.u = Some(sub.to_string());
+        t.text = sub.to_string();
+        it_samjna::run(p, i);
     }
 }
 

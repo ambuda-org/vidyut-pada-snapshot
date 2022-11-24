@@ -23,7 +23,7 @@ fn add_sanadi(
         |_| true,
         |t| op::samjna(t, T::Dhatu),
     );
-    p_it_samjna::run(p, pratyaya_index)?;
+    it_samjna::run(p, pratyaya_index)?;
 
     Ok(())
 }
@@ -48,10 +48,10 @@ pub fn run(p: &mut Prakriya, is_ardhadhatuka: bool) -> Result<(), Box<dyn Error>
         t.has_u_in(&["gupa~\\", "tija~\\", "kita~"]) && t.gana == Some(1)
     }) {
         add_sanadi("3.1.5", p, i, "san")?;
-        p.set(i+1, |t| t.add_tag(T::FlagNoArdhadhatuka));
+        p.set(i + 1, |t| t.add_tag(T::FlagNoArdhadhatuka));
     } else if p.has(i, |t| t.has_u_in(MAN_BADHA)) {
         add_sanadi("3.1.6", p, i, "san")?;
-        p.set(i+1, |t| t.add_tag(T::FlagNoArdhadhatuka));
+        p.set(i + 1, |t| t.add_tag(T::FlagNoArdhadhatuka));
     } else if p.has(i, |t| t.gana == Some(10)) {
         add_sanadi("3.1.25", p, i, "Ric")?;
     } else if p.has(i, |t| t.has_u_in(AYADAYA)) {
@@ -89,7 +89,7 @@ mod tests {
 
     fn check(dhatu: &str, code: &str) -> (Term, Term) {
         let mut p = Prakriya::new();
-        p_dhatu_karya::run(&mut p, dhatu, code).unwrap();
+        dhatu_karya::run(&mut p, dhatu, code).unwrap();
 
         run(&mut p, false).unwrap();
         let dhatu = p.get(0).unwrap();
