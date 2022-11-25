@@ -121,7 +121,7 @@ pub enum Tag {
     Krtya,
     Sup,
     Taddhita,
-    VIKARANA,
+    Vikarana,
 
     // It
     adit,
@@ -215,6 +215,7 @@ pub enum Tag {
     Nadi,
     Ghi,
 
+    // Vibhakti conditions
     Sambodhana,
     Amantrita,
     Sambuddhi,
@@ -246,6 +247,7 @@ pub enum Tag {
     FlagAtLopa,
 
     Sat,
+    Snam,
 }
 
 impl Tag {

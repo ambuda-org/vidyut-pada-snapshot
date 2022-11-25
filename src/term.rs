@@ -110,6 +110,10 @@ impl Term {
         self.lakshana.iter().any(|s| s == u)
     }
 
+    pub fn has_any_lakshana(&self, u: &[&str]) -> bool{
+        self.lakshana.iter().any(|s| u.contains(&s.as_str()))
+    }
+
     pub fn has_text(&self, items: &[&str]) -> bool {
         items.contains(&self.text.as_str())
     }

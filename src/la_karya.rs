@@ -1,63 +1,40 @@
-"""
-la_karya
-~~~~~~~~
-(various rules in 3.2, 3.3, and 3.4)
+use crate::constants::La;
+use crate::constants::Tag as T;
+use crate::it_samjna;
+use crate::prakriya::{Prakriya, Rule};
+use crate::term::Term;
+use std::error::Error;
 
-Rules that introduce a specific lakāra to the prakriyā.
+fn add_la(rule: Rule, p: &mut Prakriya, i: usize, la: &str) -> Result<(), Box<dyn Error>> {
+    let mut la = Term::make_upadesha(la);
+    la.add_tag(T::Pratyaya);
 
-Most lakāras are available under multiple different semantic conditions. For
-example, laṭ denotes the present tense, but it can denote the past tense if
-*sma* is used as an upapada. But since Padmini focuses specifically on
-generating word forms with their common semantics, implementing all of these
-conditions would complicate the program with little real gain. Therefore, we
-implement one common semantic condition per lakāra.
-"""
+    p.insert_after(i, la);
+    p.step(rule);
+    it_samjna::run(p, i + 1)?;
 
-import padmini.operations as op
-from padmini.prakriya import Term, Prakriya
-from padmini.constants import Tag as T
-from . import it_samjna
+    Ok(())
+}
 
+pub fn run(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
+    let i = match p.find_last(T::Dhatu) {
+        Some(i) => i,
+        None => return Ok(()),
+    };
 
-fn add_la(rule_code: str, p: Prakriya, dhatu: Term, la: str):
-    """Add a lakAra and apply any necessary it rules."""
-    la = Term.make_upadesha(la)
-    la.add_tags(T.PRATYAYA)
+    match la {
+        La::Lat => add_la("3.3.123", p, i, "la~w")?,
+        La::Lit => add_la("3.2.114", p, i, "li~w")?,
+        La::Lut => add_la("3.3.15", p, i, "lu~w")?,
+        La::Lrt => add_la("3.3.13", p, i, "lf~w")?,
+        La::Let => add_la("3.4.7", p, i, "le~w")?,
+        La::Lot => add_la("3.3.162", p, i, "lo~w")?,
+        La::Lan => add_la("3.2.111", p, i, "la~N")?,
+        La::AshirLin => add_la("3.3.173", p, i, "li~N")?,
+        La::VidhiLin => add_la("3.3.161", p, i, "li~N")?,
+        La::Lun => add_la("3.2.110", p, i, "lu~N")?,
+        La::Lrn => add_la("3.3.139", p, i, "lf~N")?,
+    };
 
-    op.insert_after(rule_code, p, dhatu, la)
-    it_samjna.run_no_index(p, la)
-
-
-fn run(p: Prakriya, la: str):
-    """Add a lakAra to the prakriya.
-
-    Generally, each lakAra could be added by any of several different rules.
-    Here, we choose a representative rule without being pedantic about it.
-    """
-    _, dhatu = p.find_last(T.DHATU)
-
-    if la == "la~w":
-        add_la("3.3.123", p, dhatu, la)
-    } else if  la == "li~w":
-        add_la("3.2.114", p, dhatu, la)
-    } else if  la == "lu~w":
-        add_la("3.3.15", p, dhatu, la)
-    } else if  la == "lf~w":
-        add_la("3.3.13", p, dhatu, la)
-    } else if  la == "le~w":
-        add_la("3.4.7", p, dhatu, la)
-    } else if  la == "lo~w":
-        add_la("3.3.162", p, dhatu, la)
-    } else if  la == "la~N":
-        add_la("3.2.111", p, dhatu, la)
-    } else if  la == "li~N":
-        if p.all(T.ASHIH):
-            add_la("3.3.173", p, dhatu, la)
-        else:
-            add_la("3.3.161", p, dhatu, la)
-    } else if  la == "lu~N":
-        add_la("3.2.110", p, dhatu, la)
-    } else if  la == "lf~N":
-        add_la("3.3.139", p, dhatu, la)
-    else:
-        raise VyakaranaException(f"Unknown lakara {la}.")
+    Ok(())
+}

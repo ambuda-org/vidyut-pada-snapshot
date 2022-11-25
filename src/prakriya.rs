@@ -177,6 +177,23 @@ impl Prakriya {
         true
     }
 
+    /// Applies the given operator to the given term.
+    pub fn op_term(
+        &mut self,
+        code: Rule,
+        index: usize,
+        operator: impl Fn(&mut Term),
+    ) -> bool {
+        if let Some(term) = self.get_mut(index) {
+            operator(term);
+            self.step(code);
+            true
+        } else {
+            false
+        }
+    }
+
+
     /// Applies the given operator optionally.
     pub fn op_optional(
         &mut self,

@@ -50,6 +50,16 @@ pub fn ti(t: &mut Term, sub: &str) {
     }
 }
 
+pub fn upadesha_no_it(p: &mut Prakriya, i: usize, sub: &str) {
+    if let Some(t) = p.get_mut(i) {
+        if let Some(u) = &t.u {
+            t.lakshana.push(u.to_string());
+        }
+        t.u = Some(sub.to_string());
+        t.text = sub.to_string();
+    }
+}
+
 pub fn upadesha(p: &mut Prakriya, i: usize, sub: &str) {
     if let Some(t) = p.get_mut(i) {
         if let Some(u) = &t.u {
@@ -57,10 +67,10 @@ pub fn upadesha(p: &mut Prakriya, i: usize, sub: &str) {
         }
         t.u = Some(sub.to_string());
         t.text = sub.to_string();
-
         it_samjna::run(p, i).unwrap();
     }
 }
+
 
 // Lopa
 // ====
@@ -71,13 +81,13 @@ fn lopa(t: &mut Term) {
 }
 
 /// Delete the text in the given term through `लुक्`.
-fn luk(t: &mut Term) {
+pub fn luk(t: &mut Term) {
     lopa(t);
     t.add_tag(T::Luk);
 }
 
 /// Deletes the text in the given term through `श्लु`.
-fn slu(t: &mut Term) {
+pub fn slu(t: &mut Term) {
     lopa(t);
     t.add_tag(T::Slu);
 }

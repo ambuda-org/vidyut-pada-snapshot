@@ -179,6 +179,13 @@ impl SoundSet {
     pub fn contains_char(&self, c: char) -> bool {
         self.set.contains(&c.to_string())
     }
+    pub fn contains_opt(&self, o: Option<char>) -> bool {
+        if let Some(c) = o {
+            self.contains_char(c)
+        } else {
+            false
+        }
+    }
 
     pub fn items(&self) -> &Vec<Sound> {
         &self.vec

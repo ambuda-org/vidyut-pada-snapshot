@@ -2,6 +2,7 @@ pub mod constants;
 pub mod prakriya;
 pub mod term;
 
+pub mod filters;
 pub mod operations;
 pub mod sounds;
 
