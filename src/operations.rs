@@ -17,10 +17,10 @@ pub fn adi(t: &mut Term, sub: &str) {
 }
 
 /// Replaces the last sound in the given term.
-pub fn antya(t: &mut Term, sub: &str) {
-    if let Some(c) = t.antya() {
-        if c.to_string() != sub {
-            let n = t.text.len();
+pub fn antya(sub: &'static str) -> impl Fn(&mut Term) {
+    |t| {
+        let n = t.text.len();
+        if n > 0 {
             t.text = String::from(&t.text[..n - 1]) + sub;
         }
     }
@@ -43,10 +43,12 @@ pub fn mit(t: &mut Term, sub: &str) {
     }
 }
 
-pub fn ti(t: &mut Term, sub: &str) {
-    let text = &t.text;
-    if let Some(i) = text.rfind(is_ac) {
-        t.text = String::from(&text[..i]) + sub;
+pub fn ti(sub: &'static str) -> impl Fn(&mut Term) {
+    move |t| {
+        let text = &t.text;
+        if let Some(i) = text.rfind(is_ac) {
+            t.text = String::from(&text[..i]) + sub;
+        }
     }
 }
 
@@ -70,6 +72,41 @@ pub fn upadesha(p: &mut Prakriya, i: usize, sub: &str) {
         it_samjna::run(p, i).unwrap();
     }
 }
+
+pub fn upadesha_yatha(p: &mut Prakriya, i: usize, old: &[&str], new: &[&str]) {
+    assert_eq!(old.len(), new.len());
+    if let Some(t) = p.get_mut(i) {
+        if let Some(u) = &t.u {
+            t.lakshana.push(u.to_string());
+
+            for (i, x) in old.iter().enumerate() {
+                if u == x {
+                    t.u = Some(new[i].to_string());
+                    t.text = new[i].to_string();
+                    break;
+                }
+            }
+            it_samjna::run(p, i).unwrap();
+        }
+    }
+}
+
+pub fn text_yatha(p: &mut Prakriya, i: usize, old: &[&str], new: &[&str]) {
+    assert_eq!(old.len(), new.len());
+    if let Some(t) = p.get_mut(i) {
+        if let Some(u) = &t.u {
+            t.lakshana.push(u.to_string());
+
+            for (i, x) in old.iter().enumerate() {
+                if u == x {
+                    t.text = new[i].to_string();
+                    break;
+                }
+            }
+        }
+    }
+}
+
 
 // Lopa
 // ====
@@ -115,7 +152,15 @@ pub fn t(i: usize, f: impl Fn(&mut Term)) -> impl Fn(&mut Prakriya) {
     }
 }
 
-pub fn add_tag(i: usize, tag: T) -> impl Fn(&mut Prakriya) {
+pub fn add_tag(tag: T) -> impl Fn(&mut Term) {
+    move |t| t.add_tag(tag)
+}
+
+pub fn text(sub: &'static str) -> impl Fn(&mut Term) {
+    |t| t.text = sub.to_string()
+}
+
+pub fn add_tag_legacy(i: usize, tag: T) -> impl Fn(&mut Prakriya) {
     move |p| {
         if let Some(t) = p.get_mut(i) {
             t.add_tag(tag);
@@ -138,7 +183,7 @@ mod tests {
     #[test]
     fn test_antya() {
         let mut t = Term::make_text("ti");
-        antya(&mut t, "");
+        antya("")(&mut t);
         assert_eq!(t.text, "t");
     }
 
@@ -159,7 +204,7 @@ mod tests {
     #[test]
     fn test_ti() {
         let mut t = Term::make_text("AtAm");
-        ti(&mut t, "e");
+        ti("e")(&mut t);
         assert_eq!(t.text, "Ate");
     }
 

@@ -31,11 +31,11 @@ pub fn tinanta(
     vikarana::run(&mut p)?;
 
     if la == La::AshirLin {
-        // tin_pratyaya::siddhi(&mut p, la);
+        tin_pratyaya::siddhi(&mut p, la)?;
     }
 
     if la != La::AshirLin {
-        // tin_pratyaya::siddhi(&mut p, la);
+        tin_pratyaya::siddhi(&mut p, la)?;
     }
 
     // ac_sandhi.run(&mut p);

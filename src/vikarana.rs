@@ -248,7 +248,7 @@ fn maybe_add_am_pratyaya_for_lit(p: &mut Prakriya) {
     if p.has(i, |t| t.text == "kAs" && t.has_tag(T::Pratyaya)) {
         p.op("3.1.35", add_aam);
     } else if p.has(i, |t| {
-        !f::is_eka_ac(&t.text) && !t.has_text(&["jAgf", "UrRu"])
+        !f::is_eka_ac(t) && !t.has_text(&["jAgf", "UrRu"])
     }) {
         // jAgf is handled separately below.
         p.op("3.1.35.v1", add_aam);
@@ -377,7 +377,7 @@ fn add_sarvadhatuka_vikarana(p: &mut Prakriya) {
         p.op("3.1.79", add_vikarana("u"));
     } else if p.has(i, |t| t.has_u_in(&["Divi~", "kfvi~"])) {
         p.op("3.1.80", |p| {
-            p.set(i, |t| op::antya(t, "a"));
+            p.set(i, op::antya("a"));
             add_vikarana("u")(p);
         });
     } else if p.has(i, |t| t.gana == Some(9)) {
@@ -434,7 +434,7 @@ fn maybe_sic_lopa_for_tanadi_atmanepada(
     i_vikarana: usize,
     i_tin: usize,
 ) {
-    let tanadi = p.has(i, |t| t.has_text(&TAN_ADI));
+    let tanadi = p.has(i, |t| t.has_text(TAN_ADI));
     let tathasoh = p.has(i_tin, |t| t.has_text(&["ta", "TAs"]));
     if tanadi && tathasoh {
         p.op_optional("2.4.79", op::t(i_vikarana, op::luk));

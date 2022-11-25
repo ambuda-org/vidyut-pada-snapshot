@@ -2,7 +2,7 @@ use crate::constants::Tag;
 use crate::sounds::SoundSet;
 use std::collections::HashSet;
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Term {
     pub u: Option<String>,
     pub text: String,
@@ -154,39 +154,6 @@ impl Term {
         for t in tags {
             self.tags.remove(t);
         }
-    }
-}
-
-impl Term {
-    fn is_samyoganta(&self) -> bool {
-        false
-    }
-
-    fn is_samyogadi(&self) -> bool {
-        false
-    }
-
-    fn is_hrasva(&self) -> bool {
-        match self.antya() {
-            Some(c) => false,
-            None => false,
-        }
-    }
-    fn is_laghu(&self) -> bool {
-        false
-    }
-    fn is_guru(&self) -> bool {
-        false
-    }
-
-    fn is_aprkta(&self) -> bool {
-        self.has_tag(Tag::Pratyaya) && self.text.len() == 1
-    }
-    fn is_knit(&self) -> bool {
-        false
-    }
-    fn is_eka_ac(&self) -> bool {
-        false
     }
 }
 

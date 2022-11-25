@@ -3,8 +3,8 @@ use crate::operations as op;
 use crate::prakriya::Prakriya;
 
 fn run_for_prakriya(p: &mut Prakriya, i: usize) {
-    let add_sarva = op::add_tag(i, T::Sarvadhatuka);
-    let add_ardha = op::add_tag(i, T::Ardhadhatuka);
+    let add_sarva = op::add_tag_legacy(i, T::Sarvadhatuka);
+    let add_ardha = op::add_tag_legacy(i, T::Ardhadhatuka);
 
     if p.has(i, |t| t.has_tag(T::Pratyaya)) {
         if p.has(i, |t| t.has_lakshana("li~w")) {

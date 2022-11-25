@@ -93,12 +93,6 @@ impl La {
             La::Lan | La::AshirLin | La::VidhiLin | La::Lun | La::Lrn
         ]
     }
-    pub fn is_tit(&self) -> bool {
-        matches![
-            self,
-            La::Lat | La::Lit | La::Lut | La::Lrt | La::Let | La::Lot
-        ]
-    }
     pub fn is_sarvadhatuka(&self) -> bool {
         matches!(self, La::Lat | La::Lot | La::Lan | La::VidhiLin)
     }
@@ -145,6 +139,7 @@ pub enum Tag {
     Nit,
     cit,
     Cit,
+    jit,
     Jit,
     Yit,
     wit,
@@ -274,6 +269,7 @@ impl Tag {
             "N" => Tag::Nit,
             "c" => Tag::cit,
             "C" => Tag::Cit,
+            "j" => Tag::jit,
             "J" => Tag::Jit,
             "Y" => Tag::Yit,
             "w" => Tag::wit,
