@@ -27,7 +27,7 @@ pub fn tinanta(
     tin_pratyaya::adesha(&mut p, purusha, vacana);
 
     samjna::run(&mut p);
-    vikarana::run(&mut p);
+    vikarana::run(&mut p)?;
 
     if la == La::AshirLin {
         // tin_pratyaya::siddhi(&mut p, la);
@@ -36,7 +36,6 @@ pub fn tinanta(
     if la != La::AshirLin {
         // tin_pratyaya::siddhi(&mut p, la);
     }
-
 
     Ok(p)
 }
