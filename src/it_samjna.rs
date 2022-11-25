@@ -12,7 +12,6 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::error::Error;
 
-
 fn make_re_anunasika_ac() -> Regex {
     let s_ac = s("ac").items().join("");
     Regex::new(&format!("([{s_ac}]~[\\\\^]?)")).unwrap()

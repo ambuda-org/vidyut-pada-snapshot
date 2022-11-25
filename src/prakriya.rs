@@ -9,7 +9,7 @@ pub struct Step {
     /// The rule that produced the current step.
     rule: Rule,
     /// Output for the current step.
-    state: Vec<String>,
+    state: String,
 }
 
 #[derive(Eq, PartialEq)]
@@ -167,23 +167,14 @@ impl Prakriya {
     }
 
     /// Applies the given operator.
-    pub fn op(
-        &mut self,
-        code: Rule,
-        operator: impl Fn(&mut Prakriya),
-    ) -> bool {
+    pub fn op(&mut self, code: Rule, operator: impl Fn(&mut Prakriya)) -> bool {
         operator(self);
         self.step(code);
         true
     }
 
     /// Applies the given operator to the given term.
-    pub fn op_term(
-        &mut self,
-        code: Rule,
-        index: usize,
-        operator: impl Fn(&mut Term),
-    ) -> bool {
+    pub fn op_term(&mut self, code: Rule, index: usize, operator: impl Fn(&mut Term)) -> bool {
         if let Some(term) = self.get_mut(index) {
             operator(term);
             self.step(code);
@@ -193,13 +184,8 @@ impl Prakriya {
         }
     }
 
-
     /// Applies the given operator optionally.
-    pub fn op_optional(
-        &mut self,
-        code: Rule,
-        operator: impl Fn(&mut Prakriya),
-    ) -> bool {
+    pub fn op_optional(&mut self, code: Rule, operator: impl Fn(&mut Prakriya)) -> bool {
         if self.is_allowed(code) {
             operator(self);
             self.step(code);
@@ -242,7 +228,7 @@ impl Prakriya {
     pub fn step(&mut self, rule: Rule) {
         self.steps.push(Step {
             rule,
-            state: self.terms.iter().map(|x| x.text.clone()).collect(),
+            state: self.text(),
         })
     }
 

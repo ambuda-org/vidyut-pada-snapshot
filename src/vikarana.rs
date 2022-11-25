@@ -1,30 +1,30 @@
 //! vikarana
 //! ========
 //! (3.1.33 - 3.1.90)
-//! 
+//!
 //! Rules that add various intermediate suffixes, called **vikaraṇas**, between the
 //! dhātu && the tiṅ ending. Roughly, we can split these rules into four groups:
-//! 
+//!
 //! - rules for lr̥t, lr̥ṅ, luṭ, && leṭ (3.1.33 - 3.1.34)
 //! - rules for ām-pratyaya (3.1.35 - 3.1.42)
 //! - rules for luṅ (3.1.43 - 3.1.67)
 //! - rules for sārvadhātuka pratyayas (3.1.68 - 3.1.90), which includes laṭ, loṭ,
 //!   laṅ, && vidhi-liṅ.
-//! 
+//!
 //! (āśīr-liṅ && liṭ do not use any vikaraṇas.)
 
 // The it-prakarana is applied at the very end, since there might be various
 // substitutions by lopa that block the prakarana.
 
-use std::error::Error;
 use crate::constants::Tag as T;
+use crate::dhatu_gana::{DYUT_ADI, PUSH_ADI, TAN_ADI};
 use crate::filters as f;
+use crate::it_samjna;
 use crate::operations as op;
-use crate::dhatu_gana::{PUSH_ADI, DYUT_ADI, TAN_ADI}; 
 use crate::prakriya::Prakriya;
 use crate::sounds::s;
-use crate::it_samjna;
 use crate::term::Term;
+use std::error::Error;
 
 /// Returns a function that inserts the vikarana `v` after the dhatu.
 fn add_vikarana(v: &'static str) -> impl Fn(&mut Prakriya) {
@@ -48,28 +48,28 @@ fn add_aam(p: &mut Prakriya) {
 
 fn replace_with(i: usize, sub: &'static str) -> impl Fn(&mut Prakriya) {
     move |p| {
-        op::upadesha_no_it(p, i+1, sub);
+        op::upadesha_no_it(p, i + 1, sub);
     }
 }
 
 fn xyz(p: &mut Prakriya, i: usize, f: impl Fn(&Term, &Term, &Term) -> bool) -> bool {
-    match (p.get(i), p.get(i+1), p.get(i+2)) {
+    match (p.get(i), p.get(i + 1), p.get(i + 2)) {
         (Some(x), Some(y), Some(z)) => f(x, y, z),
-        _ => false
+        _ => false,
     }
 }
 
 fn xy(p: &mut Prakriya, i: usize, f: impl Fn(&Term, &Term) -> bool) -> bool {
-    match (p.get(i), p.get(i+1)) {
+    match (p.get(i), p.get(i + 1)) {
         (Some(x), Some(y)) => f(x, y),
-        _ => false
+        _ => false,
     }
 }
 
 /// Returns whether the dhatu at index `i` is followed by the `cli~` vikarana as opposed to some
 /// substitution.
 fn has_cli(p: &Prakriya, i: usize) -> bool {
-    p.has(i+1, |t| t.has_u("cli~"))
+    p.has(i + 1, |t| t.has_u("cli~"))
 }
 
 /// Applies rules that might replace `cli~` with `ksa`.
@@ -81,10 +81,12 @@ fn maybe_replace_cli_with_ksa(p: &mut Prakriya, i: usize) {
     // The vArttika doesn't say this specifically, but the commentator examples
     // imply that this holds only for parasmaipada.
     let sprs = &["spfS", "mfS", "kfz", "tfp", "dfp"];
-    if xyz(p, i, |x, _, z| x.has_text(sprs) && z.has_tag(T::Parasmaipada)) {
+    if xyz(p, i, |x, _, z| {
+        x.has_text(sprs) && z.has_tag(T::Parasmaipada)
+    }) {
         //
-        if p.op_optional("3.1.44.v1", |p| op::upadesha_no_it(p, i+1, "si~c")) {
-            return
+        if p.op_optional("3.1.44.v1", |p| op::upadesha_no_it(p, i + 1, "si~c")) {
+            return;
         }
     }
 
@@ -97,15 +99,17 @@ fn maybe_replace_cli_with_ksa(p: &mut Prakriya, i: usize) {
 
     let pushadi_dyutadi_ldit = |t: &Term| {
         (t.has_u_in(PUSH_ADI) && t.gana == Some(4))
-        || (t.has_u_in(DYUT_ADI) && t.gana == Some(1))
-        || t.has_tag(T::xdit)
+            || (t.has_u_in(DYUT_ADI) && t.gana == Some(1))
+            || t.has_tag(T::xdit)
     };
 
-    let to_ksa = replace_with(i+1, "ksa");
+    let to_ksa = replace_with(i + 1, "ksa");
 
     // Takes priority over shala igupadha
-    if xyz(p, i, |x, _, z| pushadi_dyutadi_ldit(x) && z.has_tag(T::Parasmaipada)) {
-        p.op("3.1.55", |p| op::upadesha_no_it(p, i+1, "aN"));
+    if xyz(p, i, |x, _, z| {
+        pushadi_dyutadi_ldit(x) && z.has_tag(T::Parasmaipada)
+    }) {
+        p.op("3.1.55", |p| op::upadesha_no_it(p, i + 1, "aN"));
     } else if p.has(i, shal_igupadha_anit) {
         if p.has(i, |t| t.text == "dfS") {
             p.step("3.1.47")
@@ -131,7 +135,7 @@ fn maybe_replace_cli_with_can(p: &mut Prakriya, i: usize) {
 
     let ni = |t: &Term| t.has_u_in(&["Ric", "RiN"]);
     let shri_dru_sru = |t: &Term| t.has_text(&["Sri", "dru", "sru"]);
-    let to_can = replace_with(i+1, "can");
+    let to_can = replace_with(i + 1, "caN");
 
     if p.has_tag(T::Kartari) && p.has(i, |t| ni(t) || shri_dru_sru(t)) {
         p.op("3.1.48", to_can);
@@ -148,12 +152,12 @@ fn maybe_replace_cli_with_an(p: &mut Prakriya, i: usize) {
         return;
     }
 
-    let to_an = replace_with(i+1, "an");
+    let to_an = replace_with(i + 1, "an");
     if p.has(i, |t| t.has_u("asu~") || t.has_text(&["vac", "KyA"])) {
         p.op("3.1.52", to_an);
     } else if p.has(i, |t| t.has_text(&["lip", "sic", "hve"])) {
         let mut skip = false;
-        if p.has(i+2, |t| t.has_tag(T::Atmanepada)) {
+        if p.has(i + 2, |t| t.has_tag(T::Atmanepada)) {
             if p.is_allowed("3.1.54") {
                 p.step("3.1.54");
                 skip = true;
@@ -168,16 +172,20 @@ fn maybe_replace_cli_with_an(p: &mut Prakriya, i: usize) {
 
     // Ensure no substitution has already occurred (e.g. for Svi which can be
     // matched by 3.1.49 above).
-    let to_an = replace_with(i+1, "an");
-    let jr_stambhu = ["jF", "stanB", "mruc", "mluc", "gruc", "gluc", "glunc", "Svi"];
-    if p.has(i+2, |t| t.has_tag(T::Parasmaipada) && has_cli(p, i)) {
+    let to_an = replace_with(i + 1, "an");
+    let jr_stambhu = [
+        "jF", "stanB", "mruc", "mluc", "gruc", "gluc", "glunc", "Svi",
+    ];
+    if p.has(i + 2, |t| t.has_tag(T::Parasmaipada) && has_cli(p, i)) {
         if p.has(i, |t| t.has_text(&["sf", "SAs", "f"])) {
             p.op("3.1.56", to_an);
         } else if p.has(i, |t| t.has_tag(T::irit)) {
             p.op_optional("3.1.57", to_an);
         } else if p.has(i, |t| t.has_text(&jr_stambhu)) {
             p.op_optional("3.1.58", to_an);
-        } else if p.has(i, |t| t.has_text(&["kf", "mf", "df", "ruh"]) && p.has_tag(T::Chandasi)) {
+        } else if p.has(i, |t| {
+            t.has_text(&["kf", "mf", "df", "ruh"]) && p.has_tag(T::Chandasi)
+        }) {
             p.op("3.1.59", to_an);
         }
     }
@@ -188,11 +196,13 @@ fn maybe_replace_cli_with_cin(p: &mut Prakriya, i: usize) {
         return;
     }
 
-    let to_cin = replace_with(i+1, "ciR");
-    if p.has(i+2, |t| t.has_u("ta")) {
+    let to_cin = replace_with(i + 1, "ciR");
+    if p.has(i + 2, |t| t.has_u("ta")) {
         if p.has(i, |t| t.text == "pad") {
             p.op("3.1.60", to_cin);
-        } else if p.has(i, |t| t.has_text(&["dIp", "jan", "buD", "pUr", "tAy", "pyAy"])) {
+        } else if p.has(i, |t| {
+            t.has_text(&["dIp", "jan", "buD", "pUr", "tAy", "pyAy"])
+        }) {
             p.op_optional("3.1.61", to_cin);
         }
     }
@@ -201,7 +211,7 @@ fn maybe_replace_cli_with_cin(p: &mut Prakriya, i: usize) {
 
 fn maybe_replace_cli_with_sic(p: &mut Prakriya, i: usize) {
     if has_cli(p, i) {
-        p.op("3.1.44", |p| op::upadesha_no_it(p, i+1, "si~c"));
+        p.op("3.1.44", |p| op::upadesha_no_it(p, i + 1, "si~c"));
     }
 }
 
@@ -232,19 +242,25 @@ fn add_kr_after_am_pratyaya(p: &mut Prakriya) {
 fn maybe_add_am_pratyaya_for_lit(p: &mut Prakriya) {
     let i = match p.find_last(T::Dhatu) {
         Some(i) => i,
-        None => return
+        None => return,
     };
 
     if p.has(i, |t| t.text == "kAs" && t.has_tag(T::Pratyaya)) {
         p.op("3.1.35", add_aam);
-    } else if p.has(i, |t| !f::is_eka_ac(&t.text) && !t.has_text(&["jAgf", "UrRu"])) {
+    } else if p.has(i, |t| {
+        !f::is_eka_ac(&t.text) && !t.has_text(&["jAgf", "UrRu"])
+    }) {
         // jAgf is handled separately below.
         p.op("3.1.35.v1", add_aam);
-    } else if p.has(i, |t| t.has_adi(&s("ic")) && f::is_guru(t) && !t.has_u("fCa~")) {
+    } else if p.has(i, |t| {
+        t.has_adi(&s("ic")) && f::is_guru(t) && !t.has_u("fCa~")
+    }) {
         p.op("3.1.36", add_aam);
     } else if p.has(i, |t| t.has_text(&["day", "ay", "As"])) {
         p.op("3.1.37", add_aam);
-    } else if p.has(i, |t| t.has_text(&["uz", "jAgf"]) || (t.text == "vid" && t.gana == Some(2))) {
+    } else if p.has(i, |t| {
+        t.has_text(&["uz", "jAgf"]) || (t.text == "vid" && t.gana == Some(2))
+    }) {
         let mut aam = Term::make_upadesha("Am");
         aam.add_tags(&[T::Pratyaya]);
         if let Some(i) = p.find_last(T::Dhatu) {
@@ -257,9 +273,11 @@ fn maybe_add_am_pratyaya_for_lit(p: &mut Prakriya) {
                 p.set(i, |t| t.add_tag(T::FlagGunaApavada));
             }
         } else {
-            return
+            return;
         }
-    } else if  p.has(i, |t| t.has_text(&["BI", "hrI", "hu"]) || t.has_u("quBf\\Y")) {
+    } else if p.has(i, |t| {
+        t.has_text(&["BI", "hrI", "hu"]) || t.has_u("quBf\\Y")
+    }) {
         let add_sluvat_am = |p: &mut Prakriya| {
             let mut aam = Term::make_upadesha("Am");
             aam.add_tags(&[T::Pratyaya, T::Slu]);
@@ -268,7 +286,7 @@ fn maybe_add_am_pratyaya_for_lit(p: &mut Prakriya) {
             }
         };
         if !p.op_optional("3.1.39", add_sluvat_am) {
-            return
+            return;
         }
     } else {
         return;
@@ -307,13 +325,17 @@ fn add_sarvadhatuka_vikarana(p: &mut Prakriya) {
 
     if !p.has_tag(T::Kartari) {
         p.op("3.1.67", add_vikarana("yak"));
-        return
+        return;
     }
 
     // Optional cases
     let stanbhu_stunbhu = ["sta\\nBu~", "stu\\nBu~", "ska\\nBu~", "sku\\nBu~", "sku\\Y"];
     let mut gana_4_declined = false;
-    if p.has(i, |t| t.has_text(&["BrAS", "BlAS", "Bram", "kram", "klam", "tras", "truw", "laz"])) {
+    if p.has(i, |t| {
+        t.has_text(&[
+            "BrAS", "BlAS", "Bram", "kram", "klam", "tras", "truw", "laz",
+        ])
+    }) {
         let applied = p.op_optional("3.1.70", add_vikarana("Syan"));
 
         // Needed to make 3.1.69 available to roots like Bram
@@ -394,10 +416,10 @@ fn maybe_sic_lopa_before_parasmaipada(p: &mut Prakriya, i: usize, i_vikarana: us
 
     let gati_stha = |t: &Term| {
         (t.text == "gA" && t.gana == Some(2))
-        || t.text == "sTA"
-        || t.has_tag(T::Ghu)
-        || (t.text == "pA" && t.gana == Some(1))
-        || t.text == "BU"
+            || t.text == "sTA"
+            || t.has_tag(T::Ghu)
+            || (t.text == "pA" && t.gana == Some(1))
+            || t.text == "BU"
     };
 
     // Run only if aluk was not used above.
@@ -406,7 +428,12 @@ fn maybe_sic_lopa_before_parasmaipada(p: &mut Prakriya, i: usize, i_vikarana: us
     }
 }
 
-fn maybe_sic_lopa_for_tanadi_atmanepada(p: &mut Prakriya, i: usize, i_vikarana: usize, i_tin: usize) {
+fn maybe_sic_lopa_for_tanadi_atmanepada(
+    p: &mut Prakriya,
+    i: usize,
+    i_vikarana: usize,
+    i_tin: usize,
+) {
     let tanadi = p.has(i, |t| t.has_text(&TAN_ADI));
     let tathasoh = p.has(i_tin, |t| t.has_text(&["ta", "TAs"]));
     if tanadi && tathasoh {
@@ -485,8 +512,8 @@ pub fn run(p: &mut Prakriya) -> Result<(), Box<dyn Error>> {
         Some(i) => i,
         None => return Ok(()),
     };
-    if p.has(i, |t| t.text == "gA") && p.has(i+1, |t| t.text == "a") {
-        p.set(i+1, |t| t.text = "".to_string());
+    if p.has(i, |t| t.text == "gA") && p.has(i + 1, |t| t.text == "a") {
+        p.set(i + 1, |t| t.text = "".to_string());
         p.step("6.1.101")
     }
 

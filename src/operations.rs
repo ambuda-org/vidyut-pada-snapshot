@@ -1,7 +1,7 @@
 use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::prakriya::Prakriya;
-use crate::sounds::s;
+use crate::sounds::is_ac;
 use crate::term::Term;
 
 // Substitution
@@ -38,14 +38,14 @@ pub fn upadha(t: &mut Term, sub: &str) {
 
 pub fn mit(t: &mut Term, sub: &str) {
     let text = &t.text;
-    if let Some(i) = text.rfind(|c| s("ac").contains_char(c)) {
+    if let Some(i) = text.rfind(is_ac) {
         t.text = String::from(&text[..=i]) + sub + &text[i + 1..];
     }
 }
 
 pub fn ti(t: &mut Term, sub: &str) {
     let text = &t.text;
-    if let Some(i) = text.rfind(|c| s("ac").contains_char(c)) {
+    if let Some(i) = text.rfind(is_ac) {
         t.text = String::from(&text[..i]) + sub;
     }
 }
@@ -70,7 +70,6 @@ pub fn upadesha(p: &mut Prakriya, i: usize, sub: &str) {
         it_samjna::run(p, i).unwrap();
     }
 }
-
 
 // Lopa
 // ====

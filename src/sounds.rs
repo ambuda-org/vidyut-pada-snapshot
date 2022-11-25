@@ -363,6 +363,13 @@ fn to_dirgha(s: &str) -> &'static str {
     }
 }
 
+pub fn is_ac(c: char) -> bool {
+    lazy_static! {
+        static ref AC: SoundSet = s("ac");
+    }
+    AC.contains_char(c)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

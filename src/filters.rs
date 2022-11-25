@@ -10,7 +10,7 @@ pub fn is_eka_ac(text: &str) -> bool {
 pub fn is_laghu(t: &Term) -> bool {
     match t.antya() {
         Some('a' | 'i' | 'u' | 'f' | 'x') => true,
-        _ => false
+        _ => false,
     }
 }
 

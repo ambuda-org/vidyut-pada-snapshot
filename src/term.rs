@@ -75,7 +75,7 @@ impl Term {
 
     fn has_sound_in_set(&self, c: Option<char>, set: &SoundSet) -> bool {
         match c {
-            Some(c) => set.contains(&c.to_string()),
+            Some(c) => set.contains_char(c),
             None => false,
         }
     }
@@ -106,11 +106,11 @@ impl Term {
         }
     }
 
-    pub fn has_lakshana(&self, u: &str) -> bool{
+    pub fn has_lakshana(&self, u: &str) -> bool {
         self.lakshana.iter().any(|s| s == u)
     }
 
-    pub fn has_any_lakshana(&self, u: &[&str]) -> bool{
+    pub fn has_any_lakshana(&self, u: &[&str]) -> bool {
         self.lakshana.iter().any(|s| u.contains(&s.as_str()))
     }
 
