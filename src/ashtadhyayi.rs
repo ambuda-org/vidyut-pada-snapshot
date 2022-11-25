@@ -3,6 +3,7 @@ use crate::constants::{La, Prayoga, Purusha, Vacana};
 use crate::dhatu_karya;
 use crate::la_karya;
 use crate::prakriya::Prakriya;
+use crate::ac_sandhi;
 use crate::sanadi;
 use crate::tin_pratyaya;
 use crate::samjna;
@@ -36,6 +37,8 @@ pub fn tinanta(
     if la != La::AshirLin {
         // tin_pratyaya::siddhi(&mut p, la);
     }
+
+    ac_sandhi.run(&mut p);
 
     Ok(p)
 }

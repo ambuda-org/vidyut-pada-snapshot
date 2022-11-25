@@ -84,8 +84,8 @@ pub fn adesha(p: &mut Prakriya, purusha: Purusha, vacana: Vacana) {
         }
     }
 }
-
 /*
+
 fn jher_jus(p: &mut Prakriya, i: usize, la: La) {
     if !p.has(i, |t| t.has_u("Ji")) {
         return;
