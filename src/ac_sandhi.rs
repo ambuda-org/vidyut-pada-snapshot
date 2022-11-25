@@ -25,7 +25,6 @@ fn sup_sandhi_before_angasya(p: Prakriya) {
         op.antya("6.1.93", p, c, "A")
     }
 }
-*/
 
 /// Replaces character `i` of the current prakriya with the given substitute.
 fn set_at(p: &mut Prakriya, index: usize, substitute: &str) {
@@ -206,9 +205,11 @@ fn run_for_term(p: &mut Prakriya, index: usize) {
         op.adi("6.1.90", p, n, sounds.vrddhi(n.adi))
     }
 }
+*/
 
 
 fn run_common(p: &mut Prakriya) {
+    /*
     for i in 0..p.terms().len() {
         run_for_term(p, i)
     }
@@ -223,17 +224,20 @@ fn run_common(p: &mut Prakriya) {
         // HACK: duplicate 6.4.92 from the asiddhavat section for ci -> cAy, cap
         if c.all("m") and n.u in {"Ric", "pu~k"} and c.text in {"cAy", "cA"} {
             if c.text == "cA" {
-                op.antya("6.4.92", p, c, "a")
+                p.op("6.4.92", op::t(i, op::antya("a")));
             } else {
-                op.upadha("6.4.92", p, c, "a")
+                p.op("6.4.92", op::t(i, op::upadha("a")));
             }
         }
     }
+    */
 }
 
 
 pub fn run(p: &mut Prakriya) {
+    run_common(p)
+    /*
     sup_sandhi_before_angasya(p)
     sup_sandhi_after_angasya(p)
-    run_common(p)
+    */
 }

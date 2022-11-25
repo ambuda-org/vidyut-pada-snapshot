@@ -1,16 +1,16 @@
-"""
-ardhadhatuka
-~~~~~~~~~~~~
+//! ardhadhatuka
 
-"""
+use crate::constants::Tag as T;
+use crate::constants::{La, Purusha, Vacana};
+use crate::filters as f;
+use crate::operations as op;
+use crate::it_samjna;
+use crate::term::Term;
+use crate::sounds::s;
+use crate::prakriya::Prakriya;
+use std::error::Error;
 
-from padmini import operations as op
-from padmini.prakriya import Prakriya
-from padmini.constants import Tag as T
-from padmini.term_views import TermView
-from padmini.sounds import s
-
-
+/*
 fn _causes_guna(n: TermView):
     """Lookahead function for the following rules:
 
@@ -29,36 +29,47 @@ fn _causes_guna(n: TermView):
         return False
     # ArdhadhAtuka and other sArvadhAtuka suffixes will cause guna.
     return True
+    */
 
 
-fn dhatu_adesha_before_pada(p: Prakriya):
-    """Replace the dhAtu based on the following suffix.
+/// Replaces the dhAtu based on the suffix that follows it.
+///
+// These rules must run before we choose the verb pada.
+pub fn dhatu_adesha_before_pada(p: &mut Prakriya, la: La) {
+    let i = match p.find_first(T::Dhatu) {
+        Some(i) => i,
+        None => return,
+    };
 
-    These rules must run before the pada is decided.
-    """
-    index, c = p.find_first(T.DHATU)
-    n = TermView.make(p, index)
+    if la.is_sarvadhatuka() {
+        return;
+    }
 
-    la = p.terms[-1]
-    vidhi_lin = la.u == "li~N" and not p.all(T.ASHIH)
-    is_sarvadhatuka = la.u in {"la~w", "lo~w", "la~N"} or vidhi_lin
-    if is_sarvadhatuka:
-        return
-
-    # KyAY is Yit which allow parasamipada.
-    if c.u == "ca\\kzi~\\N":
-        do = True
-        if n.any("li~w"):
-            if p.allow("2.4.55"):
-                do = False
-            else:
+    // KyAY is Yit, which allow parasamipada.
+    if p.has(i, |t| t.has_u("ca\\kzi~\\N")) {
+        let mut use_khya = true;
+        if la == La::Lit {
+            if p.is_allowed("2.4.55") {
+                use_khya = false
+            } else {
                 p.decline("2.4.55")
-        if do:
-            c.add_tags(T.ANUDATTA)  # for anit
-            c.remove_tags(T.ANUDATTET, "N")  # for anit
-            op.upadesha("2.4.54", p, c, "KyAY")
+            }
+        }
+        if use_khya {
+            p.op("2.4.54", |p| {
+                op::upadesha(p, i, "KyAY");
+                // Remove tags set by `ca\kzi~\N` 
+                p.set(i, |t| {
+                    t.remove_tags(&[T::anudattet, T::Nit]);
+                    t.add_tag(T::Anudatta);
+                });
+                // For anit on `KyAY`.
+            });
+        }
+    }
+}
 
-
+/*
 fn dhatu_adesha_before_vikarana(p: Prakriya):
     """Replace the dhAtu based on the following suffix.
 
@@ -262,3 +273,4 @@ fn run_before_dvitva(p: Prakriya):
 fn am_agama(p: Prakriya):
     for i, _ in enumerate(p.terms):
         am_agama_for_term(p, i)
+*/

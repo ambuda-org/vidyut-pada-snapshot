@@ -27,9 +27,9 @@ pub fn antya(sub: &'static str) -> impl Fn(&mut Term) {
 }
 
 /// Replaces the penultimate sound in the given term.
-pub fn upadha(t: &mut Term, sub: &str) {
-    if let Some(c) = t.upadha() {
-        if c.to_string() != sub {
+pub fn upadha(sub: &'static str) -> impl Fn(&mut Term) {
+    |t| {
+        if let Some(c) = t.upadha() {
             let n = t.text.len();
             t.text = String::from(&t.text[..n - 2]) + sub + &t.text[n - 1..];
         }
@@ -190,7 +190,7 @@ mod tests {
     #[test]
     fn test_upadha() {
         let mut t = Term::make_text("sPur");
-        upadha(&mut t, "A");
+        upadha("A")(&mut t);
         assert_eq!(t.text, "sPAr");
     }
 

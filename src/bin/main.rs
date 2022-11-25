@@ -6,6 +6,7 @@ use vidyut_prakriya::dhatupatha as D;
 
 const LAKARA: &[La] = &[
     La::Lat,
+    /*
     La::Lit,
     La::Lut,
     La::Lrt,
@@ -16,6 +17,7 @@ const LAKARA: &[La] = &[
     La::VidhiLin,
     La::Lun,
     La::Lrn,
+    */
 ];
 
 const TIN: &[&str] = &[

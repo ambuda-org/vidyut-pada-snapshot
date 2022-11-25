@@ -1,9 +1,10 @@
+use crate::ardhadhatuka;
 use crate::atmanepada;
 use crate::constants::{La, Prayoga, Purusha, Vacana};
 use crate::dhatu_karya;
 use crate::la_karya;
 use crate::prakriya::Prakriya;
-// use crate::ac_sandhi;
+use crate::ac_sandhi;
 use crate::samjna;
 use crate::sanadi;
 use crate::tin_pratyaya;
@@ -24,6 +25,9 @@ pub fn tinanta(
     dhatu_karya::run(&mut p, dhatu, code)?;
     sanadi::run(&mut p, la.is_sarvadhatuka())?;
     la_karya::run(&mut p, la)?;
+
+    ardhadhatuka::dhatu_adesha_before_pada(&mut p, la);
+
     atmanepada::run(&mut p);
     tin_pratyaya::adesha(&mut p, purusha, vacana);
 
@@ -38,7 +42,7 @@ pub fn tinanta(
         tin_pratyaya::siddhi(&mut p, la)?;
     }
 
-    // ac_sandhi.run(&mut p);
+    ac_sandhi::run(&mut p);
 
     Ok(p)
 }
