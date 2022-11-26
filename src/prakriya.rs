@@ -58,7 +58,12 @@ impl Prakriya {
     // Term accessors
 
     /// Returns all terms.
-    pub fn terms(&mut self) -> &mut Vec<Term> {
+    pub fn terms(&self) -> &Vec<Term> {
+        &self.terms
+    }
+
+    /// Returns all terms mutably.
+    pub fn terms_mut(&mut self) -> &mut Vec<Term> {
         &mut self.terms
     }
 

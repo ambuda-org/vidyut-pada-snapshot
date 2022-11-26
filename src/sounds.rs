@@ -188,11 +188,6 @@ impl SoundSet {
         }
     }
 
-    pub fn from_vec(sounds: Vec<Sound>) -> Self {
-        let string = sounds.iter().collect();
-        SoundSet { string }
-    }
-
     pub fn contains(&self, s: &str) -> bool {
         self.string.contains(s)
     }
@@ -230,7 +225,7 @@ fn pratyahara(s: &str) -> SoundSet {
 
     let mut started = false;
     let mut saw_first_n = false;
-    let mut res = vec![];
+    let mut res = String::new();
 
     for sutra in SUTRAS.iter() {
         for sound in sutra.sounds.chars() {
@@ -258,7 +253,7 @@ fn pratyahara(s: &str) -> SoundSet {
     }
 
     assert!(!res.is_empty(), "Could not parse pratyahara `{s}`");
-    SoundSet::from_vec(res)
+    SoundSet::new(&res)
 }
 
 pub fn savarna(c: Sound) -> SoundSet {
@@ -332,18 +327,19 @@ pub fn is_ac(c: Sound) -> bool {
     AC.contains_char(c)
 }
 
-pub fn to_guna(s: Sound) -> &'static str {
-    match s {
+pub fn to_guna(s: Sound) -> Option<&'static str> {
+    let res = match s {
         'i' | 'I' => "e",
         'u' | 'U' => "o",
         'f' | 'F' => "ar",
         'x' | 'X' => "al",
-        _ => panic!("Invalid guna sound {s}"),
-    }
+        _ => return None,
+    };
+    Some(res)
 }
 
-pub fn to_vrddhi(s: Sound) -> &'static str {
-    match s {
+pub fn to_vrddhi(s: Sound) -> Option<&'static str> {
+    let res = match s {
         'a' | 'A' => "A",
         'i' | 'I' => "E",
         'u' | 'U' => "O",
@@ -351,8 +347,9 @@ pub fn to_vrddhi(s: Sound) -> &'static str {
         'x' | 'X' => "Al",
         'e' | 'E' => "E",
         'o' | 'O' => "O",
-        _ => panic!("Invalid vrddhi sound {s}"),
-    }
+        _ => return None,
+    };
+    Some(res)
 }
 
 // 1.1.48 UkAlojjhrasvadIrghaplutaH
@@ -365,7 +362,7 @@ fn to_hrasva(s: Sound) -> Option<Sound> {
         'x' | 'X' => 'x',
         'e' | 'E' => 'i',
         'o' | 'O' => 'u',
-        _ => panic!("Invalid hrasva sound {s}"),
+        _ => return None,
     };
     Some(res)
 }

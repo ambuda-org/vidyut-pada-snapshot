@@ -7,15 +7,13 @@
 //! This section of the text is massive, so we break it down into several smaller prakaraṇas.
 
 use crate::constants::Tag as T;
-use crate::constants::{La, Purusha, Vacana};
 use crate::filters as f;
-use crate::it_samjna;
 use crate::operations as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::s;
+use crate::sounds as al;
 use crate::sup_adesha;
-use crate::term::Term;
-use std::error::Error;
+use crate::term::{Term, TermView};
 
 /// Applies rules that replace an initial "J" in a pratyaya with the appropriate sounds.
 /// (7.1.3 - 7.1.7)
@@ -151,7 +149,6 @@ fn nnit_vrddhi(p: Prakriya, c: Term, n: TermView):
 */
 
 fn guna_adesha(p: &mut Prakriya, i: usize) {
-    /*
     if p.has(i, f::tag(T::Agama)) {
         return;
     }
@@ -159,9 +156,15 @@ fn guna_adesha(p: &mut Prakriya, i: usize) {
         return;
     }
 
+    let n = match TermView::new(p.terms(), i+1) {
+        Some(n) => n,
+        None => return,
+    };
+
+    let is_sarva_ardha = n.any(&[T::Sarvadhatuka, T::Ardhadhatuka]);
+    /*
     let can_guna = f.can_use_guna(c, n)
     let piti_sarvadhatuke = n.all("p", T.SARVADHATUKA)
-    let sarva_ardha = n.any(T.SARVADHATUKA, T.ARDHADHATUKA)
 
     if (
         c.antya == "u"
@@ -194,32 +197,48 @@ fn guna_adesha(p: &mut Prakriya, i: usize) {
 
     // General case
     } else if can_guna && sarva_ardha && c.antya in s("ac") {
-        if p.has(i, f::text("jAgf" && n.terms[0].u not in {"kvip", "ciN"} && not n.any("N") {
-            c.add_tags(T.F_GUNA)
-            op.antya("7.3.85", p, c, "ar")
-        } else if c.text in {"BU", "sU"} && n.all(T.TIN, T.SARVADHATUKA, "p") {
-            p.step("7.3.88")
-        } else if sounds.can_guna(c.antya) {
-            c.add_tags(T.F_GUNA)
-            op.antya("7.3.84", p, c, sounds.guna(c.antya))
+    */
+    let can_guna = |opt: Option<char>| opt.map(|c| al::to_guna(c).is_some()).unwrap_or(false);
+    if is_sarva_ardha {
+        if p.has(i, f::text("jAgf")) && !n.slice()[0].has_u_in(&["kvip", "ciN"]) && !n.has_tag(T::Nit) {
+            p.op("7.3.85", |p| {
+                p.set(i, op::add_tag(T::FlagGuna));
+                p.set(i, op::antya("ar"));
+            });
+        } else if p.has(i, f::text_in(&["BU", "sU"])) && n.all(&[T::Tin, T::Sarvadhatuka, T::pit]) {
+            p.step("7.3.88");
+        } else if p.has(i, |t| can_guna(t.antya())) {
+            let guna = al::to_guna(p.terms()[i].antya().unwrap()).unwrap();
+            p.op("7.3.84", |p| {
+                p.set(i, op::add_tag(T::FlagGuna));
+                p.set(i, op::antya(guna));
+            });
         }
+    }
 
+    /*
     // puganta-laghu-upadha (TODO: puk)
     } else if can_guna && sarva_ardha && c.upadha in sounds.HRASVA {
+    */
         // HACK: Asiddhavat, but this blocks guna.
         // TODO: move this to asiddhavat && add no_guna tag.
-        if p.has(i, f::text("guh" && n && n.adi in s("ac") {
-            op.upadha("6.4.89", p, c, "U")
-        // Per commentary on 3.1.81, make an exception for dhinv and kRNv.
-        } else if c.u in ("Divi~", "kfvi~") {
-            pass
-        // e.g. nenijAma
-        } else if c.any(T.ABHYASTA) && n.all("p", T.SARVADHATUKA) && n.adi in s("ac") {
+        let n = TermView::new(p.terms(), i+1).unwrap();
+        if p.has(i, f::text("guh")) && s("ac").contains_opt(n.adi()) {
+            p.op_term("6.4.89", i, op::upadha("U"));
+        } else if p.has(i, f::u_in(&["Divi~", "kfvi~"])) {
+            // Per commentary on 3.1.81, make an exception for dhinv and kRNv.
+        } else if p.has(i, f::tag(T::Abhyasta)) && n.all(&[T::pit, T::Sarvadhatuka]) && s("ac").contains_opt(n.adi()) {
+            // e.g. nenijAma
             p.step("7.3.87")
-        } else if sounds.can_guna(c.upadha) and c.upadha in sounds.HRASVA:
-            c.add_tags(T.F_GUNA)
-            op.upadha("7.3.86", p, c, sounds.guna(c.upadha))
+        } else if p.has(i, |t| can_guna(t.upadha()) && t.upadha().map(al::is_hrasva).is_some()) {
+            let upadha = p.terms()[i].upadha().unwrap();
+            p.op("7.3.86", |p| {
+                let guna = al::to_guna(upadha).unwrap();
+                p.set(i, op::add_tag(T::FlagGuna));
+                p.set(i, op::upadha(guna));
+            });
         }
+        /*
     }
     */
 }

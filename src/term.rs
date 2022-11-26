@@ -157,6 +157,74 @@ impl Term {
     }
 }
 
+/// An abstra
+pub struct TermView<'a> {
+    terms: &'a Vec<Term>,
+    start: usize,
+    end: usize,
+}
+
+impl<'a> TermView<'a> {
+    pub fn new(terms: &'a Vec<Term>, start: usize) -> Option<Self> {
+        if start >= terms.len() {
+            return None;
+        }
+
+        let mut end = start;
+        for (i, t) in terms.iter().enumerate().filter(|(i, _)| *i >= start) {
+            if !t.has_tag(Tag::Agama) {
+                end = i;
+                break;
+            }
+        }
+        Some(TermView { terms, start, end })
+    }
+
+    pub fn slice(&self) -> &[Term] {
+        &self.terms[self.start..=self.end]
+    }
+
+    pub fn adi(&self) -> Option<char> {
+        for t in self.slice() {
+            match t.adi() {
+                Some(c) => return Some(c),
+                None => continue
+            }
+        }
+        None
+    }
+
+    pub fn antya(&self) -> Option<char> {
+        for t in self.slice().iter().rev() {
+            match t.antya() {
+                Some(c) => return Some(c),
+                None => continue
+            }
+        }
+        None
+    }
+
+    pub fn has_tag(&self, tag: Tag) -> bool {
+        self.slice().iter().any(|t| t.has_tag(tag))
+    }
+
+    pub fn all(&self, tags: &[Tag]) -> bool {
+        for tag in tags {
+            if self.slice().iter().any(|t| t.has_tag(*tag)) {
+                continue;
+            }
+            return false; 
+        }
+        true
+    }
+
+    pub fn any(&self, tags: &[Tag]) -> bool {
+        tags.iter().any(|tag| {
+           self.slice().iter().any(|t| t.has_tag(*tag))
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -28,7 +28,7 @@ fn get_at(p: &mut Prakriya, index: usize) -> Option<&Term> {
 /// Replaces character `i` of the current prakriya with the given substitute.
 fn set_at(p: &mut Prakriya, index: usize, substitute: &str) {
     let mut cur = 0;
-    for t in p.terms() {
+    for t in p.terms_mut() {
         let delta = t.text.len();
         if (cur..cur + delta).contains(&index) {
             let t_offset = index - cur;
@@ -159,11 +159,11 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
         xy(|x, y| A.contains_char(x) && AC.contains_char(y)),
         |p, _, y, i, j| {
             if EC.contains_char(y) {
-                set_at(p, j, al::to_vrddhi(y));
+                set_at(p, j, al::to_vrddhi(y).expect("should be set"));
                 set_at(p, i, "");
                 p.step("6.1.88");
             } else {
-                set_at(p, j, al::to_guna(y));
+                set_at(p, j, al::to_guna(y).expect("should be set"));
                 set_at(p, i, "");
                 p.step("6.1.87");
             }

@@ -142,9 +142,4 @@ pub fn run(p: &mut Prakriya) {
     }
 
     try_yusmad_asmad_sup_adesha(p, i_anga, i);
-
-    /*
-    // Add new samjnas
-    samjna.sup_samjna(p)
-    */
 }
