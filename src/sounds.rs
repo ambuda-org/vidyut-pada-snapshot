@@ -1,5 +1,5 @@
 use lazy_static::lazy_static;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 type Sound = String;
 
@@ -164,20 +164,23 @@ enum Prayatna {
 
 pub struct SoundSet {
     vec: Vec<String>,
-    set: HashSet<String>,
+    string: String,
 }
 
 impl SoundSet {
     pub fn new(sounds: Vec<Sound>) -> Self {
-        let set = sounds.iter().cloned().collect();
-        SoundSet { set, vec: sounds }
+        let string = sounds.join("");
+        SoundSet {
+            string,
+            vec: sounds,
+        }
     }
 
     pub fn contains(&self, s: &str) -> bool {
-        self.set.contains(s)
+        self.string.contains(s)
     }
     pub fn contains_char(&self, c: char) -> bool {
-        self.set.contains(&c.to_string())
+        self.string.contains(c)
     }
     pub fn contains_opt(&self, o: Option<char>) -> bool {
         if let Some(c) = o {
@@ -373,6 +376,7 @@ pub fn is_ac(c: char) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashSet;
 
     #[test]
     fn test_s() {
@@ -392,8 +396,8 @@ mod tests {
             ("a ku~ h H", "aAkKgGNhH"),
         ];
         for (input, expected) in tests {
-            let expected = expected.chars().map(|x| x.to_string()).collect();
-            let actual = s(input).set;
+            let expected: HashSet<char> = expected.chars().collect();
+            let actual: HashSet<char> = s(input).string.chars().collect();
             assert_eq!(actual, expected, "input: `{input}`");
         }
     }

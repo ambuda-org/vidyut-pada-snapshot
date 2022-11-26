@@ -29,17 +29,19 @@ pub fn antya(sub: &'static str) -> impl Fn(&mut Term) {
 /// Replaces the penultimate sound in the given term.
 pub fn upadha(sub: &'static str) -> impl Fn(&mut Term) {
     |t| {
-        if let Some(c) = t.upadha() {
+        if t.upadha().is_some() {
             let n = t.text.len();
             t.text = String::from(&t.text[..n - 2]) + sub + &t.text[n - 1..];
         }
     }
 }
 
-pub fn mit(t: &mut Term, sub: &str) {
-    let text = &t.text;
-    if let Some(i) = text.rfind(is_ac) {
-        t.text = String::from(&text[..=i]) + sub + &text[i + 1..];
+pub fn mit(sub: &'static str) -> impl Fn(&mut Term) {
+    |t| {
+        let text = &t.text;
+        if let Some(i) = text.rfind(is_ac) {
+            t.text = String::from(&text[..=i]) + sub + &text[i + 1..];
+        }
     }
 }
 
@@ -141,7 +143,7 @@ pub fn samjna(t: &mut Term, tag: T) {
     t.add_tag(tag);
 }
 
-pub fn none(_t: &mut Term) {}
+pub fn none(_: &mut Term) {}
 
 pub fn t(i: usize, f: impl Fn(&mut Term)) -> impl Fn(&mut Prakriya) {
     move |p| {
@@ -157,14 +159,6 @@ pub fn add_tag(tag: T) -> impl Fn(&mut Term) {
 
 pub fn text(sub: &'static str) -> impl Fn(&mut Term) {
     |t| t.text = sub.to_string()
-}
-
-pub fn add_tag_legacy(i: usize, tag: T) -> impl Fn(&mut Prakriya) {
-    move |p| {
-        if let Some(t) = p.get_mut(i) {
-            t.add_tag(tag);
-        }
-    }
 }
 
 #[cfg(test)]
@@ -196,7 +190,7 @@ mod tests {
     #[test]
     fn test_mit() {
         let mut t = Term::make_text("vid");
-        mit(&mut t, "n");
+        mit("n")(&mut t);
         assert_eq!(t.text, "vind");
     }
 

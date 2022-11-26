@@ -1,5 +1,6 @@
 use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
+use crate::filters as f;
 use crate::it_samjna;
 use crate::operations as op;
 use crate::prakriya::Prakriya;
@@ -22,7 +23,7 @@ fn init(p: &mut Prakriya, dhatu: &str, code: &str) -> Result<(), Box<dyn Error>>
 }
 
 fn add_samjnas(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
-    p.term_rule("1.3.1", i, |_| true, |t| op::samjna(t, T::Dhatu));
+    p.op("1.3.1", op::t(i, op::add_tag(T::Dhatu)));
     it_samjna::run(p, i)?;
     p.term_rule(
         "1.1.20",
@@ -36,12 +37,9 @@ fn add_samjnas(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
 fn gana_sutras(p: &mut Prakriya, i: usize) {
     let d = p.get(i).unwrap();
     if let (Some(10), Some(num)) = (d.gana, d.number) {
-        p.term_rule(
-            "cur-mit",
-            i,
-            |t| t.has_u_in(gana::CUR_MIT),
-            |t| t.add_tag(T::mit),
-        );
+        if p.has(i, f::u_in(gana::CUR_MIT)) {
+            p.op("cur-mit", op::t(i, op::add_tag(T::mit)));
+        }
 
         // Need to check range explicitly because some of these roots appear
         // multiple times in the gana, e.g. lakza~
@@ -123,7 +121,7 @@ fn maybe_add_num_agama(p: &mut Prakriya, i: usize) {
         "7.1.58",
         i,
         |t| t.has_tag(T::idit) && !t.has_u("ca\\kzi~\\N"),
-        |t| op::mit(t, "n"),
+        op::mit("n"),
     );
 }
 

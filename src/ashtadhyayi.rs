@@ -22,18 +22,20 @@ pub fn tinanta(
     let mut p = Prakriya::new();
     p.add_tags(&[prayoga.as_tag(), purusha.as_tag(), vacana.as_tag()]);
 
+    // Create the dhatu.
     dhatu_karya::run(&mut p, dhatu, code)?;
     sanadi::run(&mut p, la.is_sarvadhatuka())?;
-    la_karya::run(&mut p, la)?;
 
+    // Add the lakAra and convert it to a basic tin ending.
+    la_karya::run(&mut p, la)?;
     ardhadhatuka::dhatu_adesha_before_pada(&mut p, la);
     atmanepada::run(&mut p);
     tin_pratyaya::adesha(&mut p, purusha, vacana);
     samjna::run(&mut p);
 
+    // Add necessary vikaranas.
     ardhadhatuka::dhatu_adesha_before_vikarana(&mut p, la);
     vikarana::run(&mut p)?;
-    // Run again for vikaranas.
     samjna::run(&mut p);
 
     if la == La::AshirLin {

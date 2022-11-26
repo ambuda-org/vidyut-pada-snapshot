@@ -1,14 +1,11 @@
 //! ardhadhatuka
 
+use crate::constants::La;
 use crate::constants::Tag as T;
-use crate::constants::{La, Purusha, Vacana};
 use crate::filters as f;
-use crate::it_samjna;
 use crate::operations as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::s;
-use crate::term::Term;
-use std::error::Error;
 
 /*
 fn _causes_guna(n: TermView):
