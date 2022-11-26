@@ -69,9 +69,18 @@ pub fn ends_with(sub: &'static str) -> impl Fn(&Term) -> bool {
     move |t| t.text.ends_with(sub)
 }
 
+pub fn not_empty(t: &Term) -> bool {
+    !t.text.is_empty()
+}
+
 /// Returns whether the term has the given `tag`.
 pub fn tag(tag: T) -> impl Fn(&Term) -> bool {
     move |t| t.has_tag(tag)
+}
+
+/// Returns whether the term has the given `tag`.
+pub fn tag_in(tags: &'static [T]) -> impl Fn(&Term) -> bool {
+    move |t| t.any(tags)
 }
 
 /// Returns whether the term is an Atmanepada pratyaya.
@@ -82,10 +91,6 @@ pub fn atmanepada(t: &Term) -> bool {
 /// Returns whether the term's text is exactly `x`.
 pub fn text(x: &'static str) -> impl Fn(&Term) -> bool {
     move |t| t.text == x
-}
-
-pub fn not_empty(t: &Term) -> bool {
-    !t.text.is_empty()
 }
 
 /// Returns whether the term's text is contained in `xs`.
