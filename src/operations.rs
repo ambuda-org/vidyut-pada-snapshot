@@ -107,7 +107,6 @@ pub fn text_yatha(p: &mut Prakriya, i: usize, old: &[&str], new: &[&str]) {
     }
 }
 
-
 // Lopa
 // ====
 

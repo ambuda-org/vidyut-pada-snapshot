@@ -1,20 +1,18 @@
 use crate::constants::Tag as T;
+use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
 use crate::term::Term;
-use crate::prakriya::Prakriya;
 use lazy_static::lazy_static;
 
-lazy_static!{
+lazy_static! {
     static ref AC: SoundSet = s("ac");
     static ref HAL: SoundSet = s("hal");
 }
 
 pub fn t(i: usize, f: impl Fn(&Term) -> bool) -> impl Fn(&mut Prakriya) -> bool {
-    move |p| {
-        match p.get(i) {
-            Some(t) => f(t),
-            None => false,
-        }
+    move |p| match p.get(i) {
+        Some(t) => f(t),
+        None => false,
     }
 }
 
@@ -56,10 +54,32 @@ pub fn is_guru(t: &Term) -> bool {
     !is_laghu(t)
 }
 
+//
+
 pub fn ends_with(sub: &'static str) -> impl Fn(&Term) -> bool {
     move |t| t.text.ends_with(sub)
 }
 
 pub fn has_tag(tag: T) -> impl Fn(&Term) -> bool {
     move |t| t.has_tag(tag)
+}
+
+pub fn text(text: &'static str) -> impl Fn(&Term) -> bool {
+    move |t| t.text == text
+}
+
+pub fn lakshana(text: &'static str) -> impl Fn(&Term) -> bool {
+    move |t| t.has_lakshana(text)
+}
+
+pub fn lakshana_in(xs: &'static [&str]) -> impl Fn(&Term) -> bool {
+    move |t| t.has_any_lakshana(xs)
+}
+
+pub fn u(u: &'static str) -> impl Fn(&Term) -> bool {
+    move |t| t.has_u(u)
+}
+
+pub fn u_in(us: &'static [&str]) -> impl Fn(&Term) -> bool {
+    move |t| t.has_u_in(us)
 }

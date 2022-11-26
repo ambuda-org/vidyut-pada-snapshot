@@ -1,10 +1,10 @@
+use crate::ac_sandhi;
 use crate::ardhadhatuka;
 use crate::atmanepada;
 use crate::constants::{La, Prayoga, Purusha, Vacana};
 use crate::dhatu_karya;
 use crate::la_karya;
 use crate::prakriya::Prakriya;
-use crate::ac_sandhi;
 use crate::samjna;
 use crate::sanadi;
 use crate::tin_pratyaya;
@@ -27,12 +27,14 @@ pub fn tinanta(
     la_karya::run(&mut p, la)?;
 
     ardhadhatuka::dhatu_adesha_before_pada(&mut p, la);
-
     atmanepada::run(&mut p);
     tin_pratyaya::adesha(&mut p, purusha, vacana);
-
     samjna::run(&mut p);
+
+    ardhadhatuka::dhatu_adesha_before_vikarana(&mut p, la);
     vikarana::run(&mut p)?;
+    // Run again for vikaranas.
+    samjna::run(&mut p);
 
     if la == La::AshirLin {
         tin_pratyaya::siddhi(&mut p, la)?;

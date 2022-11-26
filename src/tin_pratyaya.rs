@@ -16,11 +16,11 @@
 use crate::constants::Tag as T;
 use crate::constants::{La, Purusha, Vacana};
 use crate::filters as f;
-use crate::operations as op;
 use crate::it_samjna;
-use crate::term::Term;
-use crate::sounds::s;
+use crate::operations as op;
 use crate::prakriya::Prakriya;
+use crate::sounds::s;
+use crate::term::Term;
 use std::error::Error;
 
 const TIN_PARA: &[&str] = &["ti", "tas", "Ji", "si", "Tas", "Ta", "mi", "vas", "mas"];
@@ -100,9 +100,10 @@ fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) {
     } else if la.is_nit() {
         let i_dhatu = match p.find_last(T::Dhatu) {
             Some(i) => i,
-            None => return
+            None => return,
         };
-        let i_prev = p.terms()
+        let i_prev = p
+            .terms()
             .iter()
             .enumerate()
             .rev()
@@ -115,7 +116,9 @@ fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) {
         };
 
         let is_vid = p.has(i_dhatu, |t: &Term| t.text == "vid" && t.gana == Some(2));
-        if p.has(i_prev, |t| t.has_u("si~c") || t.has_tag(T::Abhyasta) || is_vid) {
+        if p.has(i_prev, |t| {
+            t.has_u("si~c") || t.has_tag(T::Abhyasta) || is_vid
+        }) {
             p.op("3.4.109", |p| op::upadesha(p, i, "jus"));
         } else if p.has(i_dhatu, |t| t.has_antya(&s("A"))) && p.has(i_prev, |t| t.has_u("si~c")) {
             p.op("3.4.110", |p| op::upadesha(p, i, "jus"));
@@ -151,11 +154,14 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
     if p.has(i, |t| t.has_u("lo~w")) {
         // let mut t = p.get_mut(i).unwrap();
         if p.has(i, |t| t.text == "si") {
-            p.op("3.4.87", op::t(i, |t| {
-                t.u = Some("hi".to_string());
-                t.text = "hi".to_string();
-                t.remove_tag(T::pit);
-            }));
+            p.op(
+                "3.4.87",
+                op::t(i, |t| {
+                    t.u = Some("hi".to_string());
+                    t.text = "hi".to_string();
+                    t.remove_tag(T::pit);
+                }),
+            );
 
             if p.has_tag(T::Chandasi) {
                 p.op_optional("3.4.88", op::t(i, op::add_tag(T::Pit)));
@@ -171,13 +177,12 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
                 p.set(i, |t| {
                     let n = t.text.len();
                     if t.text.ends_with("se") {
-                        t.text = String::from(&t.text[..n-2]) + "sva";
+                        t.text = String::from(&t.text[..n - 2]) + "sva";
                     } else {
-                        t.text = String::from(&t.text[..n-2]) + "vam";
+                        t.text = String::from(&t.text[..n - 2]) + "vam";
                     }
                 });
                 p.step("3.4.91")
-
             } else {
                 p.op("3.4.90", op::t(i, op::antya("Am")));
             }
@@ -190,7 +195,7 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
                 p.set(i, |t| t.add_tag(T::Pit));
                 p.insert_before(i, agama);
             });
-            it_samjna::run(p, i-1)?;
+            it_samjna::run(p, i - 1)?;
         }
     }
 
@@ -286,11 +291,12 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
         }
     } else if tin.has_lakshana("li~w") && tin.has_tag(T::Parasmaipada) {
         p.op("3.4.82", |p| op::upadesha_yatha(p, i, TIN_PARA, NAL_PARA));
-
     } else if tin.has_lakshana("la~w") && tin.has_tag(T::Parasmaipada) {
         if p.has(i_dhatu, |t| t.has_u("vida~")) && p.has(i, |t| t.has_text(TIN_PARA)) {
             p.op_optional("3.4.83", |p| op::upadesha_yatha(p, i, TIN_PARA, NAL_PARA));
-        } else if p.has(i_dhatu, |t| t.text == "brU") && p.has(i, |t| TIN_PARA[..5].contains(&t.text.as_str())) {
+        } else if p.has(i_dhatu, |t| t.text == "brU")
+            && p.has(i, |t| TIN_PARA[..5].contains(&t.text.as_str()))
+        {
             p.op_optional("3.4.84", |p| {
                 p.set(i_dhatu, |t| t.text = "Ah".to_string());
                 op::upadesha_yatha(p, i, TIN_PARA, NAL_PARA);

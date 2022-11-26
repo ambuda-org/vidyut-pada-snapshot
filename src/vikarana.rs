@@ -247,9 +247,7 @@ fn maybe_add_am_pratyaya_for_lit(p: &mut Prakriya) {
 
     if p.has(i, |t| t.text == "kAs" && t.has_tag(T::Pratyaya)) {
         p.op("3.1.35", add_aam);
-    } else if p.has(i, |t| {
-        !f::is_eka_ac(t) && !t.has_text(&["jAgf", "UrRu"])
-    }) {
+    } else if p.has(i, |t| !f::is_eka_ac(t) && !t.has_text(&["jAgf", "UrRu"])) {
         // jAgf is handled separately below.
         p.op("3.1.35.v1", add_aam);
     } else if p.has(i, |t| {
