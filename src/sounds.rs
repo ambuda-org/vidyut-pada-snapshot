@@ -176,6 +176,13 @@ impl SoundSet {
         }
     }
 
+    pub fn from_string(string: &str) -> Self {
+        SoundSet {
+            string: string.to_string(),
+            vec: string.chars().map(|x| x.to_string()).collect(),
+        }
+    }
+
     pub fn contains(&self, s: &str) -> bool {
         self.string.contains(s)
     }
@@ -267,9 +274,9 @@ pub fn savarna(c: char) -> SoundSet {
         'w' | 'W' | 'q' | 'Q' | 'R' => "wWqQR",
         't' | 'T' | 'd' | 'D' | 'n' => "tTdDn",
         'p' | 'P' | 'b' | 'B' | 'm' => "pPbBm",
-        _ => return SoundSet::new(vec![c.to_string()]),
+        _ => "",
     };
-    SoundSet::new(sounds.chars().map(|x| x.to_string()).collect())
+    SoundSet::from_string(sounds)
 }
 
 pub fn s(terms: &str) -> SoundSet {
@@ -313,26 +320,26 @@ pub fn map_sounds(xs: &str, ys: &str) -> HashMap<Sound, Sound> {
     mapping
 }
 
-fn to_guna(s: &str) -> &'static str {
+pub fn to_guna(s: char) -> &'static str {
     match s {
-        "i" | "I" => "e",
-        "u" | "U" => "o",
-        "f" | "F" => "ar",
-        "x" | "X" => "al",
-        &_ => panic!("Invalid guna sound {s}"),
+        'i' | 'I' => "e",
+        'u' | 'U' => "o",
+        'f' | 'F' => "ar",
+        'x' | 'X' => "al",
+        _ => panic!("Invalid guna sound {s}"),
     }
 }
 
-fn to_vrddhi(s: &str) -> &'static str {
+pub fn to_vrddhi(s: char) -> &'static str {
     match s {
-        "a" | "A" => "A",
-        "i" | "I" => "E",
-        "u" | "U" => "O",
-        "f" | "F" => "Ar",
-        "x" | "X" => "Al",
-        "e" | "E" => "E",
-        "o" | "O" => "O",
-        &_ => panic!("Invalid vrddhi sound {s}"),
+        'a' | 'A' => "A",
+        'i' | 'I' => "E",
+        'u' | 'U' => "O",
+        'f' | 'F' => "Ar",
+        'x' | 'X' => "Al",
+        'e' | 'E' => "E",
+        'o' | 'O' => "O",
+        _ => panic!("Invalid vrddhi sound {s}"),
     }
 }
 
@@ -351,19 +358,23 @@ fn to_hrasva(s: &str) -> &'static str {
 }
 
 // 1.1.48 UkAlojjhrasvadIrghaplutaH
-fn to_dirgha(s: &str) -> &'static str {
+pub fn to_dirgha(s: char) -> char {
     match s {
-        "a" | "A" => "A",
-        "i" | "I" => "U",
-        "u" | "U" => "U",
-        "f" | "F" => "F",
-        "x" | "X" => "X",
-        "e" => "e",
-        "E" => "E",
-        "o" => "o",
-        "O" => "O",
-        &_ => panic!("Invalid dirgha sound {s}"),
+        'a' | 'A' => 'A',
+        'i' | 'I' => 'U',
+        'u' | 'U' => 'U',
+        'f' | 'F' => 'F',
+        'x' | 'X' => 'X',
+        'e' => 'e',
+        'E' => 'E',
+        'o' => 'o',
+        'O' => 'O',
+        _ => panic!("Invalid dirgha sound {s}"),
     }
+}
+
+pub fn is_guna(c: char) -> bool {
+    matches!(c, 'a' | 'e' | 'o')
 }
 
 pub fn is_ac(c: char) -> bool {
