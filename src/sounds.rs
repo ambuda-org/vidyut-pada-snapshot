@@ -15,7 +15,10 @@ struct Sutra {
 
 impl Sutra {
     fn new(sounds: &str, it: char) -> Self {
-        Sutra { sounds: sounds.to_string(), it }
+        Sutra {
+            sounds: sounds.to_string(),
+            it,
+        }
     }
 }
 
@@ -187,9 +190,7 @@ impl SoundSet {
 
     pub fn from_vec(sounds: Vec<Sound>) -> Self {
         let string = sounds.iter().collect();
-        SoundSet {
-            string,
-        }
+        SoundSet { string }
     }
 
     pub fn contains(&self, s: &str) -> bool {
@@ -381,7 +382,7 @@ pub fn to_dirgha(s: Sound) -> Option<Sound> {
         'E' => 'E',
         'o' => 'o',
         'O' => 'O',
-        _ => return None
+        _ => return None,
     };
     Some(res)
 }

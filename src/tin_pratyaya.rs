@@ -167,12 +167,12 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
                 p.op_optional("3.4.88", op::t(i, op::add_tag(T::Pit)));
             }
         } else if p.has(i, f::ends_with("mi")) {
-            p.op("3.4.89", op::t(i, op::text("ni")));
+            p.op_term("3.4.89", i, op::text("ni"));
         } else if p.has(i, f::ends_with("i")) {
-            p.op("3.4.86", op::t(i, op::text("u")));
+            p.op_term("3.4.86", i, op::text("u"));
         } else if p.has(i, f::ends_with("e")) {
             if p.has(i, |t| t.has_tag(T::Uttama) && t.text.ends_with('e')) {
-                p.op("3.4.93", op::t(i, op::antya("E")));
+                p.op_term("3.4.93", i, op::antya("E"));
             } else if p.has(i, |t| t.text.ends_with("se") || t.text.ends_with("ve")) {
                 p.set(i, |t| {
                     let n = t.text.len();
@@ -184,7 +184,7 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
                 });
                 p.step("3.4.91")
             } else {
-                p.op("3.4.90", op::t(i, op::antya("Am")));
+                p.op_term("3.4.90", i, op::antya("Am"));
             }
         }
 
@@ -214,10 +214,10 @@ fn maybe_do_lin_siddhi(p: &mut Prakriya, i_tin: usize, la: La) -> Result<(), Box
 
         if la == La::AshirLin {
             // Add kit to the pratyaya, not the Agama.
-            p.op("3.4.104", op::t(i, op::add_tag(T::kit)));
+            p.op_term("3.4.104", i, op::add_tag(T::kit));
         } else {
             // Add Nit to the pratyaya, not the Agama.
-            p.op("3.4.103", op::t(i, op::add_tag(T::Nit)));
+            p.op_term("3.4.103", i, op::add_tag(T::Nit));
         }
         it_samjna::run(p, i - 1)?;
     } else {
@@ -253,12 +253,12 @@ fn maybe_do_lot_and_nit_siddhi(p: &mut Prakriya, i: usize, la: La) {
 
         if p.has(i, |t| t.has_tag(T::Parasmaipada)) {
             if p.has(i, |t| t.has_tag(T::Uttama) && t.text.ends_with('s')) {
-                p.op("3.4.99", op::t(i, op::antya("")));
+                p.op_term("3.4.99", i, op::antya(""));
             }
 
             // lo~w excluded by existence of 3.4.86
             if p.has(i, |t| t.text.ends_with('i')) && la != La::Lot {
-                p.op("3.4.100", op::t(i, op::antya("")));
+                p.op_term("3.4.100", i, op::antya(""));
             }
         }
     }
@@ -293,12 +293,12 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
         } else if p.has(i, |t| t.text == "TAs") {
             p.op("3.4.80", |p| op::upadesha(p, i, "se"));
         } else {
-            p.op("3.4.79", op::t(i, op::ti("e")));
+            p.op_term("3.4.79", i, op::ti("e"));
         }
     } else if tin.has_lakshana("li~w") && tin.has_tag(T::Parasmaipada) {
         p.op("3.4.82", |p| op::upadesha_yatha(p, i, TIN_PARA, NAL_PARA));
     } else if tin.has_lakshana("la~w") && tin.has_tag(T::Parasmaipada) {
-        if p.has(i_dhatu, |t| t.has_u("vida~")) && p.has(i, |t| t.has_text(TIN_PARA)) {
+        if p.has(i_dhatu, f::u("vida~")) && p.has(i, f::text_in(TIN_PARA)) {
             p.op_optional("3.4.83", |p| op::upadesha_yatha(p, i, TIN_PARA, NAL_PARA));
         } else if p.has(i_dhatu, |t| t.text == "brU")
             && p.has(i, |t| TIN_PARA[..5].contains(&t.text.as_str()))

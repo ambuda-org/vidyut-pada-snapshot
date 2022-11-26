@@ -1,17 +1,19 @@
-"""
+/*!
 tripadi
-~~~~~~~
+=======
 (8.2.1 - end of 8.4)
 
-The final three pādas of the Ashtadhyayi are called the **tripādi**. The tripādi
-generally contains sandhi rules and other miscellaneous sound change rules.
+The final three pādas of the Ashtadhyayi are called the **tripādi**. The tripādi generally contains
+sandhi rules and other miscellaneous sound change rules.
 
-The tripādi uses a different rule selection mechanism from the rest of the
-Ashtadhyayi: whereas the rest of the text selects rules based on their priority
-and allows a rule to apply if it has scope, the tripādi applies rules in order
-and will never "go back" to apply an earlier rule.
-"""
+The tripādi uses a different rule selection mechanism from the rest of the Ashtadhyayi: whereas the
+rest of the text selects rules based on their priority and allows a rule to apply if it has scope,
+the tripādi applies rules in order and will never "go back" to apply an earlier rule.
+*/
 
+use crate::prakriya::Prakriya;
+
+/*
 import re
 from typing import Optional
 
@@ -595,3 +597,6 @@ fn run(p: Prakriya):
         per_term_2(p, i)
 
     savarna(p)
+*/
+
+pub fn run(p: &mut Prakriya) {}

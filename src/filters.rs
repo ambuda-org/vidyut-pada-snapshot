@@ -8,8 +8,8 @@ filters and various utilities for working with filters in the rest of the system
 */
 use crate::constants::Tag as T;
 use crate::prakriya::Prakriya;
-use crate::sounds::{s, SoundSet};
 use crate::sounds as al;
+use crate::sounds::{s, SoundSet};
 use crate::term::Term;
 use lazy_static::lazy_static;
 
@@ -55,7 +55,7 @@ pub fn is_knit(t: &Term) -> bool {
 pub fn is_laghu(t: &Term) -> bool {
     match t.antya() {
         Some(c) => al::is_hrasva(c),
-        None => false
+        None => false,
     }
 }
 
@@ -90,6 +90,17 @@ pub fn tag_in(tags: &'static [T]) -> impl Fn(&Term) -> bool {
 /// Returns whether the term is an Atmanepada pratyaya.
 pub fn atmanepada(t: &Term) -> bool {
     t.has_tag(T::Atmanepada)
+}
+
+/// Returns whether the term is a sup pratyaya.
+pub fn sup(t: &Term) -> bool {
+    t.has_tag(T::Sup)
+}
+
+/// Returns whether the term's text is exactly `x`.
+pub fn antya(sounds: &'static str) -> impl Fn(&Term) -> bool {
+    let sounds = s(sounds);
+    move |t| sounds.contains_opt(t.antya())
 }
 
 /// Returns whether the term's text is exactly `x`.

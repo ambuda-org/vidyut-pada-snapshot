@@ -13,6 +13,7 @@ use crate::it_samjna;
 use crate::operations as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::s;
+use crate::sup_adesha;
 use crate::term::Term;
 use std::error::Error;
 
@@ -950,8 +951,8 @@ fn vibhaktau(p: Prakriya):
 
 */
 pub fn run_remainder(p: &mut Prakriya) {
+    sup_adesha::run(p);
     /*
-    sup_adesha.run(p)
     pratyaya_adesha(p)
     vibhaktau(p)
 

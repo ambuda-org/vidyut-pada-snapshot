@@ -10,6 +10,7 @@ use crate::prakriya::Prakriya;
 use crate::samjna;
 use crate::sanadi;
 use crate::tin_pratyaya;
+use crate::tripadi;
 use crate::vikarana;
 use std::error::Error;
 
@@ -85,6 +86,8 @@ pub fn tinanta(
 
     angasya::run_remainder(&mut p);
     ac_sandhi::run(&mut p);
+
+    tripadi::run(&mut p);
 
     Ok(p)
 }
