@@ -1,32 +1,23 @@
-"""
-angasya
-~~~~~~~
-(6.4.1 - end of 7.4)
+//! angasya
+//! ~~~~~~~
+//! (6.4.1 - end of 7.4)
+//! 
+//! Rules that modify the sounds and terms in an aṅga.
+//! 
+//! This section of the text is massive, so we break it down into several smaller prakaraṇas.
 
-Rules that modify the sounds and terms in an aṅga.
-
-This section of the text is massive, so we break it down into several smaller
-prakaraṇas.
-"""
-
-import re
-
-from padmini import filters as f
-from padmini import operations as op
-from padmini import sounds
-from padmini.constants import Tag as T
-from padmini.dhatu_gana import PU_ADI, MUC_ADI, TRMPH_ADI
-from padmini.prakriya import Prakriya, Term
-from padmini.sounds import s
-from padmini.stem_gana import PURVA_ADI, DATARA_ADI
-from padmini.term_views import TermView, StringView
-
-from . import abhyasasya
-from . import asiddhavat
-from . import it_agama
-from . import sup_adesha
+use crate::constants::Tag as T;
+use crate::constants::{La, Purusha, Vacana};
+use crate::filters as f;
+use crate::it_samjna;
+use crate::operations as op;
+use crate::prakriya::Prakriya;
+use crate::sounds::s;
+use crate::term::Term;
+use std::error::Error;
 
 
+/*
 fn jha_adesha(p: Prakriya):
     """Rules that modify the jha-pratyaya.
 
@@ -40,16 +31,16 @@ fn jha_adesha(p: Prakriya):
         else:
             op.text("7.1.1", p, last, "aka")
 
-    } else if  last.adi in {"P", "Q", "K", "C", "G"}:
+    } else if last.adi in {"P", "Q", "K", "C", "G"}:
         subs = dict(zip("Ayan", "ey", "In", "Iy", "in"), "PQKCG")
         op.adi("7.1.2", p, last, subs[last.adi])
 
-    } else if  last.adi == "J":
+    } else if last.adi == "J":
         ps = [t for t in p.terms[:-1] if t.text]
         prev = ps[-1]
         if prev.any(T.ABHYASTA):
             op.text("7.1.4", p, last, last.text.replace("J", "at"))
-        } else if  prev.antya != "a" and last.all(T.ATMANEPADA):
+        } else if prev.antya != "a" and last.all(T.ATMANEPADA):
             op.text("7.1.5", p, last, last.text.replace("J", "at"))
         else:
             op.text("7.1.3", p, last, last.text.replace("J", "ant"))
@@ -57,13 +48,13 @@ fn jha_adesha(p: Prakriya):
         if last.all(T.ATMANEPADA):
             if prev.u == "SIN":
                 op.insert_agama_after_by_term("7.1.6", p, prev, "ru~w")
-            } else if  prev.u == "vida~" and prev.gana == 2:
-                op.optional(op.insert_agama_after_by_term, "7.1.7", p, prev, "ru~w")
+            } else if prev.u == "vida~" and prev.gana == 2:
+                p.op_optional(op.insert_agama_after_by_term, "7.1.7", p, prev, "ru~w")
 
-    # -tAt substitution needs to occur early because it conditions samprasarana.
-    } else if  last.all(T.TIN) and last.text in ("tu", "hi"):
+    // -tAt substitution needs to occur early because it conditions samprasarana.
+    } else if last.all(T.TIN) and last.text in ("tu", "hi"):
         if p.allow("7.1.35"):
-            # N is to block pit-guNa, not for replacement of the last letter.
+            // N is to block pit-guNa, not for replacement of the last letter.
             op.upadesha("7.1.35", p, last, "tAta~N")
         else:
             p.decline("7.1.35")
@@ -84,7 +75,7 @@ fn pratyaya_adesha(p: Prakriya):
     if prev.antya == "A" and tin.u == "Ral":
         op.upadesha("7.1.34", p, tin, "O")
 
-    # Run 3.1.83 here because it has no clear place otherwise.
+    // Run 3.1.83 here because it has no clear place otherwise.
     if prev.u == "SnA" and tin.text == "hi" and ps[-2].antya in s("hal"):
         op.upadesha("3.1.83", p, prev, "SAnac")
 
@@ -93,7 +84,7 @@ fn vrddhi_adesha(p: Prakriya, c: Term, n: TermView):
     if c.any(T.F_GUNA_APAVADA):
         return
 
-    if c.text == "mfj" and not f.is_knit(n):
+    if p.has(i, f::text("mfj" and not f.is_knit(n):
         c.text = "mArj"
         p.step("7.2.114")
     else:
@@ -109,10 +100,10 @@ fn nnit_vrddhi(p: Prakriya, c: Term, n: TermView):
         return
 
     if c.any(T.F_AT_LOPA, T.F_GUNA_APAVADA):
-        # at-lopa prevents vrddhi
+        // at-lopa prevents vrddhi
         return
 
-    # HACK
+    // HACK
     n.u = n.terms[0].u
 
     if not (f.can_use_guna(c, n) or n.u == "RiN"):
@@ -124,85 +115,86 @@ fn nnit_vrddhi(p: Prakriya, c: Term, n: TermView):
 
     if na:
         p.step(na)
-    # By "acaH" we should ignore iko guNavRddhI (vye -> vivyAya)
-    } else if  c.antya in s("ac"):
+    // By "acaH" we should ignore iko guNavRddhI (vye -> vivyAya)
+    } else if c.antya in s("ac"):
         op.antya("7.2.115", p, c, sounds.vrddhi(c.antya))
-    } else if  c.upadha == "a":
+    } else if c.upadha == "a":
         op.upadha("7.2.116", p, c, "A")
+*/
 
+fn guna_adesha(p: &mut Prakriya, i: usize) {
+    if p.has(i, f::tag(T::Agama)) {
+        return;
+    }
+    if p.has(i, |t| t.any(&[T::FlagAtLopa, T::FlagGunaApavada])) {
+        return;
+    }
 
-fn guna_adesha(p: Prakriya, index: int):
-    c = p.terms[index]
-    if c.all(T.AGAMA):
-        return
-
-    if c.any(T.F_AT_LOPA, T.F_GUNA_APAVADA):
-        # at-lopa prevents vrddhi
-        return
-
-    n = TermView.make_pratyaya(p, index)
-    if not n:
-        return
-
-    can_guna = f.can_use_guna(c, n)
-    piti_sarvadhatuke = n.all("p", T.SARVADHATUKA)
-    sarva_ardha = n.any(T.SARVADHATUKA, T.ARDHADHATUKA)
+    let can_guna = f.can_use_guna(c, n)
+    let piti_sarvadhatuke = n.all("p", T.SARVADHATUKA)
+    let sarva_ardha = n.any(T.SARVADHATUKA, T.ARDHADHATUKA)
 
     if (
         c.antya == "u"
-        and n.terms[0].any("luk")
-        and n.adi in s("hal")
-        and piti_sarvadhatuke
-        and can_guna
-    ):
-        if c.u == "UrRuY":
-            if p.allow("7.3.90"):
+        && n.terms[0].any("luk")
+        && n.adi in s("hal")
+        && piti_sarvadhatuke
+        && can_guna
+    ) {
+        if c.u == "UrRuY" {
+            if p.allow("7.3.90") {
                 p.step("7.3.90")
-            else:
+            } else {
                 p.decline("7.3.90")
                 op.antya("7.3.89", p, c, sounds.vrddhi(c.antya))
-        else:
+            }
+        } else {
             op.antya("7.3.89", p, c, sounds.vrddhi(c.antya))
+        }
 
-    if c.text == "mid" and n.any("S"):
+    if p.has(i, f::text("mid" && n.any("S") {
         c.add_tags(T.F_GUNA)
         op.text("7.3.82", p, c, "med")
 
-    } else if  n.first_non_empty.u == "jus" and c.antya in s("ik"):
+    } else if n.first_non_empty.u == "jus" && c.antya in s("ik") {
         c.add_tags(T.F_GUNA)
         op.antya("7.3.83", p, c, sounds.guna(c.antya))
 
-    } else if  c.text == "tfnah" and n.adi in s("hal") and piti_sarvadhatuke:
+    } else if p.has(i, f::text("tfnah" && n.adi in s("hal") && piti_sarvadhatuke {
         op.mit("7.3.92", p, c, "i")
 
-    # General case
-    } else if  can_guna and sarva_ardha and c.antya in s("ac"):
-        if c.text == "jAgf" and n.terms[0].u not in {"kvip", "ciN"} and not n.any("N"):
+    // General case
+    } else if can_guna && sarva_ardha && c.antya in s("ac") {
+        if p.has(i, f::text("jAgf" && n.terms[0].u not in {"kvip", "ciN"} && not n.any("N") {
             c.add_tags(T.F_GUNA)
             op.antya("7.3.85", p, c, "ar")
-        } else if  c.text in {"BU", "sU"} and n.all(T.TIN, T.SARVADHATUKA, "p"):
+        } else if c.text in {"BU", "sU"} && n.all(T.TIN, T.SARVADHATUKA, "p") {
             p.step("7.3.88")
-        } else if  sounds.can_guna(c.antya):
+        } else if sounds.can_guna(c.antya) {
             c.add_tags(T.F_GUNA)
             op.antya("7.3.84", p, c, sounds.guna(c.antya))
+        }
 
-    # puganta-laghu-upadha (TODO: puk)
-    } else if  can_guna and sarva_ardha and c.upadha in sounds.HRASVA:
-        # HACK: Asiddhavat, but this blocks guna.
-        # TODO: move this to asiddhavat and add no_guna tag.
-        if c.text == "guh" and n and n.adi in s("ac"):
+    // puganta-laghu-upadha (TODO: puk)
+    } else if can_guna && sarva_ardha && c.upadha in sounds.HRASVA {
+        // HACK: Asiddhavat, but this blocks guna.
+        // TODO: move this to asiddhavat && add no_guna tag.
+        if p.has(i, f::text("guh" && n && n.adi in s("ac") {
             op.upadha("6.4.89", p, c, "U")
-        # Per commentary on 3.1.81, make an exception for dhinv and kRNv.
-        } else if  c.u in ("Divi~", "kfvi~"):
+        // Per commentary on 3.1.81, make an exception for dhinv and kRNv.
+        } else if c.u in ("Divi~", "kfvi~") {
             pass
-        # e.g. nenijAma
-        } else if  c.any(T.ABHYASTA) and n.all("p", T.SARVADHATUKA) and n.adi in s("ac"):
+        // e.g. nenijAma
+        } else if c.any(T.ABHYASTA) && n.all("p", T.SARVADHATUKA) && n.adi in s("ac") {
             p.step("7.3.87")
-        } else if  sounds.can_guna(c.upadha) and c.upadha in sounds.HRASVA:
+        } else if sounds.can_guna(c.upadha) and c.upadha in sounds.HRASVA:
             c.add_tags(T.F_GUNA)
             op.upadha("7.3.86", p, c, sounds.guna(c.upadha))
+        }
+    }
+}
 
-
+/*
 fn shiti(p: Prakriya, index: int):
     c = p.terms[index]
     ns = [u for u in p.terms[index + 1 :] if u.text]
@@ -226,7 +218,7 @@ fn shiti(p: Prakriya, index: int):
         "klamu~",
         "madI~",
     )
-    # Need gana check to avoid including Bramu~ from bhU-gaNa
+    // Need gana check to avoid including Bramu~ from bhU-gaNa
     if c.u in sham_adi and n.u == "Syan" and c.gana == 4:
         c.text = c.text.replace("a", "A")
         p.step("7.3.74")
@@ -245,7 +237,7 @@ fn shiti(p: Prakriya, index: int):
         "za\\dx~",
     )
 
-    # 7.3.78
+    // 7.3.78
     if c.all(T.DHATU) and c.u in pa_ghra and c.gana not in {2, 3}:
         piba_jighra = (
             "piba",
@@ -261,26 +253,26 @@ fn shiti(p: Prakriya, index: int):
             "sIda",
         )
         mapping = dict(zip(pa_ghra, piba_jighra))
-        # sartervegitāyāṃ gatau dhāvādeśam icchanti। anyatra sarati, anusarati
-        # ityeva bhavati. (kAzikA)
+        // sartervegitāyāṃ gatau dhāvādeśam icchanti। anyatra sarati, anusarati
+        // ityeva bhavati. (kAzikA)
         if c.u == "sf\\":
-            op.optional(op.text, "7.3.78", p, c, mapping[c.u])
+            p.op_optional(op.text, "7.3.78", p, c, mapping[c.u])
         else:
             op.text("7.3.78", p, c, mapping[c.u])
 
-    } else if  c.u in ("jYA\\", "janI~\\"):
+    } else if c.u in ("jYA\\", "janI~\\"):
         op.text("7.3.79", p, c, "jA")
-    } else if  c.u in PU_ADI and c.gana in {5, 9}:
+    } else if c.u in PU_ADI and c.gana in {5, 9}:
         c.text = c.text.replace("U", "u").replace("F", "f").replace("I", "i")
         p.step("7.3.80")
 
-    # TODO: A-cam
+    // TODO: A-cam
     if c.text in ("zWiv", "klam"):
         c.text = op.yatha(c.text, ("zWiv", "klam"), ("zWIv", "klAm"))
         p.step("7.3.75")
-    } else if  c.text == "kram" and p.terms[-1].all("parasmaipada"):
+    } else if p.has(i, f::text("kram" and p.terms[-1].all("parasmaipada"):
         op.text("7.3.76", p, c, "krAm")
-    } else if  c.u in ("izu~", "ga\\mx~", "ya\\ma~"):
+    } else if c.u in ("izu~", "ga\\mx~", "ya\\ma~"):
         op.antya("7.3.77", p, c, "C")
 
 
@@ -302,21 +294,21 @@ fn num_agama(p: Prakriya, index: int):
         prev = p.terms[-2]
         if prev.all(T.SARVANAMA):
             op.insert_agama_before("7.1.52", p, last, "su~w")
-        } else if  prev.text == "tri":
+        } else if prev.text == "tri":
             op.text("7.1.53", p, "traya")
-        # TODO: nadI, Ap
-        } else if  f.is_hrasva(prev):
+        // TODO: nadI, Ap
+        } else if f.is_hrasva(prev):
             op.insert_agama_before("7.1.54", p, last, "nu~w")
-        } else if  prev.any(T.SAT) or prev.text == "catur":
+        } else if prev.any(T.SAT) or prev.text == "catur":
             op.insert_agama_before("7.1.55", p, last, "nu~w")
 
-    # 7.1.58 (idito nuM dhAtoH) is in `dhatu_karya`
+    // 7.1.58 (idito nuM dhAtoH) is in `dhatu_karya`
 
     if c.u in MUC_ADI and n.terms[0].u == "Sa":
         op.mit("7.1.59", p, c, "n")
-    } else if  c.u in TRMPH_ADI and n.terms[0].u == "Sa":
+    } else if c.u in TRMPH_ADI and n.terms[0].u == "Sa":
         op.mit("7.1.59.v1", p, c, "n")
-    } else if  c.text in ("masj", "naS") and n.adi in s("Jal"):
+    } else if c.text in ("masj", "naS") and n.adi in s("Jal"):
         op.mit("7.1.60", p, c, "n")
 
     liti = n.any("li~w")
@@ -326,14 +318,14 @@ fn num_agama(p: Prakriya, index: int):
                 p.step("7.1.62")
             else:
                 op.mit("7.1.61", p, c, "n")
-        } else if  c.u == "ra\\Ba~\\" and n.terms[0].u != "Sap" and not liti:
+        } else if c.u == "ra\\Ba~\\" and n.terms[0].u != "Sap" and not liti:
             op.mit("7.1.63", p, c, "n")
-        } else if  c.u == "qula\\Ba~\\z" and n.terms[0].u != "Sap" and not liti:
-            # TODO: 7.1.65 - 7.1.69
+        } else if c.u == "qula\\Ba~\\z" and n.terms[0].u != "Sap" and not liti:
+            // TODO: 7.1.65 - 7.1.69
             op.mit("7.1.64", p, c, "n")
 
     if n.any(T.SARVANAMASTHANA):
-        # TODO: aYc
+        // TODO: aYc
         if c.any("u", "f") and not c.any(T.DHATU):
             op.mit("7.1.70", p, c, "n")
         if c.any(T.NAPUMSAKA) and n.adi in s("Jal ac"):
@@ -350,8 +342,8 @@ fn iit_agama(p: Prakriya):
         if not c.text or not n:
             continue
 
-        # Prevent loops
-        # TODO: find a cleaner solution to this.
+        // Prevent loops
+        // TODO: find a cleaner solution to this.
         if c.u == "Iw":
             return
 
@@ -359,14 +351,14 @@ fn iit_agama(p: Prakriya):
         hali = n.adi in s("hal")
         if sarva and hali:
             piti = n.all("p")
-            if piti and c.text == "brU":
-                # i + 1 to skip luk
+            if piti and p.has(i, f::text("brU":
+                // i + 1 to skip luk
                 op.insert_agama_after("7.3.93", p, index + 1, "Iw")
-            } else if  piti and c.u == "yaN":
-                op.optional(op.insert_agama_after, "7.3.94", p, index, "Iw")
-            } else if  c.u in ("tu\\", "ru", "zwu\\Y", "Sam", "ama~"):
-                op.optional(op.insert_agama_after, "7.3.95", p, index, "Iw")
-            } else if  c.u in {"asa~", "si~c"} and f.is_aprkta(n):
+            } else if piti and c.u == "yaN":
+                p.op_optional(op.insert_agama_after, "7.3.94", p, index, "Iw")
+            } else if c.u in ("tu\\", "ru", "zwu\\Y", "Sam", "ama~"):
+                p.op_optional(op.insert_agama_after, "7.3.95", p, index, "Iw")
+            } else if c.u in {"asa~", "si~c"} and f.is_aprkta(n):
                 op.insert_agama_after("7.3.96", p, index, "Iw")
 
     _, dhatu = p.find_last(T.DHATU)
@@ -399,11 +391,11 @@ fn lin_karya(p: Prakriya):
             else:
                 tin.text = tin.text.replace("s", "")
             p.step("7.2.79")
-        # yAs -> yA due to 7.2.79 above.
+        // yAs -> yA due to 7.2.79 above.
         if anga.antya == "a" and agama.text == "yA":
             op.text("7.2.80", p, agama, "Iy")
 
-    # TODO: not sure where to put this. Not lin.
+    // TODO: not sure where to put this. Not lin.
     prev = p.terms[-2]
     if prev.antya == "a" and tin.adi == "A" and tin.all("N"):
         op.adi("7.2.81", p, tin, "Iy")
@@ -423,16 +415,16 @@ fn final_f_and_dirgha(p: Prakriya, index: int):
         (p.terms[-1].all("li~N", T.ARDHADHATUKA) and n.adi == "y")
     )
     if c.antya == "f" and shayaklinksu and kniti:
-        # nyAsa on 7.4.29:
-        #
-        #     `ṛ gatiprāpaṇayoḥ` (dhātupāṭhaḥ-936), `ṛ sṛ gatau`
-        #     (dhātupāṭhaḥ-1098,1099) - ityetayor bhauvādika-
-        #     jauhotyādikayor grahaṇam
-        if f.samyogadi(c) or c.text == "f":
+        // nyAsa on 7.4.29:
+        //
+        //     `ṛ gatiprāpaṇayoḥ` (dhātupāṭhaḥ-936), `ṛ sṛ gatau`
+        //     (dhātupāṭhaḥ-1098,1099) - ityetayor bhauvādika-
+        //     jauhotyādikayor grahaṇam
+        if f.samyogadi(c) or p.has(i, f::text("f":
             op.antya("7.4.29", p, c, "ar")
         else:
             op.antya("7.4.28", p, c, "ri")
-    } else if  akrtsarvadhatukayoh and (n.terms[0].u == "cvi" or n.adi == "y"):
+    } else if akrtsarvadhatukayoh and (n.terms[0].u == "cvi" or n.adi == "y"):
         if c.antya == "f":
             op.antya("7.4.27", p, c, "rI")
         else:
@@ -451,21 +443,23 @@ fn nittva(p, index):
     except IndexError:
         return
 
-    if c.text == "go" and n.all(T.SARVANAMASTHANA):
+    if p.has(i, f::text("go" and n.all(T.SARVANAMASTHANA):
         op.tag("7.1.90", p, n, "R")
-    } else if  c.antya == "o" and n.all(T.SARVANAMASTHANA):
+    } else if c.antya == "o" and n.all(T.SARVANAMASTHANA):
         op.tag("7.1.90.v1", p, n, "R")
-    } else if  n.u == "Ral" and n.all(T.UTTAMA):
+    } else if n.u == "Ral" and n.all(T.UTTAMA):
         if p.allow("7.1.91"):
             n.remove_tags("R")
             p.step("7.1.91")
         else:
             p.decline("7.1.91")
-    } else if  c.antya == "f" and n.u == "su~" and not n.any(T.SAMBUDDHI):
+    } else if c.antya == "f" and n.u == "su~" and not n.any(T.SAMBUDDHI):
         op.antya("7.1.94", p, c, "an")
+*/
 
 
-fn run_for_each_2(p: Prakriya, index: int):
+fn run_for_each_2(p: &mut Prakriya, index: usize) {
+    /*
     terms = p.terms
 
     c = terms[index]
@@ -480,11 +474,11 @@ fn run_for_each_2(p: Prakriya, index: int):
         if c.u == "SIN":
             if kniti and n.adi == "y":
                 op.antya("7.4.22", p, c, "ay")
-            } else if  n.all(T.SARVADHATUKA):
+            } else if n.all(T.SARVADHATUKA):
                 op.antya("7.4.21", p, c, sounds.guna(c.antya))
 
-    # HACK: check for "dhatu" to avoid processing "yAs"-Agama
-    # TODO: don't do this hack.
+    // HACK: check for "dhatu" to avoid processing "yAs"-Agama
+    // TODO: don't do this hack.
     if (
         c.antya == "s"
         and c.all(T.DHATU)
@@ -494,30 +488,34 @@ fn run_for_each_2(p: Prakriya, index: int):
     ):
         op.antya("7.4.49", p, c, "t")
 
-    if c.text == "tAs" or f.is_asti(c):
+    if p.has(i, f::text("tAs" or f.is_asti(c):
         if n.adi == "s":
             op.antya("7.4.50", p, c, "")
-        } else if  n.adi == "r":
+        } else if n.adi == "r":
             op.antya("7.4.51", p, c, "")
-        } else if  n.adi == "e":
+        } else if n.adi == "e":
             op.antya("7.4.52", p, c, "h")
 
-    } else if  c.u in ("dIDIN", "vevIN") and n.adi in s("i u"):
+    } else if c.u in ("dIDIN", "vevIN") and n.adi in s("i u"):
         op.antya("7.4.53", p, c, "")
 
-    # Must occur before guna and after 7.3.77 (gam -> gacC).
+    // Must occur before guna and after 7.3.77 (gam -> gacC).
     samhitayam_tuk(p)
 
-    # Vrddhi takes priority over guna. For example, Nic is Ardhadhatuka (guna)
-    # and Nit (vrddhi), but it will cause vrddhi if possible.
+    // Vrddhi takes priority over guna. For example, Nic is Ardhadhatuka (guna)
+    // and Nit (vrddhi), but it will cause vrddhi if possible.
     vrddhi_adesha(p, c, n)
+    */
     guna_adesha(p, index)
 
-    # TODO: 7.4.23-4
+    /*
+    // TODO: 7.4.23-4
     if n:
         final_f_and_dirgha(p, index)
+    */
+}
 
-
+/*
 fn samhitayam_tuk(p: Prakriya):
     view = StringView(p.terms)
     vtext = view.text
@@ -526,9 +524,9 @@ fn samhitayam_tuk(p: Prakriya):
         index = match.span(1)[0]
         term = view.term_for_index(index)
         if term.any(T.ABHYASA):
-            # tena cicchadatuḥ, cicchiduḥ ityatra tukabhyāsasya grahaṇena na
-            # gṛhyate iti halādiḥśeṣeṇa na nivartyate
-            # -- kAzikA
+            // tena cicchadatuḥ, cicchiduḥ ityatra tukabhyāsasya grahaṇena na
+            // gṛhyate iti halādiḥśeṣeṇa na nivartyate
+            // -- kAzikA
             pass
         else:
             view[match.span(1)[0]] = "tC"
@@ -550,19 +548,19 @@ fn cajoh_kuh(p: Prakriya, index: int):
     if not n:
         return
 
-    # HACK
+    // HACK
     n.u = n.terms[0].u
 
     mapping = {"c": "k", "j": "g", "h": "G"}
 
-    # TODO: do niyama only under the conditions below.
+    // TODO: do niyama only under the conditions below.
     niyama = None
     if c.adi in s("ku~"):
         niyama = "7.3.59"
-    } else if  c.text in {"aj", "vraj"}:
+    } else if c.text in {"aj", "vraj"}:
         niyama = "7.3.60"
-    # TODO: pra-vac
-    } else if  c.text in {"yaj", "yAc", "ruc", "fc"} and n.u == "Ryat":
+    // TODO: pra-vac
+    } else if c.text in {"yaj", "yAc", "ruc", "fc"} and n.u == "Ryat":
         niyama = "7.3.66"
     if niyama:
         p.step(niyama)
@@ -570,19 +568,19 @@ fn cajoh_kuh(p: Prakriya, index: int):
 
     if c.antya in s("c j") and (n.any("G") or n.u == "Ryat"):
         op.antya("7.3.52", p, c, mapping[c.antya])
-    } else if  c.text == "han":
+    } else if p.has(i, f::text("han":
         if n.any("Y", "R") or n.adi == "n":
             op.adi("7.3.54", p, c, "G")
-        } else if  c.all(T.ABHYASTA):
+        } else if c.all(T.ABHYASTA):
             op.adi("7.3.55", p, c, "G")
-    } else if  c.text == "hi" and c.all(T.ABHYASTA) and n.u != "caN":
+    } else if p.has(i, f::text("hi" and c.all(T.ABHYASTA) and n.u != "caN":
         op.adi("7.3.56", p, c, "G")
 
     sanlitoh = n.u == "san" or n.all("li~w")
-    if c.text == "ji" and c.gana == 1 and c.all(T.ABHYASTA) and sanlitoh:
+    if p.has(i, f::text("ji" and c.gana == 1 and c.all(T.ABHYASTA) and sanlitoh:
         op.adi("7.3.57", p, c, "g")
-    } else if  c.text == "ci" and c.all(T.ABHYASTA) and sanlitoh:
-        op.optional(op.adi, "7.3.58", p, c, "k")
+    } else if p.has(i, f::text("ci" and c.all(T.ABHYASTA) and sanlitoh:
+        p.op_optional(op.adi, "7.3.58", p, c, "k")
 
 
 fn dhatu_rt_adesha(p: Prakriya, index: int):
@@ -595,7 +593,7 @@ fn dhatu_rt_adesha(p: Prakriya, index: int):
             op.antya("7.1.102", p, c, "ur")
         else:
             op.antya("7.1.100", p, c, "ir")
-    # HACK: 7.1.101 before dvitva
+    // HACK: 7.1.101 before dvitva
 
 
 fn ato_dirgha(p: Prakriya, index: int):
@@ -610,22 +608,22 @@ fn ato_dirgha(p: Prakriya, index: int):
     if n.all(T.SARVADHATUKA):
         if c.antya == "a" and n.adi in s("yaY"):
             op.antya("7.3.101", p, c, "A")
-    } else if  n.all(T.SUP):
+    } else if n.all(T.SUP):
         if c.antya == "a":
             if n.all(T.BAHUVACANA) and n.adi in s("Jal"):
                 op.antya("7.3.103", p, c, "e")
-            } else if  n.adi in s("yaY"):
+            } else if n.adi in s("yaY"):
                 op.antya("7.3.102", p, c, "A")
-            } else if  n.terms[0].text == "os":
+            } else if n.terms[0].text == "os":
                 op.antya("7.3.104", p, c, "e")
         if c.antya in sounds.HRASVA and c.antya != "a":
             if n.any(T.SAMBUDDHI):
                 op.antya("7.3.108", p, c, sounds.guna(c.antya))
-            } else if  n.u == "jas":
+            } else if n.u == "jas":
                 op.antya("7.3.109", p, c, sounds.guna(c.antya))
-            } else if  c.antya == "f" and (n.u == "Ni" or n.any(T.SARVANAMASTHANA)):
+            } else if c.antya == "f" and (n.u == "Ni" or n.any(T.SARVANAMASTHANA)):
                 op.antya("7.3.110", p, c, sounds.guna(c.antya))
-            } else if  c.any(T.GHI) and n.any("N"):
+            } else if c.any(T.GHI) and n.any("N"):
                 op.antya("7.3.111", p, c, sounds.guna(c.antya))
 
 
@@ -663,39 +661,39 @@ fn sic_vrddhi(p: Prakriya):
     if not (dhatu and sic.u == "si~c" and tin.all(T.PARASMAIPADA)):
         return
 
-    # A dhatu followed by ArdhadhAtuka has its final `a` deleted by 6.4.48.
-    # But in the context of the rules below, we should ignore the effect of
-    # 6.4.48 per 1.1.57 (acaH parasmin pUrvavidhau) and cause no changes for
-    # such roots. (Motivating examples: agopAyIt, avadhIt)
+    // A dhatu followed by ArdhadhAtuka has its final `a` deleted by 6.4.48.
+    // But in the context of the rules below, we should ignore the effect of
+    // 6.4.48 per 1.1.57 (acaH parasmin pUrvavidhau) and cause no changes for
+    // such roots. (Motivating examples: agopAyIt, avadhIt)
     if p.all(T.F_AT_LOPA):
         return
 
-    # 1.2.1 -- skip vrddhi for these sounds
-    # HACK: check only sic, atidesha should not apply to it.
+    // 1.2.1 -- skip vrddhi for these sounds
+    // HACK: check only sic, atidesha should not apply to it.
     if (it and it.any("N")) or sic.any("N"):
         return
 
     if dhatu.upadha == "a" and dhatu.antya in s("l r"):
-        # apavAda to 7.2.7 below, so run this first.
+        // apavAda to 7.2.7 below, so run this first.
         op.upadha("7.2.2", p, dhatu, sounds.vrddhi(dhatu.upadha))
         return
 
     block_rule = None
-    # TODO: don't add hack for tug-Agama. Should reorder.
+    // TODO: don't add hack for tug-Agama. Should reorder.
     if it:
-        # TODO: other cases
+        // TODO: other cases
         if (
             dhatu.antya in s("h m y")
             or dhatu.text in {"kzaR", "Svas", "jAgf", "Svi"}
             or dhatu.all("e")
         ):
             block_rule = "7.2.5"
-        } else if  dhatu.text == "UrRu":
+        } else if dhatu.text == "UrRu":
             block_rule = optional_rule("7.2.6", p)
-        } else if  dhatu.adi in s("hal") and dhatu.upadha == "a" and dhatu.antya != "C":
+        } else if dhatu.adi in s("hal") and dhatu.upadha == "a" and dhatu.antya != "C":
             block_rule = optional_rule("7.2.7", p)
-        # Base case
-        } else if  dhatu.antya in s("hal"):
+        // Base case
+        } else if dhatu.antya in s("hal"):
             block_rule = "7.2.4"
 
     if block_rule:
@@ -704,13 +702,13 @@ fn sic_vrddhi(p: Prakriya):
 
     if dhatu.antya in s("ac"):
         op.antya("7.2.1", p, dhatu, sounds.vrddhi(dhatu.antya))
-    } else if  f.samyoganta(dhatu):
-        # 7.2.3 applies to the final vowel generally, even if samyoganta
+    } else if f.samyoganta(dhatu):
+        // 7.2.3 applies to the final vowel generally, even if samyoganta
         text = dhatu.text
         if text[-3] in s("ac"):
             dhatu.text = text[:-3] + sounds.vrddhi(text[-3]) + text[-2:]
         else:
-            # e.g. "mansj", "pracC"
+            // e.g. "mansj", "pracC"
             dhatu.text = dhatu.text.replace("a", "A")
         p.step("7.2.3")
     else:
@@ -733,7 +731,7 @@ fn cani_before_guna(p: Prakriya):
     except IndexError:
         cani = False
 
-    # 7.4.7 blocks guna.
+    // 7.4.7 blocks guna.
     if c.upadha in s("f") and nici and cani:
         if p.allow("7.4.7"):
             c.add_tags(T.F_GUNA_APAVADA)
@@ -784,15 +782,15 @@ fn cani_after_guna(p: Prakriya):
     if can.u != "caN":
         return
 
-    # Ignore 'f' because it is handled by 7.4.7.
+    // Ignore 'f' because it is handled by 7.4.7.
     if c.upadha in s("ac") and c.upadha not in s("f"):
         res = sounds.hrasva(c.upadha)
-        if c.any(T.F_AT_LOPA) or c.text == "SAs" or c.any("f"):
+        if c.any(T.F_AT_LOPA) or p.has(i, f::text("SAs" or c.any("f"):
             p.step("7.4.2")
-        } else if  res != c.upadha:
+        } else if res != c.upadha:
             op.upadha("7.4.1", p, c, res)
-    } else if  has_agama and c.antya in s("ac"):
-        # HACK for agama
+    } else if has_agama and c.antya in s("ac"):
+        // HACK for agama
         res = sounds.hrasva(c.antya)
         op.antya("7.4.1", p, c, res)
 
@@ -810,10 +808,10 @@ fn liti(p: Prakriya):
     if c.antya == "f" and f.samyogadi(c) and not tin.all("R"):
         c.add_tags(T.F_GUNA)
         op.antya("7.4.10", p, c, "ar")
-    } else if  c.u == "fCa~":
+    } else if c.u == "fCa~":
         c.add_tags(T.F_GUNA)
         op.adi("7.4.11", p, c, "ar")
-    } else if  c.antya == "F" or c.u == "f\\" and not tin.all("R"):
+    } else if c.antya == "F" or c.u == "f\\" and not tin.all("R"):
         c.add_tags(T.F_GUNA)
         op.antya("7.4.12", p, c, "ar")
 
@@ -831,18 +829,18 @@ fn ani(p: Prakriya):
     if n.u != "aN":
         return
 
-    if c.antya in s("f") or c.text == "dfS":
-        if c.text == "dfS":
+    if c.antya in s("f") or p.has(i, f::text("dfS":
+        if p.has(i, f::text("dfS":
             op.text("7.4.16", p, c, "darS")
         else:
             op.antya("7.4.16", p, c, "ar")
-    } else if  c.u == "asu~":
+    } else if c.u == "asu~":
         op.insert_agama_after("7.4.17", p, index, "Tu~k")
-    } else if  c.text == "Svi":
+    } else if p.has(i, f::text("Svi":
         op.antya("7.4.18", p, c, "a")
-    } else if  c.text == "pat":
+    } else if p.has(i, f::text("pat":
         op.mit("7.4.19", p, c, "p")
-    } else if  c.text == "vac":
+    } else if p.has(i, f::text("vac":
         op.mit("7.4.20", p, c, "u")
 
 
@@ -859,7 +857,7 @@ fn ksasya(p: Prakriya):
     if n.adi in s("ac"):
         op.antya("7.3.72", p, c, "")
     if dhatu.text in {"duh", "dih", "lih", "guh"} and n.all(T.ATMANEPADA):
-        op.optional(op.antya, "7.3.73", p, c, "")
+        p.op_optional(op.antya, "7.3.73", p, c, "")
 
 
 fn nau(p: Prakriya, index: int):
@@ -872,34 +870,34 @@ fn nau(p: Prakriya, index: int):
     if n.u not in {"Ric", "RiN"}:
         return
 
-    # HACK: avoid adding augments for ajAdi-dvitva.
+    // HACK: avoid adding augments for ajAdi-dvitva.
     if n.any(T.ABHYASA):
         return
 
     if c.text in {"f", "hrI", "vlI", "rI", "knUy", "kzmAy"} or c.antya == "A":
         op.insert_agama_after_by_term("7.3.36", p, c, "pu~k")
-    } else if  c.text in {"zA", "DA", "sA", "hvA", "vyA", "pA", "pE"} or c.u == "ve\\Y":
+    } else if c.text in {"zA", "DA", "sA", "hvA", "vyA", "pA", "pE"} or c.u == "ve\\Y":
         do = True
         if c.u == "ve\\Y":
-            if op.optional(op.insert_agama_after_by_term, "7.3.38", p, c, "ju~k"):
+            if p.op_optional(op.insert_agama_after_by_term, "7.3.38", p, c, "ju~k"):
                 do = False
         if do:
             op.insert_agama_after_by_term("7.3.37", p, c, "yu~k")
-    } else if  c.text == "pA" and c.gana == 2:
+    } else if p.has(i, f::text("pA" and c.gana == 2:
         op.insert_agama_after_by_term("7.3.37.v1", p, c, "lu~k")
-    # TODO: 7.3.39
-    } else if  c.text in {"prI", "DU"}:
-        # Optional per Haradatta (see commentary on prIY in siddhAnta-kaumudI)
-        op.optional(op.insert_agama_after_by_term, "7.3.37.v2", p, c, "nu~k")
-    # TODO: 7.3.39
-    } else if  c.text == "BI":
-        op.optional(op.insert_agama_after_by_term, "7.3.40", p, c, "zu~k")
-    } else if  c.text == "sPAy":
+    // TODO: 7.3.39
+    } else if c.text in {"prI", "DU"}:
+        // Optional per Haradatta (see commentary on prIY in siddhAnta-kaumudI)
+        p.op_optional(op.insert_agama_after_by_term, "7.3.37.v2", p, c, "nu~k")
+    // TODO: 7.3.39
+    } else if p.has(i, f::text("BI")) {
+        p.op_optional(op.insert_agama_after_by_term, "7.3.40", p, c, "zu~k")
+    } else if p.has(i, f::text("sPAy")) {
         op.antya("7.3.41", p, c, "v")
-    } else if  c.text == "Sad":
-        op.optional(op.antya, "7.3.42", p, c, "t")
-    } else if  c.text == "ruh":
-        op.optional(op.antya, "7.3.43", p, c, "p")
+    } else if p.has(i, f::text("Sad")) {
+        p.op_optional(op.antya, "7.3.42", p, c, "t")
+    } else if p.has(i, f::text("ruh")) {
+        p.op_optional(op.antya, "7.3.43", p, c, "p")
 
 
 fn vibhaktau(p: Prakriya):
@@ -910,60 +908,65 @@ fn vibhaktau(p: Prakriya):
 
     if stem.text == "rE" and sup.adi in s("hal"):
         op.antya("7.2.85", p, stem, "A")
-    } else if  stem.text in {"yuzmad", "asmad"}:
+    } else if stem.text in {"yuzmad", "asmad"}:
         if sup.adi in s("ac"):
             op.antya("7.2.89", p, stem, "y")
-        } else if  sup.text:
+        } else if sup.text:
             op.antya("7.2.86", p, stem, "A")
-        } else if  sup.all(T.V2):
+        } else if sup.all(T.V2):
             op.antya("7.2.87", p, stem, "A")
-        } else if  sup.all(T.V1, T.DVIVACANA):
+        } else if sup.all(T.V1, T.DVIVACANA):
             op.antya("7.2.88", p, stem, "A")
         else:
             op.antya("7.2.90", p, stem, "")
 
-
-fn run_remainder(p: Prakriya):
+*/
+pub fn run_remainder(p: &mut Prakriya) {
+/*
     sup_adesha.run(p)
     pratyaya_adesha(p)
     vibhaktau(p)
 
-    # ksasya must run lin_karya so that at-lopa takes effect and prevents
-    # "ato yeyaH"
+    // ksasya must run lin_karya so that at-lopa takes effect and prevents
+    // "ato yeyaH"
     ksasya(p)
-    # 7.2.79 - 7.2.81
+    // 7.2.79 - 7.2.81
     lin_karya(p)
 
     for index, _ in enumerate(p.terms):
         shiti(p, index)
 
-    # Must come before asiddhavat rule 6.4.78 (e.g. "iyarti", ekahalmadhya)
+    // Must come before asiddhavat rule 6.4.78 (e.g. "iyarti", ekahalmadhya)
     abhyasasya.run(p)
 
     index = 0
     while index < len(p.terms):
         has_at = p.any(T.F_AT_AGAMA)
         asiddhavat.run_before_guna(p, index)
-        # Added at-Agama -- this causes a frame shift. Correct the pointer.
+        // Added at-Agama -- this causes a frame shift. Correct the pointer.
         if p.any(T.F_AT_AGAMA) != has_at:
             index += 1
 
-        # num-Agama must come after asiddhavat rule 6.2.24, which causes na-lopa.
+        // num-Agama must come after asiddhavat rule 6.2.24, which causes na-lopa.
         num_agama(p, index)
         index += 1
 
     sic_vrddhi(p)
+    */
 
-    for index, _ in enumerate(p.terms):
-        nau(p, index)
+    for index in 0..p.terms().len() {
+        /* nau(p, index)
         cajoh_kuh(p, index)
-        run_for_each_2(p, index)
+        */
+        run_for_each_2(p, index);
+    }
 
-    # Rules for various lun-vikaranas.
+    /*
+    // Rules for various lun-vikaranas.
     liti(p)
     ani(p)
 
-    # Asiddhavat must run before cani for "Ner aniTi"
+    // Asiddhavat must run before cani for "Ner aniTi"
     for index, _ in enumerate(p.terms):
         c = p.terms[index]
         if c.text:
@@ -982,3 +985,5 @@ fn run_remainder(p: Prakriya):
         ato_dirgha(p, index)
 
     asiddhavat.run_dirgha(p)
+*/
+}

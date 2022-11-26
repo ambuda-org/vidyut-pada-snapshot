@@ -1,4 +1,5 @@
 use crate::ac_sandhi;
+use crate::angasya;
 use crate::ardhadhatuka;
 use crate::atmanepada;
 use crate::constants::{La, Prayoga, Purusha, Vacana};
@@ -46,6 +47,7 @@ pub fn tinanta(
         tin_pratyaya::siddhi(&mut p, la)?;
     }
 
+    angasya::run_remainder(&mut p);
     ac_sandhi::run(&mut p);
 
     Ok(p)

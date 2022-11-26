@@ -104,7 +104,7 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) {
         if p.has(n, f::lakshana("li~N")) {
             p.op("2.4.42", to_vadha);
         } else if p.has(n, f::lakshana("lu~N")) {
-            if p.has(n, f::has_tag(T::Atmanepada)) {
+            if p.has(n, f::tag(T::Atmanepada)) {
                 p.op_optional("2.4.44", to_vadha);
             } else {
                 p.op("2.4.43", to_vadha);

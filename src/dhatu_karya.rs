@@ -90,7 +90,7 @@ fn satva_and_natva(p: &mut Prakriya, i: usize) {
                     |_| true,
                     |t| {
                         t.add_tag(T::FlagAdeshadi);
-                        op::adi(t, "s");
+                        op::adi("s")(t);
                     },
                 );
             }
@@ -103,7 +103,7 @@ fn satva_and_natva(p: &mut Prakriya, i: usize) {
             |t| t.has_adi(&s("R")),
             |t| {
                 t.add_tag(T::FlagAdeshadi);
-                op::adi(t, "n");
+                op::adi("n")(t);
             },
         );
     }

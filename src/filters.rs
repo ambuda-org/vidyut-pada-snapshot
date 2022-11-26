@@ -1,3 +1,11 @@
+/*!
+Components for creating filters.
+
+We model rules as having two parts: a `filter` that determines whether the rule can apply to some
+*prakriya* and an `operator` that changes the *prakriya*. This module contains useful standalone
+filters and various utilities for working with filters in the rest of the system.
+
+*/
 use crate::constants::Tag as T;
 use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
@@ -34,6 +42,7 @@ pub fn is_samyoganta(t: &Term) -> bool {
     HAL.contains_opt(chars.next()) && HAL.contains_opt(chars.next())
 }
 
+/// Returns whether the term is a pratyaya with exactly one sound.
 pub fn is_aprkta(t: &Term) -> bool {
     t.has_tag(T::Pratyaya) && t.text.len() == 1
 }
@@ -46,26 +55,33 @@ pub fn is_laghu(t: &Term) -> bool {
     matches!(t.antya(), Some('a' | 'i' | 'u' | 'f' | 'x'))
 }
 
+/// Returns whether the term ends in a *hrasva* vowel.
 pub fn is_hrasva(t: &Term) -> bool {
     is_laghu(t)
 }
 
+/// Returns whether the term ends in a *guru* syllable.
 pub fn is_guru(t: &Term) -> bool {
     !is_laghu(t)
 }
-
-//
 
 pub fn ends_with(sub: &'static str) -> impl Fn(&Term) -> bool {
     move |t| t.text.ends_with(sub)
 }
 
-pub fn has_tag(tag: T) -> impl Fn(&Term) -> bool {
+/// Returns whether the term has the given `tag`.
+pub fn tag(tag: T) -> impl Fn(&Term) -> bool {
     move |t| t.has_tag(tag)
 }
 
-pub fn text(text: &'static str) -> impl Fn(&Term) -> bool {
-    move |t| t.text == text
+/// Returns whether the term's text is exactly `x`.
+pub fn text(x: &'static str) -> impl Fn(&Term) -> bool {
+    move |t| t.text == x
+}
+
+/// Returns whether the term's text is contained in `xs`.
+pub fn text_in(xs: &'static [&str]) -> impl Fn(&Term) -> bool {
+    move |t| t.has_text(xs)
 }
 
 pub fn lakshana(text: &'static str) -> impl Fn(&Term) -> bool {
@@ -76,10 +92,12 @@ pub fn lakshana_in(xs: &'static [&str]) -> impl Fn(&Term) -> bool {
     move |t| t.has_any_lakshana(xs)
 }
 
+/// Returns whether the term's upadesha is exactly `x`.
 pub fn u(u: &'static str) -> impl Fn(&Term) -> bool {
     move |t| t.has_u(u)
 }
 
+/// Returns whether the term's upadesha is contained in `xs`.
 pub fn u_in(us: &'static [&str]) -> impl Fn(&Term) -> bool {
     move |t| t.has_u_in(us)
 }

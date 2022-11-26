@@ -1,22 +1,20 @@
-pub mod constants;
-pub mod prakriya;
-pub mod term;
-
-pub mod filters;
-pub mod operations;
-pub mod sounds;
-
 pub mod ac_sandhi;
+pub mod angasya;
 pub mod ardhadhatuka;
+pub mod ashtadhyayi;
 pub mod atmanepada;
+pub mod constants;
+pub mod dhatu_gana;
 pub mod dhatu_karya;
+pub mod dhatupatha;
+pub mod filters;
 pub mod it_samjna;
 pub mod la_karya;
+pub mod operations;
+pub mod prakriya;
 pub mod samjna;
 pub mod sanadi;
+pub mod sounds;
+pub mod term;
 pub mod tin_pratyaya;
 pub mod vikarana;
-
-pub mod ashtadhyayi;
-pub mod dhatu_gana;
-pub mod dhatupatha;

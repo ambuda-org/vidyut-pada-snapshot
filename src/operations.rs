@@ -1,16 +1,49 @@
+/*!
+Components for creating operators.
+
+We model rules as having two parts: a `filter` that determines whether the rule can apply to some
+*prakriya* and an `operator` that changes the *prakriya*. This module contains useful standalone
+operators and various utilities for working with operators in the rest of the system.
+
+
+# Types of operators
+
+Broadly, our system has two kinds of operators: `Term` operators and `Prakriya` operators. A `Term`
+operator accepts a single term and mutates it in some way, and a `Prakriya` operator does the same
+for a `Prakriya`. Most of our operators are `Term` operators, but we can convert these operators to
+`Prakriya` operators with the `t` function.
+
+
+# Technical design
+
+Generally, the functions here accept one or more static parameters then return `Term` operators as
+closures. This approach gives us a terse and simple scheme for describing various operations, and
+Rust's zero-cost abstractions ensure that there is no runtime penalty for juggling so many
+closures.
+*/
 use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::prakriya::Prakriya;
 use crate::sounds::is_ac;
 use crate::term::Term;
 
+/// Wraps a `Term` operator and converts it to a `Prakriya` operator.
+pub fn t(i: usize, f: impl Fn(&mut Term)) -> impl Fn(&mut Prakriya) {
+    move |p| {
+        if let Some(t) = p.get_mut(i) {
+            f(t);
+        }
+    }
+}
+
 // Substitution
 // ============
 
 /// Replaces the first sound in the given term.
-pub fn adi(t: &mut Term, sub: &str) {
-    if let Some(c) = t.adi() {
-        if c.to_string() != sub {
+pub fn adi(sub: &'static str) -> impl Fn(&mut Term) {
+    move |t| {
+        let n = t.text.len();
+        if n > 0 {
             t.text = String::from(sub) + &t.text[1..];
         }
     }
@@ -36,6 +69,9 @@ pub fn upadha(sub: &'static str) -> impl Fn(&mut Term) {
     }
 }
 
+/// Inserts some text immediately after the term's last vowel:
+///
+/// > mid aco 'ntyāt paraḥ (1.1.47)
 pub fn mit(sub: &'static str) -> impl Fn(&mut Term) {
     |t| {
         let text = &t.text;
@@ -45,6 +81,11 @@ pub fn mit(sub: &'static str) -> impl Fn(&mut Term) {
     }
 }
 
+/// Replaces the `ti` region of the given term.
+///
+/// The `ti` region starts at the term's last vowel and continues to the end of the string:
+///
+/// > aco 'ntyādi ṭi (1.1.64)
 pub fn ti(sub: &'static str) -> impl Fn(&mut Term) {
     move |t| {
         let text = &t.text;
@@ -52,6 +93,11 @@ pub fn ti(sub: &'static str) -> impl Fn(&mut Term) {
             t.text = String::from(&text[..i]) + sub;
         }
     }
+}
+
+/// Replaces all of the text of the given term.
+pub fn text(sub: &'static str) -> impl Fn(&mut Term) {
+    |t| t.text = sub.to_string()
 }
 
 pub fn upadesha_no_it(p: &mut Prakriya, i: usize, sub: &str) {
@@ -112,24 +158,24 @@ pub fn text_yatha(p: &mut Prakriya, i: usize, old: &[&str], new: &[&str]) {
 // Lopa
 // ====
 
-/// Delete the text in the given term.
+/// Deletes all of the text in the given term.
 fn lopa(t: &mut Term) {
     t.text = "".to_string();
 }
 
-/// Delete the text in the given term through `लुक्`.
+/// Delete all of the text in the given term through *luk*.
 pub fn luk(t: &mut Term) {
     lopa(t);
     t.add_tag(T::Luk);
 }
 
-/// Deletes the text in the given term through `श्लु`.
+/// Deletes all of the text in the given term through *ślu*.
 pub fn slu(t: &mut Term) {
     lopa(t);
     t.add_tag(T::Slu);
 }
 
-/// Deletes the text in the given term through `लुप्`.
+/// Deletes all of the text in the given term through *lup*.
 fn lup(t: &mut Term) {
     lopa(t);
     t.add_tag(T::Lup);
@@ -145,20 +191,8 @@ pub fn samjna(t: &mut Term, tag: T) {
 
 pub fn none(_: &mut Term) {}
 
-pub fn t(i: usize, f: impl Fn(&mut Term)) -> impl Fn(&mut Prakriya) {
-    move |p| {
-        if let Some(t) = p.get_mut(i) {
-            f(t);
-        }
-    }
-}
-
 pub fn add_tag(tag: T) -> impl Fn(&mut Term) {
     move |t| t.add_tag(tag)
-}
-
-pub fn text(sub: &'static str) -> impl Fn(&mut Term) {
-    |t| t.text = sub.to_string()
 }
 
 #[cfg(test)]
@@ -169,7 +203,7 @@ mod tests {
     #[test]
     fn test_adi() {
         let mut t = Term::make_text("ji");
-        adi(&mut t, "g");
+        adi("g")(&mut t);
         assert_eq!(t.text, "gi");
     }
 
