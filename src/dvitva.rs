@@ -1,14 +1,16 @@
-from padmini import filters as f
-from padmini import operations as op
-from padmini.constants import Tag as T
-from padmini.sounds import s
-from padmini.prakriya import Term, Prakriya
-from padmini.term_views import TermView
-from padmini.prakarana.utils import eka_ac
+use crate::constants::Tag as T;
+use crate::constants::{La, Purusha, Vacana};
+use crate::filters as f;
+use crate::it_samjna;
+use crate::operations as op;
+use crate::prakriya::Prakriya;
+use crate::sounds::s;
+use crate::term::Term;
+use std::error::Error;
 
-
+/*
 fn _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
-    # Special logic for Nic.
+    // Special logic for Nic.
     if (
         dhatu.adi in s("ac")
         and dhatu.antya in s("hal")
@@ -35,7 +37,7 @@ fn _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
         p.step("6.1.5")
 
     } else if  eka_ac(dhatu) or dhatu.adi in s("hal"):
-        # TODO: correctly double jAgR
+        // TODO: correctly double jAgR
         abhyasa = Term.make_term(dhatu.text)
         op.insert_before(rule, p, dhatu, abhyasa)
         op.samjna("6.1.4", p, abhyasa, T.ABHYASA)
@@ -46,20 +48,20 @@ fn _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
             p.terms[i + 2].add_tags(T.ABHYASTA)
         p.step("6.1.5")
     else:
-        # Create 3 terms:
-        # 1. the dhatu without the abhyasa
-        # 2. the abhyasa
-        # 3. the doubled portion
+        // Create 3 terms:
+        // 1. the dhatu without the abhyasa
+        // 2. the abhyasa
+        // 3. the doubled portion
 
-        # 6.1.2 ajAder dvitIyasya
-        # 6.1.3 na ndrAH saMyogAdayaH
+        // 6.1.2 ajAder dvitIyasya
+        // 6.1.3 na ndrAH saMyogAdayaH
         third = Term.make_term(dhatu.text[1:])
         while f.samyogadi(third) and third.adi in {"n", "d", "r"}:
             third.text = third.text[1:]
         third.u = dhatu.u
         third.add_tags(T.DHATU)
 
-        # Ru -> nu for UrRu
+        // Ru -> nu for UrRu
         if dhatu.text == "UrRu":
             third.text = "nu"
 
@@ -84,20 +86,20 @@ fn run_for_each(p: Prakriya, dhatu: Term, i: int):
     if not n:
         return
 
-    # HACK for Nic + caN
+    // HACK for Nic + caN
     if n.terms[0].u in ("Ric", "RiN"):
         n = TermView.make_pratyaya(p, i + 1)
 
     n.u = n.terms[0].u
     if dhatu.text in {"jakz", "jAgf", "daridrA", "cakAs", "SAs", "dIDI", "vevI"}:
-        # These are termed abhyasta, but they can still undergo dvitva because
-        # the rules below inherit "anabhyAsasya" from 6.1.8.
+        // These are termed abhyasta, but they can still undergo dvitva because
+        // the rules below inherit "anabhyAsasya" from 6.1.8.
         op.tag("6.1.6", p, dhatu, T.ABHYASTA)
 
     if n.all("li~w"):
-        # kAshikA:
-        #   dayateḥ iti dīṅo grahaṇaṃ na tu daya dāne ityasya.
-        #   digyādeśena dvirvacanasya bādhanam iṣyate.
+        // kAshikA:
+        //   dayateḥ iti dīṅo grahaṇaṃ na tu daya dāne ityasya.
+        //   digyādeśena dvirvacanasya bādhanam iṣyate.
         if dhatu.u == "de\\N":
             op.text("7.4.9", p, dhatu, "digi")
         else:
@@ -108,17 +110,20 @@ fn run_for_each(p: Prakriya, dhatu: Term, i: int):
         _double("6.1.10", p, dhatu, i)
     } else if  n.u == "caN":
         _double("6.1.11", p, dhatu, i)
+*/
 
-
-fn run(p: Prakriya):
+pub fn run(p: &mut Prakriya) {
+    /*
     i = 0
     num_terms = len(p.terms)
     while i < num_terms:
         c = p.terms[i]
-        # HACK to avoid doubling the nic / nin
+        // HACK to avoid doubling the nic / nin
         if c.any(T.DHATU) and c.u not in {"Ric", "RiN"}:
             run_for_each(p, c, i)
 
-        # Skip new terms
+        // Skip new terms
         i += 1 + (len(p.terms) - num_terms)
         num_terms = len(p.terms)
+    */
+}

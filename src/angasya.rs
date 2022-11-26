@@ -1,9 +1,9 @@
 //! angasya
 //! ~~~~~~~
 //! (6.4.1 - end of 7.4)
-//! 
+//!
 //! Rules that modify the sounds and terms in an aṅga.
-//! 
+//!
 //! This section of the text is massive, so we break it down into several smaller prakaraṇas.
 
 use crate::constants::Tag as T;
@@ -16,50 +16,77 @@ use crate::sounds::s;
 use crate::term::Term;
 use std::error::Error;
 
+/// Applies rules that replace an initial "J" in a pratyaya with the appropriate sounds.
+/// (7.1.3 - 7.1.7)
+fn maybe_do_jha_adesha(p: &mut Prakriya, i: usize) {
+    if !p.has(i, |t| t.text.starts_with('J')) {
+        return;
+    }
+    let b = match p.terms()[..i]
+        .iter()
+        .enumerate()
+        .rev()
+        .find(|(_, t)| !t.text.is_empty())
+    {
+        Some((index, _)) => index,
+        None => return,
+    };
+
+    let to_at = |t: &mut Term| t.text = t.text.replace('J', "at");
+    let to_ant = |t: &mut Term| t.text = t.text.replace('J', "ant");
+
+    if p.has(b, f::tag(T::Abhyasta)) {
+        p.op("7.1.4", op::t(i, to_at));
+    } else if p.has(b, |t| !t.text.ends_with('a')) && p.has(i, f::atmanepada) {
+        p.op("7.1.5", op::t(i, to_at));
+    } else {
+        p.op("7.1.3", op::t(i, to_ant));
+    }
+
+    if p.has(i, f::atmanepada) {
+        let insert_rut = |p: &mut Prakriya| p.insert_after(b, Term::make_agama("ru~w"));
+
+        if p.has(b, f::u("SIN")) {
+            insert_rut(p);
+            p.step("7.1.6");
+        } else if p.has(b, |t| t.has_u("vida~") && t.gana == Some(2)) {
+            p.op_optional("7.1.7", insert_rut);
+        }
+    }
+}
+
+/// Applies rules that replace the jha-pratyaya with the appropriate sounds.
+/// (7.1.1 - 7.1.7)
+pub fn pratyaya_adesha(p: &mut Prakriya) {
+    let i = p.terms().len() - 1;
+    let t = &p.terms()[i];
+
+    if t.has_text(&["yu~", "vu~"]) {
+        if t.text == "yu~" {
+            p.op("7.1.1", op::t(i, op::text("ana")));
+        } else {
+            p.op("7.1.1", op::t(i, op::text("aka")));
+        }
+    } else if t.has_adi(&s("P Q K C G")) {
+        let sub = match t.adi().unwrap() {
+            'P' => "Ayan",
+            'Q' => "ey",
+            'K' => "In",
+            'C' => "Iy",
+            'G' => "in",
+            _ => panic!("Unexpected"),
+        };
+        p.op("7.1.2", op::t(i, op::adi(sub)));
+    } else if t.text.starts_with('J') {
+        maybe_do_jha_adesha(p, i);
+    // -tAt substitution needs to occur early because it conditions samprasarana.
+    } else if p.has(i, |t| t.has_tag(T::Tin) && t.has_text(&["tu", "hi"])) {
+        // N is to block pit-guNa, not for replacement of the last letter.
+        p.op_optional("7.1.35", |p| op::upadesha(p, i, "tAta~N"));
+    }
+}
 
 /*
-fn jha_adesha(p: Prakriya):
-    """Rules that modify the jha-pratyaya.
-
-    (7.1.1 - 7.1.7)
-    """
-    last = p.terms[-1]
-
-    if last.text in {"yu~", "vu~"}:
-        if last.text == "yu~":
-            op.text("7.1.1", p, last, "ana")
-        else:
-            op.text("7.1.1", p, last, "aka")
-
-    } else if last.adi in {"P", "Q", "K", "C", "G"}:
-        subs = dict(zip("Ayan", "ey", "In", "Iy", "in"), "PQKCG")
-        op.adi("7.1.2", p, last, subs[last.adi])
-
-    } else if last.adi == "J":
-        ps = [t for t in p.terms[:-1] if t.text]
-        prev = ps[-1]
-        if prev.any(T.ABHYASTA):
-            op.text("7.1.4", p, last, last.text.replace("J", "at"))
-        } else if prev.antya != "a" and last.all(T.ATMANEPADA):
-            op.text("7.1.5", p, last, last.text.replace("J", "at"))
-        else:
-            op.text("7.1.3", p, last, last.text.replace("J", "ant"))
-
-        if last.all(T.ATMANEPADA):
-            if prev.u == "SIN":
-                op.insert_agama_after_by_term("7.1.6", p, prev, "ru~w")
-            } else if prev.u == "vida~" and prev.gana == 2:
-                p.op_optional(op.insert_agama_after_by_term, "7.1.7", p, prev, "ru~w")
-
-    // -tAt substitution needs to occur early because it conditions samprasarana.
-    } else if last.all(T.TIN) and last.text in ("tu", "hi"):
-        if p.allow("7.1.35"):
-            // N is to block pit-guNa, not for replacement of the last letter.
-            op.upadesha("7.1.35", p, last, "tAta~N")
-        else:
-            p.decline("7.1.35")
-
-
 fn pratyaya_adesha(p: Prakriya):
     """Rules that substitute the pratyaya.
 
@@ -123,6 +150,7 @@ fn nnit_vrddhi(p: Prakriya, c: Term, n: TermView):
 */
 
 fn guna_adesha(p: &mut Prakriya, i: usize) {
+    /*
     if p.has(i, f::tag(T::Agama)) {
         return;
     }
@@ -192,6 +220,7 @@ fn guna_adesha(p: &mut Prakriya, i: usize) {
             op.upadha("7.3.86", p, c, sounds.guna(c.upadha))
         }
     }
+    */
 }
 
 /*
@@ -456,7 +485,6 @@ fn nittva(p, index):
     } else if c.antya == "f" and n.u == "su~" and not n.any(T.SAMBUDDHI):
         op.antya("7.1.94", p, c, "an")
 */
-
 
 fn run_for_each_2(p: &mut Prakriya, index: usize) {
     /*
@@ -922,7 +950,7 @@ fn vibhaktau(p: Prakriya):
 
 */
 pub fn run_remainder(p: &mut Prakriya) {
-/*
+    /*
     sup_adesha.run(p)
     pratyaya_adesha(p)
     vibhaktau(p)
@@ -962,28 +990,28 @@ pub fn run_remainder(p: &mut Prakriya) {
     }
 
     /*
-    // Rules for various lun-vikaranas.
-    liti(p)
-    ani(p)
+        // Rules for various lun-vikaranas.
+        liti(p)
+        ani(p)
 
-    // Asiddhavat must run before cani for "Ner aniTi"
-    for index, _ in enumerate(p.terms):
-        c = p.terms[index]
-        if c.text:
-            asiddhavat.run_nau(p, index)
+        // Asiddhavat must run before cani for "Ner aniTi"
+        for index, _ in enumerate(p.terms):
+            c = p.terms[index]
+            if c.text:
+                asiddhavat.run_nau(p, index)
 
-    cani_after_guna(p)
-    abhyasasya.run_sani_cani(p)
+        cani_after_guna(p)
+        abhyasasya.run_sani_cani(p)
 
-    for index, _ in enumerate(p.terms):
-        c = p.terms[index]
-        if not c.text:
-            continue
+        for index, _ in enumerate(p.terms):
+            c = p.terms[index]
+            if not c.text:
+                continue
 
-        asiddhavat.run_after_guna(p, index)
-        dhatu_rt_adesha(p, index)
-        ato_dirgha(p, index)
+            asiddhavat.run_after_guna(p, index)
+            dhatu_rt_adesha(p, index)
+            ato_dirgha(p, index)
 
-    asiddhavat.run_dirgha(p)
-*/
+        asiddhavat.run_dirgha(p)
+    */
 }

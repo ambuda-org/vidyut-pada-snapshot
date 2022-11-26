@@ -74,9 +74,18 @@ pub fn tag(tag: T) -> impl Fn(&Term) -> bool {
     move |t| t.has_tag(tag)
 }
 
+/// Returns whether the term is an Atmanepada pratyaya.
+pub fn atmanepada(t: &Term) -> bool {
+    t.has_tag(T::Atmanepada)
+}
+
 /// Returns whether the term's text is exactly `x`.
 pub fn text(x: &'static str) -> impl Fn(&Term) -> bool {
     move |t| t.text == x
+}
+
+pub fn not_empty(t: &Term) -> bool {
+    !t.text.is_empty()
 }
 
 /// Returns whether the term's text is contained in `xs`.

@@ -7,6 +7,7 @@ pub mod constants;
 pub mod dhatu_gana;
 pub mod dhatu_karya;
 pub mod dhatupatha;
+pub mod dvitva;
 pub mod filters;
 pub mod it_samjna;
 pub mod la_karya;

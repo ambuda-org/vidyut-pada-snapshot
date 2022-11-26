@@ -202,12 +202,16 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
     Ok(())
 }
 
-fn maybe_do_lin_siddhi(p: &mut Prakriya, i: usize, la: La) -> Result<(), Box<dyn Error>> {
-    if !p.has(i, |t| t.has_u("li~N")) {
+fn maybe_do_lin_siddhi(p: &mut Prakriya, i_tin: usize, la: La) -> Result<(), Box<dyn Error>> {
+    let mut i = i_tin;
+
+    if !p.has(i, |t| t.has_lakshana("li~N")) {
         return Ok(());
     }
     if p.has(i, |t| t.has_tag(T::Parasmaipada)) {
         p.insert_before(i, Term::make_agama("yAsu~w"));
+        i += 1;
+
         if la == La::AshirLin {
             // Add kit to the pratyaya, not the Agama.
             p.op("3.4.104", op::t(i, op::add_tag(T::kit)));
@@ -218,6 +222,8 @@ fn maybe_do_lin_siddhi(p: &mut Prakriya, i: usize, la: La) -> Result<(), Box<dyn
         it_samjna::run(p, i - 1)?;
     } else {
         p.insert_before(i, Term::make_agama("sIyu~w"));
+        i += 1;
+
         p.step("3.4.102");
         it_samjna::run(p, i - 1)?;
 
