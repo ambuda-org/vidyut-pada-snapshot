@@ -133,7 +133,7 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
         xy(|x, y| AK.contains_char(x) && AK.contains_char(y) && al::savarna(x).contains_char(y)),
         |p, x, _, i, j| {
             set_at(p, j, "");
-            set_at(p, i, &al::to_dirgha(x).to_string());
+            set_at(p, i, &al::to_dirgha(x).expect("should be ac").to_string());
             p.step("6.1.101");
         },
     );

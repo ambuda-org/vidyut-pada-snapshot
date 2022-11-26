@@ -1,29 +1,40 @@
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 
-type Sound = String;
+type Sound = char;
 
 lazy_static! {
     static ref SUTRAS: Vec<Sutra> = create_shiva_sutras();
     static ref SOUND_PROPS: HashMap<Sound, Uccarana> = create_sound_props();
 }
 
+struct Sutra {
+    sounds: String,
+    it: char,
+}
+
+impl Sutra {
+    fn new(sounds: &str, it: char) -> Self {
+        Sutra { sounds: sounds.to_string(), it }
+    }
+}
+
 fn create_shiva_sutras() -> Vec<Sutra> {
     vec![
-        Sutra::new(vec!["a", "i", "u"], "R"),
-        Sutra::new(vec!["f", "x"], "k"),
-        Sutra::new(vec!["e", "o"], "N"),
-        Sutra::new(vec!["E", "O"], "c"),
-        Sutra::new(vec!["ha", "ya", "va", "ra"], "w"),
-        Sutra::new(vec!["la"], "R"),
-        Sutra::new(vec!["Ya", "ma", "Na", "Ra", "na"], "m"),
-        Sutra::new(vec!["Ja", "Ba"], "Y"),
-        Sutra::new(vec!["Ga", "Qa", "Da"], "z"),
-        Sutra::new(vec!["ja", "ba", "ga", "qa", "da"], "S"),
-        Sutra::new(vec!["Ka", "Pa", "Ca", "Wa", "Ta", "ca", "wa", "ta"], "v"),
-        Sutra::new(vec!["ka", "pa"], "y"),
-        Sutra::new(vec!["Sa", "za", "sa"], "r"),
-        Sutra::new(vec!["ha"], "l"),
+        Sutra::new("aiu", 'R'),
+        Sutra::new("fx", 'k'),
+        Sutra::new("eo", 'N'),
+        Sutra::new("EO", 'c'),
+        Sutra::new("hyvr", 'w'),
+        Sutra::new("l", 'R'),
+        Sutra::new("YmNRn", 'm'),
+        Sutra::new("JB", 'Y'),
+        Sutra::new("GQD", 'z'),
+        Sutra::new("jbgqd", 'S'),
+        Sutra::new("KPCWTcwt", 'v'),
+        Sutra::new("kp", 'y'),
+        Sutra::new("Szs", 'r'),
+        Sutra::new("h", 'l'),
     ]
 }
 
@@ -31,17 +42,18 @@ fn create_sound_props() -> HashMap<Sound, Uccarana> {
     fn flatten_multi<T: Copy>(data: Vec<(SoundSet, T)>) -> HashMap<Sound, Vec<T>> {
         let mut mapping = HashMap::new();
         for (ks, v) in data {
-            for k in &ks.vec {
-                mapping.entry(k.clone()).or_insert_with(Vec::new).push(v);
+            for k in ks.iter() {
+                mapping.entry(k).or_insert_with(Vec::new).push(v);
             }
         }
         mapping
     }
+
     fn flatten<T: Copy>(data: Vec<(SoundSet, T)>) -> HashMap<Sound, T> {
         let mut mapping = HashMap::new();
         for (ks, v) in data {
-            for k in &ks.vec {
-                mapping.insert(k.clone(), v);
+            for k in ks.iter() {
+                mapping.insert(k, v);
             }
         }
         mapping
@@ -57,7 +69,7 @@ fn create_sound_props() -> HashMap<Sound, Uccarana> {
         (s("o O"), Sthana::KanthaOshtha),
         (s("v"), Sthana::DantaOshtha),
     ]);
-    for k in s("Yam M").vec {
+    for k in s("Yam M").iter() {
         sthana
             .entry(k)
             .or_insert_with(Vec::new)
@@ -79,14 +91,14 @@ fn create_sound_props() -> HashMap<Sound, Uccarana> {
     ]);
 
     let mut res = HashMap::new();
-    for k in s("al H M").vec {
+    for k in s("al H M").iter() {
         let sthana = match sthana.get(&k) {
             Some(s) => s.clone(),
             None => Vec::new(),
         };
 
         res.insert(
-            k.clone(),
+            k,
             Uccarana {
                 sthana,
                 ghosha: *ghosha.get(&k).unwrap_or(&Ghosha::Aghosha),
@@ -163,32 +175,31 @@ enum Prayatna {
 }
 
 pub struct SoundSet {
-    vec: Vec<String>,
     string: String,
 }
 
 impl SoundSet {
-    pub fn new(sounds: Vec<Sound>) -> Self {
-        let string = sounds.join("");
+    pub fn new(string: &str) -> Self {
         SoundSet {
-            string,
-            vec: sounds,
+            string: string.to_string(),
         }
     }
 
-    pub fn from_string(string: &str) -> Self {
+    pub fn from_vec(sounds: Vec<Sound>) -> Self {
+        let string = sounds.iter().collect();
         SoundSet {
-            string: string.to_string(),
-            vec: string.chars().map(|x| x.to_string()).collect(),
+            string,
         }
     }
 
     pub fn contains(&self, s: &str) -> bool {
         self.string.contains(s)
     }
-    pub fn contains_char(&self, c: char) -> bool {
+
+    pub fn contains_char(&self, c: Sound) -> bool {
         self.string.contains(c)
     }
+
     pub fn contains_opt(&self, o: Option<char>) -> bool {
         if let Some(c) = o {
             self.contains_char(c)
@@ -197,33 +208,23 @@ impl SoundSet {
         }
     }
 
-    pub fn items(&self) -> &Vec<Sound> {
-        &self.vec
+    pub fn into_string(self) -> String {
+        self.string
     }
-}
 
-struct Sutra {
-    sounds: Vec<String>,
-    it: String,
-}
-
-impl Sutra {
-    fn new(sounds: Vec<&str>, it: &str) -> Self {
-        Sutra {
-            sounds: sounds.iter().map(|x| x.to_string()).collect(),
-            it: it.to_string(),
-        }
+    pub fn iter(&self) -> std::str::Chars {
+        self.string.chars()
     }
 }
 
 fn pratyahara(s: &str) -> SoundSet {
-    let n = s.len();
+    let first = s.as_bytes()[0] as char;
 
     let use_second_n = s.ends_with("R2");
-    let (first, it) = if use_second_n {
-        (&s[..n - 2], &s[n - 2..n - 1])
+    let it = if use_second_n {
+        'R'
     } else {
-        (&s[..n - 1], &s[n - 1..])
+        s.as_bytes()[s.len() - 1] as char
     };
 
     let mut started = false;
@@ -231,21 +232,17 @@ fn pratyahara(s: &str) -> SoundSet {
     let mut res = vec![];
 
     for sutra in SUTRAS.iter() {
-        for sound in &sutra.sounds {
+        for sound in sutra.sounds.chars() {
             if first == sound {
                 started = true;
             }
             if started {
-                let letter = &sound[0..=0];
-                res.push(letter.to_string());
+                res.push(sound);
 
                 // Add long vowels, which are not explictly included in the
                 // Shiva Sutras.
-                match letter {
-                    "a" | "i" | "u" | "f" | "x" => {
-                        res.push(letter.to_uppercase());
-                    }
-                    _ => (),
+                if is_hrasva(sound) {
+                    res.push(to_dirgha(sound).expect("should be ac"));
                 }
             }
         }
@@ -260,10 +257,10 @@ fn pratyahara(s: &str) -> SoundSet {
     }
 
     assert!(!res.is_empty(), "Could not parse pratyahara `{s}`");
-    SoundSet::new(res)
+    SoundSet::from_vec(res)
 }
 
-pub fn savarna(c: char) -> SoundSet {
+pub fn savarna(c: Sound) -> SoundSet {
     let sounds = match c {
         'a' | 'A' => "aA",
         'i' | 'I' => "iI",
@@ -276,25 +273,25 @@ pub fn savarna(c: char) -> SoundSet {
         'p' | 'P' | 'b' | 'B' | 'm' => "pPbBm",
         _ => "",
     };
-    SoundSet::from_string(sounds)
+    SoundSet::new(sounds)
 }
 
 pub fn s(terms: &str) -> SoundSet {
-    let mut ret = vec![];
+    let mut ret = String::new();
     let ak = ["a", "A", "i", "I", "u", "U", "f", "F", "x", "X"];
 
     for term in terms.split_whitespace() {
         if term.ends_with("u~") || ak.contains(&term) {
             let first = term.chars().next().unwrap();
-            ret.extend(savarna(first).vec);
+            ret += &savarna(first).string;
         } else if term.len() == 1 {
-            ret.push(term.to_string());
+            ret += term;
         } else {
-            ret.extend(pratyahara(term).vec);
+            ret += &pratyahara(term).string;
         }
     }
 
-    SoundSet::new(ret)
+    SoundSet::new(&ret)
 }
 
 pub fn map_sounds(xs: &str, ys: &str) -> HashMap<Sound, Sound> {
@@ -302,25 +299,39 @@ pub fn map_sounds(xs: &str, ys: &str) -> HashMap<Sound, Sound> {
     let ys = s(ys);
 
     let mut mapping = HashMap::new();
-    for x in xs.vec {
+    for x in xs.iter() {
         let x_props = SOUND_PROPS.get(&x).unwrap();
 
         // The best sound has the minimal distance.
         let best_y = ys
-            .items()
             .iter()
-            .min_by_key(|y| SOUND_PROPS.get(*y).unwrap().distance(x_props))
+            .min_by_key(|y| SOUND_PROPS.get(y).unwrap().distance(x_props))
             .unwrap();
 
-        let d = x_props.distance(SOUND_PROPS.get(best_y).unwrap());
+        let d = x_props.distance(SOUND_PROPS.get(&best_y).unwrap());
         println!("The closest sound to {x} is {best_y} with distance {d}.");
-        mapping.insert(x, best_y.clone());
+        mapping.insert(x, best_y);
     }
 
     mapping
 }
 
-pub fn to_guna(s: char) -> &'static str {
+pub fn is_hrasva(c: Sound) -> bool {
+    matches!(c, 'a' | 'i' | 'u' | 'f' | 'x')
+}
+
+pub fn is_guna(c: Sound) -> bool {
+    matches!(c, 'a' | 'e' | 'o')
+}
+
+pub fn is_ac(c: Sound) -> bool {
+    lazy_static! {
+        static ref AC: SoundSet = s("ac");
+    }
+    AC.contains_char(c)
+}
+
+pub fn to_guna(s: Sound) -> &'static str {
     match s {
         'i' | 'I' => "e",
         'u' | 'U' => "o",
@@ -330,7 +341,7 @@ pub fn to_guna(s: char) -> &'static str {
     }
 }
 
-pub fn to_vrddhi(s: char) -> &'static str {
+pub fn to_vrddhi(s: Sound) -> &'static str {
     match s {
         'a' | 'A' => "A",
         'i' | 'I' => "E",
@@ -344,24 +355,25 @@ pub fn to_vrddhi(s: char) -> &'static str {
 }
 
 // 1.1.48 UkAlojjhrasvadIrghaplutaH
-fn to_hrasva(s: &str) -> &'static str {
-    match s {
-        "a" | "A" => "a",
-        "i" | "I" => "i",
-        "u" | "U" => "u",
-        "f" | "F" => "f",
-        "x" | "X" => "x",
-        "e" | "E" => "i",
-        "o" | "O" => "u",
-        &_ => panic!("Invalid hrasva sound {s}"),
-    }
+fn to_hrasva(s: Sound) -> Option<Sound> {
+    let res = match s {
+        'a' | 'A' => 'a',
+        'i' | 'I' => 'i',
+        'u' | 'U' => 'u',
+        'f' | 'F' => 'f',
+        'x' | 'X' => 'x',
+        'e' | 'E' => 'i',
+        'o' | 'O' => 'u',
+        _ => panic!("Invalid hrasva sound {s}"),
+    };
+    Some(res)
 }
 
 // 1.1.48 UkAlojjhrasvadIrghaplutaH
-pub fn to_dirgha(s: char) -> char {
-    match s {
+pub fn to_dirgha(s: Sound) -> Option<Sound> {
+    let res = match s {
         'a' | 'A' => 'A',
-        'i' | 'I' => 'U',
+        'i' | 'I' => 'I',
         'u' | 'U' => 'U',
         'f' | 'F' => 'F',
         'x' | 'X' => 'X',
@@ -369,19 +381,9 @@ pub fn to_dirgha(s: char) -> char {
         'E' => 'E',
         'o' => 'o',
         'O' => 'O',
-        _ => panic!("Invalid dirgha sound {s}"),
-    }
-}
-
-pub fn is_guna(c: char) -> bool {
-    matches!(c, 'a' | 'e' | 'o')
-}
-
-pub fn is_ac(c: char) -> bool {
-    lazy_static! {
-        static ref AC: SoundSet = s("ac");
-    }
-    AC.contains_char(c)
+        _ => return None
+    };
+    Some(res)
 }
 
 #[cfg(test)]
@@ -407,8 +409,8 @@ mod tests {
             ("a ku~ h H", "aAkKgGNhH"),
         ];
         for (input, expected) in tests {
-            let expected: HashSet<char> = expected.chars().collect();
-            let actual: HashSet<char> = s(input).string.chars().collect();
+            let expected: HashSet<Sound> = expected.chars().collect();
+            let actual: HashSet<Sound> = s(input).string.chars().collect();
             assert_eq!(actual, expected, "input: `{input}`");
         }
     }
@@ -416,34 +418,34 @@ mod tests {
     #[test]
     fn test_map_sounds_jhal_jhash() {
         let actual = map_sounds("Jal", "jaS");
-        let expected: HashMap<String, String> = vec![
-            ("J", "j"),
-            ("B", "b"),
-            ("G", "g"),
-            ("Q", "q"),
-            ("D", "d"),
-            ("j", "j"),
-            ("b", "b"),
-            ("g", "g"),
-            ("q", "q"),
-            ("d", "d"),
-            ("K", "g"),
-            ("P", "b"),
-            ("C", "j"),
-            ("W", "q"),
-            ("T", "d"),
-            ("c", "j"),
-            ("w", "q"),
-            ("t", "d"),
-            ("k", "g"),
-            ("p", "b"),
-            ("S", "j"),
-            ("z", "q"),
-            ("s", "d"),
-            ("h", "g"),
+        let expected: HashMap<Sound, Sound> = vec![
+            ('J', 'j'),
+            ('B', 'b'),
+            ('G', 'g'),
+            ('Q', 'q'),
+            ('D', 'd'),
+            ('j', 'j'),
+            ('b', 'b'),
+            ('g', 'g'),
+            ('q', 'q'),
+            ('d', 'd'),
+            ('K', 'g'),
+            ('P', 'b'),
+            ('C', 'j'),
+            ('W', 'q'),
+            ('T', 'd'),
+            ('c', 'j'),
+            ('w', 'q'),
+            ('t', 'd'),
+            ('k', 'g'),
+            ('p', 'b'),
+            ('S', 'j'),
+            ('z', 'q'),
+            ('s', 'd'),
+            ('h', 'g'),
         ]
         .iter()
-        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .map(|(k, v)| (*k, *v))
         .collect();
         assert_eq!(expected, actual);
     }
@@ -451,16 +453,16 @@ mod tests {
     #[test]
     fn test_map_sounds_kuh_cu() {
         let actual = map_sounds("ku~ h", "cu~");
-        let expected: HashMap<String, String> = vec![
-            ("k", "c"),
-            ("K", "C"),
-            ("g", "j"),
-            ("G", "J"),
-            ("N", "Y"),
-            ("h", "J"),
+        let expected: HashMap<Sound, Sound> = vec![
+            ('k', 'c'),
+            ('K', 'C'),
+            ('g', 'j'),
+            ('G', 'J'),
+            ('N', 'Y'),
+            ('h', 'J'),
         ]
         .iter()
-        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .map(|(k, v)| (*k, *v))
         .collect();
 
         assert_eq!(expected, actual);

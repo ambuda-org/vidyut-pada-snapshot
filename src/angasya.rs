@@ -1,5 +1,5 @@
 //! angasya
-//! ~~~~~~~
+//! =======
 //! (6.4.1 - end of 7.4)
 //!
 //! Rules that modify the sounds and terms in an aṅga.

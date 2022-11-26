@@ -9,6 +9,7 @@ filters and various utilities for working with filters in the rest of the system
 use crate::constants::Tag as T;
 use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
+use crate::sounds as al;
 use crate::term::Term;
 use lazy_static::lazy_static;
 
@@ -52,7 +53,10 @@ pub fn is_knit(t: &Term) -> bool {
 }
 
 pub fn is_laghu(t: &Term) -> bool {
-    matches!(t.antya(), Some('a' | 'i' | 'u' | 'f' | 'x'))
+    match t.antya() {
+        Some(c) => al::is_hrasva(c),
+        None => false
+    }
 }
 
 /// Returns whether the term ends in a *hrasva* vowel.
