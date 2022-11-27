@@ -650,7 +650,7 @@ fn dhatu_rt_adesha(p: Prakriya, index: int):
 ///
 /// (7.3.101 - 7.3.111)
 fn try_ato_dirgha(p: &mut Prakriya, i: usize) {
-    let n = match TermView::new(p.terms(), i+1) {
+    let n = match p.view(i+1) {
         Some(n) => n,
         None => return,
     };
@@ -677,7 +677,7 @@ fn try_ato_dirgha(p: &mut Prakriya, i: usize) {
         }
 
         let c = &p.terms()[i];
-        let n = match TermView::new(p.terms(), i+1) {
+        let n = match p.view(i+1) {
             Some(n) => n,
             None => return,
         };

@@ -1,5 +1,5 @@
 use crate::constants::Tag;
-use crate::term::Term;
+use crate::term::{Term, TermView};
 use std::collections::{HashMap, HashSet};
 
 pub type Rule = &'static str;
@@ -77,6 +77,10 @@ impl Prakriya {
     /// of bounds.
     pub fn get_mut(&mut self, i: usize) -> Option<&mut Term> {
         self.terms.get_mut(i)
+    }
+
+    pub fn view(&self, i: usize) -> Option<TermView> {
+        TermView::new(self.terms(), i)
     }
 
     /// Returns the index of the first `Term` that has the given tag or `None` if no such term
