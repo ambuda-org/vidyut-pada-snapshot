@@ -326,8 +326,6 @@ pub fn map_sounds(xs: &str, ys: &str) -> HashMap<Sound, Sound> {
             .iter()
             .min_by_key(|y| SOUND_PROPS.get(y).unwrap().distance(x_props))
             .unwrap();
-
-        let d = x_props.distance(SOUND_PROPS.get(&best_y).unwrap());
         mapping.insert(x, best_y);
     }
 

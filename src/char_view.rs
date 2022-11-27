@@ -42,7 +42,12 @@ pub fn char_rule(
 
         for i in 0..text.len() {
             if filter(p, &text, i) {
-                changed_text = changed_text || operator(p, &text, i);
+                changed_text = operator(p, &text, i);
+                // Once the text has changed, our indices need to be reset. So, break the loop and
+                // try again.
+                if changed_text {
+                    break;
+                }
             }
         }
 

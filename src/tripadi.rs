@@ -409,6 +409,48 @@ fn try_natva(p: &mut Prakriya) {
 }
 */
 
+/// Converts "m" and "n" to the anusvara when a consonant follows.
+///
+/// Example: Sankate -> SaMkate
+fn try_mn_to_anusvara(p: &mut Prakriya) {
+    // TODO: a-padAnta
+    char_rule(
+        p,
+        xy(|x, y| (x == 'm' || x == 'n') && JHAL.contains_char(y)),
+        |p, _, i| {
+            set_at(p, i, "M");
+            p.step("8.3.24");
+            true
+        },
+    );
+}
+
+/// Runs rules that make a sound mUrdhanya when certain sounds precede.
+///
+/// Example: `nesyati -> nezyati`
+///
+/// (8.3.55 - 8.3.119)
+fn try_murdhanya(p: &mut Prakriya) {
+    for i in 0..p.terms().len() {
+        let n = i + 1;
+        if p.get(n).is_none() {
+            return;
+        }
+
+        let apadanta = p.has(n, f::not_empty);
+        // HACK: don't include Agama.
+        let adesha_pratyaya = p.has(n, |t| t.any(&[T::Pratyaya, T::FlagAdeshadi, T::Agama]));
+        if p.has(i, |t| t.has_antya(&*INKU)) && p.has(n, f::adi("s")) && adesha_pratyaya && apadanta
+        {
+            p.op_term("8.3.59", n, op::adi("z"));
+        } else if p.has(i, |t| {
+            t.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && t.has_upadha(&*INKU)
+        }) {
+            p.op_term("8.3.60", i, op::antya("z"));
+        }
+    }
+}
+
 fn stu_to_scu(c: char) -> Option<&'static str> {
     // FIXME: use char map?
     let res = match c {
@@ -496,32 +538,6 @@ fn try_change_stu_to_parasavarna(p: &mut Prakriya) {
     );
 }
 
-/// Runs rules that make a sound mUrdhanya when certain sounds precede.
-///
-/// Example: `nesyati -> nezyati`
-///
-/// (8.3.55 - 8.3.119)
-fn try_murdhanya(p: &mut Prakriya) {
-    for i in 0..p.terms().len() {
-        let n = i + 1;
-        if p.get(n).is_none() {
-            return;
-        }
-
-        let apadanta = p.has(n, f::not_empty);
-        // HACK: don't include Agama.
-        let adesha_pratyaya = p.has(n, |t| t.any(&[T::Pratyaya, T::FlagAdeshadi, T::Agama]));
-        if p.has(i, |t| t.has_antya(&*INKU)) && p.has(n, f::adi("s")) && adesha_pratyaya && apadanta
-        {
-            p.op_term("8.3.59", n, op::adi("z"));
-        } else if p.has(i, |t| {
-            t.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && t.has_upadha(&*INKU)
-        }) {
-            p.op_term("8.3.60", i, op::antya("z"));
-        }
-    }
-}
-
 /*
         // HACK
         for i, u in enumerate(p.terms):
@@ -553,22 +569,6 @@ fn try_murdhanya(p: &mut Prakriya) {
                 last.text = last.text.replace("D", "Q")
                 p.step("8.3.78")
 */
-
-/// Converts "m" and "n" to the anusvara when a consonant follows.
-///
-/// Example: Sankate -> SaMkate
-fn try_mn_to_anusvara(p: &mut Prakriya) {
-    // TODO: a-padAnta
-    char_rule(
-        p,
-        xy(|x, y| (x == 'm' || x == 'n') && JHAL.contains_char(y)),
-        |p, _, i| {
-            set_at(p, i, "M");
-            p.step("8.3.24");
-            true
-        },
-    );
-}
 
 /*
 /// Run rules for retroflex Dha.
