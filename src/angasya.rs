@@ -10,8 +10,8 @@ use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operations as op;
 use crate::prakriya::Prakriya;
-use crate::sounds::s;
 use crate::sounds as al;
+use crate::sounds::s;
 use crate::sup_adesha;
 use crate::term::{Term, TermView};
 
@@ -156,7 +156,7 @@ fn guna_adesha(p: &mut Prakriya, i: usize) {
         return;
     }
 
-    let n = match TermView::new(p.terms(), i+1) {
+    let n = match TermView::new(p.terms(), i + 1) {
         Some(n) => n,
         None => return,
     };
@@ -200,7 +200,10 @@ fn guna_adesha(p: &mut Prakriya, i: usize) {
     */
     let can_guna = |opt: Option<char>| opt.map(|c| al::to_guna(c).is_some()).unwrap_or(false);
     if is_sarva_ardha {
-        if p.has(i, f::text("jAgf")) && !n.slice()[0].has_u_in(&["kvip", "ciN"]) && !n.has_tag(T::Nit) {
+        if p.has(i, f::text("jAgf"))
+            && !n.slice()[0].has_u_in(&["kvip", "ciN"])
+            && !n.has_tag(T::Nit)
+        {
             p.op("7.3.85", |p| {
                 p.set(i, op::add_tag(T::FlagGuna));
                 p.set(i, op::antya("ar"));
@@ -220,25 +223,30 @@ fn guna_adesha(p: &mut Prakriya, i: usize) {
     // puganta-laghu-upadha (TODO: puk)
     } else if can_guna && sarva_ardha && c.upadha in sounds.HRASVA {
     */
-        // HACK: Asiddhavat, but this blocks guna.
-        // TODO: move this to asiddhavat && add no_guna tag.
-        let n = TermView::new(p.terms(), i+1).unwrap();
-        if p.has(i, f::text("guh")) && s("ac").contains_opt(n.adi()) {
-            p.op_term("6.4.89", i, op::upadha("U"));
-        } else if p.has(i, f::u_in(&["Divi~", "kfvi~"])) {
-            // Per commentary on 3.1.81, make an exception for dhinv and kRNv.
-        } else if p.has(i, f::tag(T::Abhyasta)) && n.all(&[T::pit, T::Sarvadhatuka]) && s("ac").contains_opt(n.adi()) {
-            // e.g. nenijAma
-            p.step("7.3.87")
-        } else if p.has(i, |t| can_guna(t.upadha()) && t.upadha().map(al::is_hrasva).is_some()) {
-            let upadha = p.terms()[i].upadha().unwrap();
-            p.op("7.3.86", |p| {
-                let guna = al::to_guna(upadha).unwrap();
-                p.set(i, op::add_tag(T::FlagGuna));
-                p.set(i, op::upadha(guna));
-            });
-        }
-        /*
+    // HACK: Asiddhavat, but this blocks guna.
+    // TODO: move this to asiddhavat && add no_guna tag.
+    let n = TermView::new(p.terms(), i + 1).unwrap();
+    if p.has(i, f::text("guh")) && s("ac").contains_opt(n.adi()) {
+        p.op_term("6.4.89", i, op::upadha("U"));
+    } else if p.has(i, f::u_in(&["Divi~", "kfvi~"])) {
+        // Per commentary on 3.1.81, make an exception for dhinv and kRNv.
+    } else if p.has(i, f::tag(T::Abhyasta))
+        && n.all(&[T::pit, T::Sarvadhatuka])
+        && s("ac").contains_opt(n.adi())
+    {
+        // e.g. nenijAma
+        p.step("7.3.87")
+    } else if p.has(i, |t| {
+        can_guna(t.upadha()) && t.upadha().map(al::is_hrasva).is_some()
+    }) {
+        let upadha = p.terms()[i].upadha().unwrap();
+        p.op("7.3.86", |p| {
+            let guna = al::to_guna(upadha).unwrap();
+            p.set(i, op::add_tag(T::FlagGuna));
+            p.set(i, op::upadha(guna));
+        });
+    }
+    /*
     }
     */
 }
@@ -650,7 +658,7 @@ fn dhatu_rt_adesha(p: Prakriya, index: int):
 ///
 /// (7.3.101 - 7.3.111)
 fn try_ato_dirgha(p: &mut Prakriya, i: usize) {
-    let n = match p.view(i+1) {
+    let n = match p.view(i + 1) {
         Some(n) => n,
         None => return,
     };
@@ -677,7 +685,7 @@ fn try_ato_dirgha(p: &mut Prakriya, i: usize) {
         }
 
         let c = &p.terms()[i];
-        let n = match p.view(i+1) {
+        let n = match p.view(i + 1) {
             Some(n) => n,
             None => return,
         };
@@ -686,7 +694,9 @@ fn try_ato_dirgha(p: &mut Prakriya, i: usize) {
                 p.op_term("7.3.108", i, to_guna);
             } else if n.has_u("jas") {
                 p.op_term("7.3.109", i, to_guna);
-            } else if p.has(i, |t| t.text.ends_with('f')) && (n.has_u("Ni") || n.has_tag(T::Sarvanamasthana)) {
+            } else if p.has(i, |t| t.text.ends_with('f'))
+                && (n.has_u("Ni") || n.has_tag(T::Sarvanamasthana))
+            {
                 p.op_term("7.3.110", i, to_guna);
             } else if p.has(i, f::tag(T::Ghi)) && n.has_tag(T::Nit) {
                 p.op_term("7.3.111", i, to_guna);

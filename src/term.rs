@@ -188,7 +188,7 @@ impl<'a> TermView<'a> {
         for t in self.slice() {
             match t.adi() {
                 Some(c) => return Some(c),
-                None => continue
+                None => continue,
             }
         }
         None
@@ -198,7 +198,7 @@ impl<'a> TermView<'a> {
         for t in self.slice().iter().rev() {
             match t.antya() {
                 Some(c) => return Some(c),
-                None => continue
+                None => continue,
             }
         }
         None
@@ -207,7 +207,7 @@ impl<'a> TermView<'a> {
     pub fn has_u(&self, u: &str) -> bool {
         match self.slice().first() {
             Some(t) => t.has_u(u),
-            None => false
+            None => false,
         }
     }
 
@@ -220,15 +220,14 @@ impl<'a> TermView<'a> {
             if self.slice().iter().any(|t| t.has_tag(*tag)) {
                 continue;
             }
-            return false; 
+            return false;
         }
         true
     }
 
     pub fn any(&self, tags: &[Tag]) -> bool {
-        tags.iter().any(|tag| {
-           self.slice().iter().any(|t| t.has_tag(*tag))
-        })
+        tags.iter()
+            .any(|tag| self.slice().iter().any(|t| t.has_tag(*tag)))
     }
 }
 

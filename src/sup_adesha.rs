@@ -24,7 +24,7 @@ fn try_adanta_adesha(p: &mut Prakriya, i_anga: usize, i: usize) {
     let is_sarvanama = p.has(i_anga, f::tag(T::Sarvanama));
     let sup_u = match &p.terms()[i].u {
         Some(u) => u.to_string(),
-        None => "".to_string()
+        None => "".to_string(),
     };
 
     if p.has(i, f::text("Bis")) {

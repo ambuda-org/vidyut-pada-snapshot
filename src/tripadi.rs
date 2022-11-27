@@ -11,14 +11,13 @@ rest of the text selects rules based on their priority and allows a rule to appl
 the tripādi applies rules in order and will never "go back" to apply an earlier rule.
 */
 
-use lazy_static::lazy_static;
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operations as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
 use crate::term::Term;
-
+use lazy_static::lazy_static;
 
 /*
 
@@ -94,7 +93,10 @@ fn try_na_lopa(p: &mut Prakriya) {
     };
     let i_anga = i - 1;
 
-    if p.has(i_anga, |t| t.text.ends_with('n') && t.has_tag(T::Pratipadika)) && p.has(i, f::empty) {
+    if p.has(i_anga, |t| {
+        t.text.ends_with('n') && t.has_tag(T::Pratipadika)
+    }) && p.has(i, f::empty)
+    {
         if p.has(i, |t| t.has_tag(T::Sambuddhi) || t.has_u("Ni")) {
             p.step("8.2.8");
         } else {
@@ -117,7 +119,9 @@ fn try_ra_to_la(p: &mut Prakriya) {
             p.op("8.2.18", op::t(i, do_ra_la));
         } else if p.has(i, f::u("gF")) && p.has(n, f::u("yaN")) {
             p.op("8.2.20", op::t(i, do_ra_la));
-        } else if p.has(i, |t| t.has_u("gF") && t.gana == Some(6)) && p.has(n, |t| t.has_adi(&s("ac"))) {
+        } else if p.has(i, |t| t.has_u("gF") && t.gana == Some(6))
+            && p.has(n, |t| t.has_adi(&s("ac")))
+        {
             // TODO: where is it specified that this is only for gF/girati?
             p.op("8.2.21", op::t(i, do_ra_la));
         }
@@ -221,7 +225,7 @@ fn samyoganta_and_salopa(p: Prakriya):
 ///
 /// (8.2.31 - 8.2.35)
 fn try_ha_adesha(p: &mut Prakriya) {
-    lazy_static!{
+    lazy_static! {
         static ref JHAL: SoundSet = s("Jal");
     }
 
@@ -617,7 +621,7 @@ pub fn run(p: &mut Prakriya) {
     // samyoganta_and_salopa(p)
     try_ha_adesha(p)
 
-        /*
+    /*
     for i, _ in enumerate(p.terms):
         per_term_1b(p, i)
 
