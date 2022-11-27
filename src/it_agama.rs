@@ -1,10 +1,10 @@
-"""
+/*!
 it_agama
-~~~~~~~~
+========
 (7.2.8 - 7.2.78)
 
-Various Sanskrit words have an "i" vowel inserted between the dhātu and the
-pratyaya. This "i" is called *iṭ*. Roots use iṭ in one of three patterns:
+Various Sanskrit words have an "i" vowel inserted between the dhātu and the pratyaya. This "i" is
+called *iṭ*. Roots use iṭ in one of three patterns:
 
 - Roots that generally use iṭ are called *seṭ* (sa-iṭ).
 - Roots that generally avoid iṭ are called *aniṭ* (an-iṭ).
@@ -13,11 +13,9 @@ pratyaya. This "i" is called *iṭ*. Roots use iṭ in one of three patterns:
 This prakaraṇa fully specifies the rules that add the iṭ-āgama to the prakriyā.
 
 Order of operations:
-
 - must run before `dvitva` for `undidizati`, etc.
 - must run after `vikarana` since it checks for `sya`, `si~c`, etc.
-
-"""
+*/
 
 import padmini.filters as f
 from padmini.sounds import s
@@ -33,7 +31,7 @@ from . import it_samjna
 
 fn eka_ac(t: Term) -> bool:
     num_vowels = sum(1 for L in t.text if L in s("ac"))
-    # HACK to have ekac apply for am-Agama
+    // HACK to have ekac apply for am-Agama
     return num_vowels == 1 or "fa" in t.text
 
 
@@ -65,14 +63,14 @@ fn general_anit(p: Prakriya, index: int) -> bool:
     } else if  (c.text == "Svi" or c.any("I")) and n.any(T.NISTHA):
         anit_rule = "7.2.14"
 
-    # TODO: 7.2.15
+    // TODO: 7.2.15
     } else if  c.any("A") and n.any(T.NISTHA):
         if p.all(T.BHAVE.T.KARMANI) and p.allow("7.2.17"):
             pass
         else:
             p.decline("7.2.17")
             anit_rule = "7.2.16"
-    # TODO: 7.2.18 - 7.2.34
+    // TODO: 7.2.18 - 7.2.34
 
     if anit_rule:
         p.step(anit_rule)
@@ -97,33 +95,33 @@ fn lit_it(p: Prakriya, index: int) -> bool:
 
     _7_2_10 = c.any(T.ANUDATTA) and eka_ac(c)
 
-    # These rules are always aniT.
+    // These rules are always aniT.
     if c.text in {"kf", "sf", "Bf", "vf", "stu", "dru", "sru", "Sru"}:
         anit_rule = "7.2.13"
 
-    # Concise summary of rules:
-    # - The roots in 7.2.13 are aniT. All others are seT in valAdi.
-    # - However, there are the following exceptions for Tal:
-    #   - roots ending in R (except R) are aniT.
-    #   - roots ending in a vowel, or with a middle 'a', are veT.
+    // Concise summary of rules:
+    // - The roots in 7.2.13 are aniT. All others are seT in valAdi.
+    // - However, there are the following exceptions for Tal:
+    //   - roots ending in R (except R) are aniT.
+    //   - roots ending in a vowel, or with a middle 'a', are veT.
     } else if  c.antya in s("ac") and n.u == "Tal" and _7_2_10:
-        # 7.2.63 Rto bhAradvAjasya
-        # In Bharadvaja's opinion, this applies only for final R. So for all
-        # other roots, this condition is optional:
+        // 7.2.63 Rto bhAradvAjasya
+        // In Bharadvaja's opinion, this applies only for final R. So for all
+        // other roots, this condition is optional:
         if c.antya != "f":
             if p.allow("7.2.63"):
                 set_rule = "7.2.63"
             else:
                 p.decline("7.2.63")
                 anit_rule = "7.2.61"
-        # But for other anit roots, it is obligatory.
+        // But for other anit roots, it is obligatory.
         else:
             if c.u == "f\\":
                 set_rule = "7.2.66"
             else:
                 anit_rule = "7.2.61"
     } else if  c.text in {"sfj", "dfS"} and n.u == "Tal":
-        # By default, these will be seT. So the option allows aniT.
+        // By default, these will be seT. So the option allows aniT.
         code = "7.2.65"
         if p.allow(code):
             anit_rule = code
@@ -131,8 +129,8 @@ fn lit_it(p: Prakriya, index: int) -> bool:
             p.decline(code)
 
     if n.any("li~w") and not (anit_rule or set_rule):
-        # The effect of 7.2.13 is that all other roots are considerd `sew` by
-        # default.
+        // The effect of 7.2.13 is that all other roots are considerd `sew` by
+        // default.
         p.step("7.2.13")
         if n.adi in s("val"):
             set_rule = "7.2.35"
@@ -156,14 +154,14 @@ fn ardhadhatuke(p: Prakriya, index: int):
     if not n:
         return
 
-    # HACK
+    // HACK
     n.u = n.terms[0].u
 
     anit_rule = set_rule = None
 
-    # Special cases
+    // Special cases
     if (c.antya == "f" or c.text == "han") and n.u == "sya":
-        # Takes priority over 7.2.44 below.
+        // Takes priority over 7.2.44 below.
         set_rule = "7.2.70"
     } else if  n.u == "si~c":
         if c.text == "aYj" and n.u == "si~c":
@@ -177,8 +175,8 @@ fn ardhadhatuke(p: Prakriya, index: int):
                 c.text += "s"
                 set_rule = "7.2.73"
             } else if  c.antya == "A":
-                # Handle this after running Attva. See the run_after_attva
-                # function for details.
+                // Handle this after running Attva. See the run_after_attva
+                // function for details.
                 return
 
     } else if  c.text == "IS" and n.adi == "s":
@@ -188,7 +186,7 @@ fn ardhadhatuke(p: Prakriya, index: int):
         return
 
     } else if  c.text in {"IS", "Iq", "jan"} and (n.adi == "s" or n.terms[-1].u == "Dvam"):
-        # See kAshika on 7.2.78 for inclusion of IS here.
+        // See kAshika on 7.2.78 for inclusion of IS here.
         set_rule = "7.2.78"
         op.insert_agama_after(set_rule, p, index, "iw")
         p.step(set_rule)
@@ -204,8 +202,8 @@ fn ardhadhatuke(p: Prakriya, index: int):
         pass
 
     } else if  c.u in RADH_ADI and n.adi in s("val"):
-        # All of these roots are in scope for 7.2.10 (aniT).
-        # So, this option allows seT-tva.
+        // All of these roots are in scope for 7.2.10 (aniT).
+        // So, this option allows seT-tva.
         set_rule = optional_rule("7.2.45", p)
 
     } else if  c.u in {"izu~", "zaha~\\", "luBa~", "ruza~", "riza~"} and n.adi == "t":
@@ -223,18 +221,18 @@ fn ardhadhatuke(p: Prakriya, index: int):
     } else if  c.u == "kfpU~\\" and antya_para and (n.adi == "s" or n.u == "tAsi~"):
         anit_rule = "7.2.60"
 
-    # TODO: not sure I undesrtand the scope of this rule.
+    // TODO: not sure I undesrtand the scope of this rule.
     } else if  c.text in {"snu", "kram"} and n.adi in s("val"):
         if p.terms[-1].all(T.ATMANEPADA) and n.terms[0].u == "sIyu~w":
             anit_rule = "7.2.36"
 
-    # Optional rules (Udit and others)
+    // Optional rules (Udit and others)
 
     if anit_rule or set_rule:
         pass
     } else if  n.adi in s("val"):
         if c.u in ("svf", "zUN", "DUY") or c.any("U"):
-            # Synchronize choice of "it" with the choice of lun-vikarana.
+            // Synchronize choice of "it" with the choice of lun-vikarana.
             if p.all(T.F_ANIT_KSA):
                 anit_rule = "7.2.44"
             } else if  p.all(T.F_SET_SIC):
@@ -244,25 +242,25 @@ fn ardhadhatuke(p: Prakriya, index: int):
         } else if  (n.any("li~N") or n.u == "si~c") and p.terms[-1].any(T.ATMANEPADA):
             vrt = c.text == "vf" or c.antya == "F"
             if vrt and n.any(T.ARDHADHATUKA):
-                # By default, all of these roots are seT.
-                # So, the option allows anit.
+                // By default, all of these roots are seT.
+                // So, the option allows anit.
                 anit_rule = optional_rule("7.2.42", p)
             } else if  c.antya == "f" and f.samyogadi(c):
                 if c.all(T.ANUDATTA):
-                    # For anit roots, optional seT.
+                    // For anit roots, optional seT.
                     set_rule = optional_rule("7.2.43", p)
                 else:
-                    # For seT roots, optional aniT.
+                    // For seT roots, optional aniT.
                     anit_rule = optional_rule("7.2.43", p)
 
-    # General cases
+    // General cases
 
     if anit_rule or set_rule:
         pass
-    # 7.2.10 is a niyama to the general rule, which applies only to
-    # ArdhadhAtuka suffixes. So we add a check for ArdhadhAtukatva here.
-    #
-    # Any li~w root not explictly included in 7.2.13 is also iT.
+    // 7.2.10 is a niyama to the general rule, which applies only to
+    // ArdhadhAtuka suffixes. So we add a check for ArdhadhAtukatva here.
+    //
+    // Any li~w root not explictly included in 7.2.13 is also iT.
     } else if  c.any(T.ANUDATTA) and eka_ac(c) and not n.any("li~w"):
         anit_rule = "7.2.10"
     } else if  n.adi in s("val") and n.any(T.ARDHADHATUKA):
@@ -288,8 +286,8 @@ fn sarvadhatuke(p: Prakriya, index: int):
 
     if n.adi in s("val") and n.all(T.SARVADHATUKA):
         if c.u in ("rudi~r", "Yizva\\pa~", "Svasa~", "ana~", "jakza~"):
-            # index+1 to skip vikarana
-            # TODO: less hacky
+            // index+1 to skip vikarana
+            // TODO: less hacky
             op.insert_agama_after("7.2.76", p, index + 1, "iw")
             return
 
@@ -319,7 +317,7 @@ fn it_dirgha(p: Prakriya, c: Term, n: TermView):
 fn run_for_index(p: Prakriya, index: int):
     c = p.terms[index]
 
-    # Abhyasa might come second
+    // Abhyasa might come second
     if not c.any(T.DHATU, T.ABHYASA):
         return
 

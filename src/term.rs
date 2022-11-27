@@ -188,6 +188,14 @@ impl<'a> TermView<'a> {
         self.end
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.slice().iter().any(|t| !t.text.is_empty())
+    }
+
+    pub fn ends_word(&self) -> bool {
+        self.end == self.terms.len() - 1
+    }
+
     pub fn adi(&self) -> Option<char> {
         for t in self.slice() {
             match t.adi() {

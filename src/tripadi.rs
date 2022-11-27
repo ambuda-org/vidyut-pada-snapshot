@@ -17,6 +17,7 @@ use crate::operations as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
 use crate::term::Term;
+use crate::term::TermView;
 use lazy_static::lazy_static;
 
 /*
@@ -26,8 +27,8 @@ ADESHA_CACHE = {}
 
 fn al_adesha(
     rule: str,
-    p: Prakriya,
-    index: int,
+    p: &mut Prakriya,
+    i: usize,
     tasmat: Optional[str],
     tasya: str,
     tasmin: str,
@@ -126,7 +127,7 @@ fn try_ra_to_la(p: &mut Prakriya) {
 }
 
 /*
-fn samyoganta_and_salopa(p: Prakriya):
+fn samyoganta_and_salopa(p: &mut Prakriya):
     """Final samyoga. (8.2.23 - 8.2.29)"""
 
     // Exception to 8.2.23.
@@ -256,115 +257,140 @@ fn try_ha_adesha(p: &mut Prakriya) {
     }
 }
 
-/*
-fn per_term_1b(p: Prakriya, index: int):
-    c = p.terms[index]
-    try:
-        n = [u for u in p.terms[index + 1 :] if u.text][0]
-    except IndexError:
-        n = None
+fn per_term_1b(p: &mut Prakriya, i: usize) {
+    let is_padanta = |n: Option<TermView>| match n {
+        Some(n) => n.is_empty() && n.ends_word(),
+        None => true,
+    };
 
-    vrascha = {
-    "o~vrascU~",
-        "Bra\\sja~^",
-        "sf\\ja~\\",
-        "sf\\ja~",
-        "mfjU~",
-        "ya\\ja~^",
-        "rAj",
-        "BrAjf~\\",
+    let n = p.view(i);
+    if p.has(i, |t| t.has_antya('s')) && is_padanta(n) {
+        p.op_term("8.2.66", i, op::antya("ru~"));
     }
-
-    jhali_ante = not n or n.adi in s("Jal")
-    if (c.u in vrascha or c.antya in s("C S")) and jhali_ante:
-        if c.text.endswith("tC"):
-            // TODO: seems implied, not sure.
-            c.text = c.text[:-2] + "z"
-            p.step("8.2.36")
-        else:
-            op.antya("8.2.36", p, c, "z")
-
-    if c.antya in s("cu~") and (not n or n.adi in s("Jal")):
-        mapping = sounds.map_sounds(s("cu~"), s("ku~"))
-        op.antya("8.2.30", p, c, mapping[c.antya])
-
-    sdhvoh = n and (n.adi == "s" or n.all(T.PRATYAYA) and n.u.startswith("Dv"))
-    basho_bhash = sounds.map_sounds_s("baS", "Baz")
-    if c.adi in basho_bhash and c.antya in s("JaS") and sdhvoh:
-        op.adi("8.2.37", p, c, basho_bhash[c.adi])
-
-    // Exclude the following from 8.2.39 so that the corresponding rules aren't
-    // vyartha:
-    // - c for 8.2.30 (coH kuH)
-    // - S for 8.2.36 (vraSca-Brasja-...-Ca-SAM zaH)
-    // - s for 8.2.66 (sasajuSo ruH)
-    // - h for 8.2.31 (ho QaH)
-    if c.antya in s("Jal") and c.antya not in s("c S s h") and not n:
-        mapping = sounds.map_sounds(s("Jal"), s("jaS"))
-        op.antya("8.2.39", p, c, mapping[c.antya])
-
-    if c.all(T.DHATU) and c.u != "quDA\\Y":
-        // TODO: abhyasa
-        if c.antya in s("Jaz") and n and n.adi in s("t T"):
-            op.adi("8.2.40", p, n, "D")
-
-    if c.antya in s("z Q") and n.adi == "s":
-        op.antya("8.2.41", p, c, "k")
-
-    if c.any(T.DHATU) and c.antya == "m" and n.adi in {"m", "v"}:
-        op.antya("8.2.65", p, c, "n")
-
-    // TODO: sajuS
-
-    try:
-        rn = p.terms[index + 1]
-    except IndexError:
-        rn = None
-    next_is_last = index + 1 == len(p.terms) - 1
-    if c.antya == "s" and next_is_last and rn.text == "" and rn.u == "tip":
-        // Exception to general rule 8.2.66 below
-        op.antya("8.2.73", p, c, "d")
-
-    } else if c.antya == "s" and (not n or (next_is_last and rn.text == "")):
-        op.antya("8.2.66", p, c, "ru~")
-
-    if c.antya in s("s d") and rn and rn.text == "" and rn.u == "sip":
-        if c.antya == "s":
-            op.optional(op.antya, "8.2.74", p, c, "ru~")
-        else:
-            op.optional(op.antya, "8.2.75", p, c, "ru~")
-
-    // 8.2.77
-    // TODO: sajuS
-    if c.all(T.DHATU):
-        // TODO: bha
-        if c.text in ("kur", "Cur"):
-            // Do nothing.
-            p.step("8.2.79")
-        } else if c.antya in s("r v"):
-            if c.upadha in {"i", "u", "f", "x"}:
-                if n and n.adi in s("hal"):
-                    op.upadha("8.2.77", p, c, sounds.dirgha(c.upadha))
-                } else if not n:
-                    op.upadha("8.2.76", p, c, sounds.dirgha(c.upadha))
-        if (
-            len(c.text) >= 3
-            and c.text[-3] in s("ik")
-            and c.upadha in "rv"
-            and c.antya in s("hal")
-        ):
-            c.text = c.text[:-3] + sounds.dirgha(c.text[-3]) + c.text[-2:]
-            p.step("8.2.78")
 
     // 8.3.15
     // TODO: next pada
-    has_ru = c.text.endswith("ru~") or c.text.endswith("r")
-    if has_ru and not n:
-        c.text = c.text.replace("ru~", "H")
-        if c.text.endswith("r"):
-            c.text = c.text[:-1] + "H"
-        p.step("8.3.15")
-*/
+    let n = p.view(i);
+    let has_ru = p.has(i, |t| t.text.ends_with("ru~") || t.has_antya('r'));
+    if has_ru && is_padanta(n) {
+        p.op_term("8.3.15", i, |t| {
+            if let Some(p) = t.text.strip_suffix("ru~") {
+                t.text = p.to_owned() + "H";
+            } else if let Some(p) = t.text.strip_suffix('r') {
+                t.text = p.to_owned() + "H";
+            }
+        });
+    }
+
+    /*
+        c = p.terms[index]
+        try:
+            n = [u for u in p.terms[index + 1 :] if u.text][0]
+        except IndexError:
+            n = None
+
+        vrascha = {
+        "o~vrascU~",
+            "Bra\\sja~^",
+            "sf\\ja~\\",
+            "sf\\ja~",
+            "mfjU~",
+            "ya\\ja~^",
+            "rAj",
+            "BrAjf~\\",
+        }
+
+        jhali_ante = not n or n.adi in s("Jal")
+        if (c.u in vrascha or c.antya in s("C S")) and jhali_ante:
+            if c.text.endswith("tC"):
+                // TODO: seems implied, not sure.
+                c.text = c.text[:-2] + "z"
+                p.step("8.2.36")
+            else:
+                op.antya("8.2.36", p, c, "z")
+
+        if c.antya in s("cu~") and (not n or n.adi in s("Jal")):
+            mapping = sounds.map_sounds(s("cu~"), s("ku~"))
+            op.antya("8.2.30", p, c, mapping[c.antya])
+
+        sdhvoh = n and (n.adi == "s" or n.all(T.PRATYAYA) and n.u.startswith("Dv"))
+        basho_bhash = sounds.map_sounds_s("baS", "Baz")
+        if c.adi in basho_bhash and c.antya in s("JaS") and sdhvoh:
+            op.adi("8.2.37", p, c, basho_bhash[c.adi])
+
+        // Exclude the following from 8.2.39 so that the corresponding rules aren't
+        // vyartha:
+        // - c for 8.2.30 (coH kuH)
+        // - S for 8.2.36 (vraSca-Brasja-...-Ca-SAM zaH)
+        // - s for 8.2.66 (sasajuSo ruH)
+        // - h for 8.2.31 (ho QaH)
+        if c.antya in s("Jal") and c.antya not in s("c S s h") and not n:
+            mapping = sounds.map_sounds(s("Jal"), s("jaS"))
+            op.antya("8.2.39", p, c, mapping[c.antya])
+
+        if c.all(T.DHATU) and c.u != "quDA\\Y":
+            // TODO: abhyasa
+            if c.antya in s("Jaz") and n and n.adi in s("t T"):
+                op.adi("8.2.40", p, n, "D")
+
+        if c.antya in s("z Q") and n.adi == "s":
+            op.antya("8.2.41", p, c, "k")
+
+        if c.any(T.DHATU) and c.antya == "m" and n.adi in {"m", "v"}:
+            op.antya("8.2.65", p, c, "n")
+
+        // TODO: sajuS
+
+        try:
+            rn = p.terms[index + 1]
+        except IndexError:
+            rn = None
+        next_is_last = index + 1 == len(p.terms) - 1
+        if c.antya == "s" and next_is_last and rn.text == "" and rn.u == "tip":
+            // Exception to general rule 8.2.66 below
+            op.antya("8.2.73", p, c, "d")
+
+        } else if c.antya == "s" and (not n or (next_is_last and rn.text == "")):
+            op.antya("8.2.66", p, c, "ru~")
+
+        if c.antya in s("s d") and rn and rn.text == "" and rn.u == "sip":
+            if c.antya == "s":
+                op.optional(op.antya, "8.2.74", p, c, "ru~")
+            else:
+                op.optional(op.antya, "8.2.75", p, c, "ru~")
+
+        // 8.2.77
+        // TODO: sajuS
+        if c.all(T.DHATU):
+            // TODO: bha
+            if c.text in ("kur", "Cur"):
+                // Do nothing.
+                p.step("8.2.79")
+            } else if c.antya in s("r v"):
+                if c.upadha in {"i", "u", "f", "x"}:
+                    if n and n.adi in s("hal"):
+                        op.upadha("8.2.77", p, c, sounds.dirgha(c.upadha))
+                    } else if not n:
+                        op.upadha("8.2.76", p, c, sounds.dirgha(c.upadha))
+            if (
+                len(c.text) >= 3
+                and c.text[-3] in s("ik")
+                and c.upadha in "rv"
+                and c.antya in s("hal")
+            ):
+                c.text = c.text[:-3] + sounds.dirgha(c.text[-3]) + c.text[-2:]
+                p.step("8.2.78")
+
+        // 8.3.15
+        // TODO: next pada
+        has_ru = c.text.endswith("ru~") or c.text.endswith("r")
+        if has_ru and not n:
+            c.text = c.text.replace("ru~", "H")
+            if c.text.endswith("r"):
+                c.text = c.text[:-1] + "H"
+            p.step("8.3.15")
+    */
+}
 
 /// Runs rules that change `n` to `R`.
 /// Example: muh + ta -> mugdha.
@@ -443,7 +469,7 @@ fn stoh_scuna_stuna(p):
         p.step("8.4.41")
 
 
-fn murdhanya(p: Prakriya):
+fn murdhanya(p: &mut Prakriya):
     """mUrdhanya when preceded by certain sounds.
 
     (8.3.55 - 8.3.119)
@@ -492,7 +518,7 @@ fn murdhanya(p: Prakriya):
                 p.step("8.3.78")
 
 
-fn overall_1(p: Prakriya):
+fn overall_1(p: &mut Prakriya):
     """Rules that apply to the overall prakriya."""
 
     view = StringView(p.terms)
@@ -506,8 +532,8 @@ fn overall_1(p: Prakriya):
         p.step("8.3.24")
 
 
-fn dha(p: Prakriya):
-    """Rules for retroflex Dha."""
+/// Run rules for retroflex Dha.
+fn dha(p: &mut Prakriya):
     view = StringView(p.terms)
     // Save the text before Dha-lopa for a cleaner comparison below.
     vtext = view.text
@@ -585,7 +611,7 @@ fn savarna(p):
                 p.decline("8.4.65")
 
 
-fn per_term_2(p: Prakriya, index: int):
+fn per_term_2(p: &mut Prakriya, i: usize):
     try:
         n = [u for u in p.terms[index + 1 :] if u.text][0]
     except IndexError:
@@ -616,19 +642,22 @@ pub fn run(p: &mut Prakriya) {
     try_na_lopa(p);
     try_ra_to_la(p);
     // samyoganta_and_salopa(p)
-    try_ha_adesha(p)
+    try_ha_adesha(p);
+
+    for i in 0..p.terms().len() {
+        per_term_1b(p, i);
+    }
 
     /*
-    for i, _ in enumerate(p.terms):
-        per_term_1b(p, i)
-
     murdhanya(p)
     overall_1(p)
 
     try_natva(p)
     stoh_scuna_stuna(p)
-    dha(p)
+    */
+    // dha(p);
 
+    /*
     for i, _ in enumerate(p.terms):
         per_term_2(p, i)
 

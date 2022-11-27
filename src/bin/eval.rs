@@ -1,7 +1,15 @@
+use clap::Parser;
 use std::error::Error;
 use std::path::Path;
 use vidyut_prakriya::ashtadhyayi as A;
 use vidyut_prakriya::constants::{La, Prayoga, Purusha, Vacana};
+
+#[derive(Parser)]
+#[command(author, version, about)]
+struct Args {
+    #[arg(long)]
+    limit: Option<i32>,
+}
 
 fn parse_la(s: &str) -> La {
     match s {
@@ -14,8 +22,8 @@ fn parse_la(s: &str) -> La {
         "laN" => La::Lan,
         "liN" => La::VidhiLin,
         "ASIrliN" => La::AshirLin,
-        "luN" =>  La::Lun,
-        "lfN" =>  La::Lrn,
+        "luN" => La::Lun,
+        "lfN" => La::Lrn,
         _ => panic!("Unknown {s}"),
     }
 }
@@ -38,12 +46,13 @@ fn parse_vacana(s: &str) -> Vacana {
     }
 }
 
-
-fn run() -> Result<(), Box<dyn Error>> {
+fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let mut rdr = csv::Reader::from_path("data/eval.csv")?;
 
     let mut num_matches = 0;
     let mut n = 0;
+    let limit = args.limit.unwrap_or(std::i32::MAX);
+
     for maybe_row in rdr.records() {
         let r = maybe_row?;
         let pada = &r[0];
@@ -54,25 +63,19 @@ fn run() -> Result<(), Box<dyn Error>> {
         let purusha = parse_purusha(&r[5]);
         let vacana = parse_vacana(&r[6]);
 
-        if la != La::Lat {
-            continue;
-        }
+        let p = A::tinanta(dhatu, &code, la, Prayoga::Kartari, purusha, vacana)?;
 
-        let p = A::tinanta(
-            dhatu,
-            &code,
-            la,
-            Prayoga::Kartari,
-            purusha,
-            vacana,
-        )?;
-    
         n += 1;
         let actual = p.text();
         if actual == pada {
+            println!("[  OK  ]: {pada}");
             num_matches += 1;
         } else {
-            println!("FAIL: {pada} (saw {actual})");
+            println!("[ FAIL ]: {pada} ({actual})");
+        }
+
+        if n >= limit {
+            break;
         }
     }
 
@@ -82,7 +85,9 @@ fn run() -> Result<(), Box<dyn Error>> {
 }
 
 fn main() {
-    match run() {
+    let args = Args::parse();
+
+    match run(args) {
         Ok(()) => (),
         Err(err) => {
             println!("{}", err);
@@ -90,4 +95,3 @@ fn main() {
         }
     }
 }
-
