@@ -92,7 +92,7 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) {
         } else if p.has(n, f::lakshana("li~w")) {
             p.op_optional("2.4.40", to_ghasl);
         } else if p.has(n, |t| {
-            t.has_u("lyap") || (t.text.starts_with('t') && t.has_tag(T::kit))
+            t.has_u("lyap") || (t.has_adi('t') && t.has_tag(T::kit))
         }) {
             p.op("2.4.36", |p| op::upadesha(p, i, "jagDi~"));
         }

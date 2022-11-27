@@ -1,5 +1,5 @@
 use crate::constants::Tag;
-use crate::sounds::SoundSet;
+use crate::sounds::Pattern;
 use std::collections::HashSet;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -73,23 +73,23 @@ impl Term {
 
     // Sound properties
 
-    fn has_sound_in_set(&self, c: Option<char>, set: &SoundSet) -> bool {
+    fn matches_sound_pattern(&self, c: Option<char>, pattern: impl Pattern) -> bool {
         match c {
-            Some(c) => set.contains_char(c),
+            Some(c) => pattern.matches(c),
             None => false,
         }
     }
 
-    pub fn has_adi(&self, set: &SoundSet) -> bool {
-        self.has_sound_in_set(self.adi(), set)
+    pub fn has_adi(&self, pattern: impl Pattern) -> bool {
+        self.matches_sound_pattern(self.adi(), pattern)
     }
 
-    pub fn has_antya(&self, set: &SoundSet) -> bool {
-        self.has_sound_in_set(self.antya(), set)
+    pub fn has_antya(&self, pattern: impl Pattern) -> bool {
+        self.matches_sound_pattern(self.antya(), pattern)
     }
 
-    pub fn has_upadha(&self, set: &SoundSet) -> bool {
-        self.has_sound_in_set(self.upadha(), set)
+    pub fn has_upadha(&self, pattern: impl Pattern) -> bool {
+        self.matches_sound_pattern(self.upadha(), pattern)
     }
 
     pub fn has_u(&self, s: &str) -> bool {
@@ -184,6 +184,10 @@ impl<'a> TermView<'a> {
         &self.terms[self.start..=self.end]
     }
 
+    pub fn end(&self) -> usize {
+        self.end
+    }
+
     pub fn adi(&self) -> Option<char> {
         for t in self.slice() {
             match t.adi() {
@@ -213,6 +217,10 @@ impl<'a> TermView<'a> {
 
     pub fn has_tag(&self, tag: Tag) -> bool {
         self.slice().iter().any(|t| t.has_tag(tag))
+    }
+
+    pub fn has_lakshana(&self, s: &str) -> bool {
+        self.slice().iter().any(|t| t.has_lakshana(s))
     }
 
     pub fn all(&self, tags: &[Tag]) -> bool {

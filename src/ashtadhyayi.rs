@@ -1,6 +1,7 @@
 use crate::ac_sandhi;
 use crate::angasya;
 use crate::ardhadhatuka;
+use crate::atidesha;
 use crate::atmanepada;
 use crate::constants::{La, Prayoga, Purusha, Vacana};
 use crate::dhatu_karya;
@@ -20,11 +21,11 @@ use std::error::Error;
 /// jha_adesha --> it_agama --> atidesha --> samprasarana
 fn dhatu_samprasarana_tasks(p: &mut Prakriya) {
     // Needed transitively for dhatu-samprasarana.
-    angasya::pratyaya_adesha(p)
+    angasya::pratyaya_adesha(p);
     // Depends on jha_adesha since it conditions on the first sound.
     // angasya::it_agama::run_before_attva(p)
     // Depends on it_agama for certain rules.
-    // atidesha::run_before_attva(p)
+    atidesha::run_before_attva(p);
 
     // Depends on atidesha (for kit-Nit).
     // samprasarana::run_for_dhatu(p)
@@ -33,7 +34,7 @@ fn dhatu_samprasarana_tasks(p: &mut Prakriya) {
 
     // Now finish it_agama and atidesha
     // angasya::it_agama::run_after_attva(p)
-    // atidesha::run_after_attva(p)
+    atidesha::run_after_attva(p);
 }
 
 pub fn tinanta(

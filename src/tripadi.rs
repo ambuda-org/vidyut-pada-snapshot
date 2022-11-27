@@ -93,10 +93,7 @@ fn try_na_lopa(p: &mut Prakriya) {
     };
     let i_anga = i - 1;
 
-    if p.has(i_anga, |t| {
-        t.text.ends_with('n') && t.has_tag(T::Pratipadika)
-    }) && p.has(i, f::empty)
-    {
+    if p.has(i_anga, |t| t.has_antya('n') && t.has_tag(T::Pratipadika)) && p.has(i, f::empty) {
         if p.has(i, |t| t.has_tag(T::Sambuddhi) || t.has_u("Ni")) {
             p.step("8.2.8");
         } else {
@@ -110,7 +107,7 @@ fn try_na_lopa(p: &mut Prakriya) {
 ///
 /// (8.2.18 - 8.2.20)
 fn try_ra_to_la(p: &mut Prakriya) {
-    let do_ra_la = |t: &mut Term| t.text = t.text.replace("f", "x").replace("r", "l");
+    let do_ra_la = |t: &mut Term| t.text = t.text.replace('f', "x").replace('r', "l");
 
     for i in 0..p.terms().len() {
         let n = i + 1;
@@ -247,12 +244,12 @@ fn try_ha_adesha(p: &mut Prakriya) {
                     p.op_term("8.2.34", i, op::antya("D"));
                 } else if dhatu.text == "Ah" {
                     p.op_term("8.2.35", i, op::antya("T"));
-                } else if dhatu.adi() == Some('d') {
+                } else if dhatu.has_adi('d') {
                     p.op_term("8.2.35", i, op::antya("G"));
                 }
             }
             // If no change was made, use the default.
-            if p.has(i, |t| t.text.ends_with('h')) {
+            if p.has(i, |t| t.has_antya('h')) {
                 p.op_term("8.2.31", i, op::antya("Q"));
             }
         }
@@ -268,7 +265,7 @@ fn per_term_1b(p: Prakriya, index: int):
         n = None
 
     vrascha = {
-        "o~vrascU~",
+    "o~vrascU~",
         "Bra\\sja~^",
         "sf\\ja~\\",
         "sf\\ja~",

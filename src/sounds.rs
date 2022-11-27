@@ -8,6 +8,29 @@ lazy_static! {
     static ref SOUND_PROPS: HashMap<Sound, Uccarana> = create_sound_props();
 }
 
+pub trait Pattern {
+    /// Returns whether this `Master` includes the given sound.
+    fn matches(&self, s: Sound) -> bool;
+}
+
+impl Pattern for char {
+    fn matches(&self, s: Sound) -> bool {
+        *self == s
+    }
+}
+
+impl Pattern for SoundSet {
+    fn matches(&self, s: Sound) -> bool {
+        self.contains_char(s)
+    }
+}
+
+impl Pattern for &SoundSet {
+    fn matches(&self, s: Sound) -> bool {
+        self.contains_char(s)
+    }
+}
+
 struct Sutra {
     sounds: String,
     it: char,

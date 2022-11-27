@@ -1,109 +1,107 @@
-from padmini import filters as f
-from padmini import operations as op
-from padmini.constants import Tag as T
-from padmini.dhatupatha import is_kutadi
-from padmini.prakriya import Prakriya
-from padmini.sounds import s
-from padmini.term_views import TermView
+/*!
+atidesha (1.2.1 - 1.2.17)
+=========================
+*/
 
+use crate::constants::Tag as T;
+use crate::dhatupatha::is_kutadi;
+use crate::filters as f;
+use crate::operations as op;
+use crate::prakriya::Prakriya;
 
-fn run_for_index(p: Prakriya, index: int):
-    # Should run after it-Agama has been added.
-    c = p.terms[index]
-    n = TermView.make_pratyaya(p, index)
-    if not n:
-        return
+fn run_before_attva_at_index(p: &mut Prakriya, i: usize) {
+    let n = match p.view(i) {
+        Some(x) => x,
+        None => return,
+    };
+    let add_nit = op::add_tag(T::Nit);
+    let add_kit = op::add_tag(T::kit);
 
-    iti = f.is_it_agama(n.terms[0])
+    // Must check for `Agama` specifically because of the tiN ending "iw".
+    let iti = n.has_u("iw") && n.has_tag(T::Agama);
 
-    # Needs an explicit check against gana == 6 to avoid including similar
-    # roots from other ganas.
-    in_kutadi = is_kutadi(c)
-    if (c.u == "gAN" or in_kutadi) and not n.any("R", "Y"):
-        op.tag("1.2.1", p, n.terms[0], "N")
+    let gan_kutadi = p.has(i, |t| t.has_u("gAN") || is_kutadi(t));
+    if gan_kutadi && !n.any(&[T::Rit, T::Yit]) {
+        p.op_term("1.2.1", i + 1, add_nit);
+    } else if p.has(i, f::text("vij")) && iti {
+        p.op_term("1.2.2", n.end(), add_nit);
+    } else if p.has(i, f::text("UrRu")) && iti {
+        p.op_optional("1.2.3", op::t(n.end(), add_nit));
+    } else if n.has_tag(T::Sarvadhatuka) && !n.has_tag(T::pit) {
+        p.op_term("1.2.4", n.end(), add_nit);
+    } else if p.has(i, |t| t.has_tag(T::Dhatu) && !f::is_samyoganta(t))
+        && n.has_lakshana("li~w")
+        && !n.has_tag(T::pit)
+    {
+        p.op_term("1.2.5", n.end(), add_kit);
+    } else if p.has(i, f::text_in(&["BU", "inD"])) && n.has_lakshana("li~w") {
+        p.op_term("1.2.6", n.end(), add_kit);
+    } else if n.has_lakshana("li~w") && p.has(i, f::text_in(&["SranT", "granT", "danB", "svanj"])) {
+        // TODO: rule seems obligatory; where is optionality defined?
+        p.op_optional("1.2.6.v1", op::t(n.end(), add_kit));
+    }
 
-    # Must check for AGAMA specifically because of the tiN ending "iw".
-    } else if  c.text == "vij" and iti:
-        op.tag("1.2.2", p, n.terms[-1], "N")
-    } else if  c.text == "UrRu" and iti:
-        if p.allow("1.2.3"):
-            p.step("1.2.3")
-        else:
-            n.terms[-1].add_tags("N")
-            p.decline("1.2.3")
-
-    } else if  n.all(T.SARVADHATUKA) and not n.all("p"):
-        op.tag("1.2.4", p, n.terms[-1], "N")
-
-    } else if  c.any(T.DHATU) and not f.samyoganta(c) and n.all("li~w") and not n.all("p"):
-        op.tag("1.2.5", p, n.terms[-1], "k")
-
-    } else if  c.text in {"BU", "inD"} and n.all("li~w"):
-        op.tag("1.2.6", p, n.terms[-1], "k")
-
-    } else if  n.all("li~w") and c.text in {"SranT", "granT", "danB", "svanj"}:
-        # TODO: rule seems obligatory; where is optionality defined?
-        op.optional(op.tag, "1.2.6.v1", p, n.terms[-1], "k")
-
+    /*
     tin = p.terms[-1]
     if (
-        tin.all(T.ATMANEPADA) and (tin.all("li~N") or n.terms[0].u == "si~c")
-    ) and n.adi in s("Jal"):
+        tin.all(T.ATMANEPADA) && (tin.all("li~N") or n.terms[0].u == "si~c")
+    ) && n.adi in s("Jal") {
         is_dhatu = c.all(T.DHATU)
-        ik_halantat = c.upadha in s("ik") and c.antya in s("hal")
+        ik_halantat = c.upadha in s("ik") && c.antya in s("hal")
 
-        if is_dhatu and ik_halantat:
+        if is_dhatu && ik_halantat:
             op.tag("1.2.11", p, n.terms[-1], "k")
-        } else if  is_dhatu and c.antya in s("f"):
+        } else if is_dhatu && c.antya in s("f"):
             op.tag("1.2.12", p, n.terms[-1], "k")
+        }
+    }
+    */
+}
 
-
-fn attva_atidesha_for_index(p: Prakriya, index: int):
-    """Atidesha rules that apply only if the root ends in long A.
-
-    If we don't use a separate function for these rules, we have a dependency
-    loop:
-
-        iT-Agama --> atidesha & samprasarana
-
-        atidesha & samprasarana --> Ad-Adesha
-
-        Ad-Adesha --> iT-Agama (sak ca)
-
-    So we break the loop by doing the following:
-
-        iT-Agama (non-A) --> atidesha & samprasarana (non-A)
-
-        atidesha & samprasarana (non-A) -> Ad-Adesha
-
-        Ad-Adesha --> iT-Agama (A)
-
-        iT-Agama (A) --> atidesha and samprasarana (A)
-
-
-    """
+/// Runs rules that apply only if the root ends in long A.
+///
+/// If we don't use a separate function for these rules, we have a dependency loop:
+///
+/// 1. iT-Agama --> atidesha & samprasarana
+/// 2. atidesha & samprasarana --> Ad-Adesha
+/// 3. Ad-Adesha --> iT-Agama (sak ca)
+///
+/// So we break the loop by doing the following:
+///
+/// 1. iT-Agama (non-A) --> atidesha & samprasarana (non-A)
+/// 2. atidesha & samprasarana (non-A) -> Ad-Adesha
+/// 3. Ad-Adesha --> iT-Agama (A)
+/// 4. iT-Agama (A) --> atidesha and samprasarana (A)
+fn run_after_attva_at_index(p: &mut Prakriya, i: usize) {
+    /*
     c = p.terms[index]
     n = TermView.make_pratyaya(p, index)
-    if not n:
+    if not n {
         return
+    }
 
     tin = p.terms[-1]
     if (
         tin.all(T.ATMANEPADA)
         and n.terms[-1].u == "si~c"
         and (c.text == "sTA" or c.all(T.GHU))
-    ):
+    ) {
         n.terms[-1].add_tags("k")
         op.antya("1.2.17", p, c, "i")
+    }
+    */
+}
 
+/// Runs most atidesha rules.
+pub fn run_before_attva(p: &mut Prakriya) {
+    for i in 0..p.terms().len() {
+        run_before_attva_at_index(p, i);
+    }
+}
 
-fn run_before_attva(p: Prakriya):
-    """Run before the rule "Adeca upadeze 'ziti"."""
-    for i, _ in enumerate(p.terms):
-        run_for_index(p, i)
-
-
-fn run_after_attva(p: Prakriya):
-    """Run after the rule "Adeca upadeze 'ziti"."""
-    for i, _ in enumerate(p.terms):
-        attva_atidesha_for_index(p, i)
+/// Runs atidesha rules that must follow rule 6.1.45 (Adeca upadeze 'ziti).
+pub fn run_after_attva(p: &mut Prakriya) {
+    for i in 0..p.terms().len() {
+        run_after_attva_at_index(p, i);
+    }
+}

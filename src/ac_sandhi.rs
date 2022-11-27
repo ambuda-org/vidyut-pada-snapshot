@@ -178,7 +178,7 @@ fn sup_sandhi_before_angasya(p: &mut Prakriya) {
     }
     let x = y - 1;
 
-    if p.has(x, |t| t.text.ends_with('o')) || p.has(y, f::u_in(&["am", "Sas"])) {
+    if p.has(x, |t| t.has_antya('o')) || p.has(y, f::u_in(&["am", "Sas"])) {
         p.set(x, op::antya("A"));
         p.set(y, op::adi(""));
         p.step("6.1.93");
@@ -216,7 +216,7 @@ fn sup_sandhi_after_angasya(p: &mut Prakriya) {
     } else if p.has(y, f::u_in(&["Nasi~", "Nas"])) {
         if p.has(x, |t| t.has_antya(&s("eN"))) {
             p.op("6.1.110", op::t(s, op::adi("")));
-        } else if p.has(x, |t| t.text.ends_with('f')) {
+        } else if p.has(x, |t| t.has_antya('f')) {
             c.text = c.text[:-1] + "ur";
             p.op("6.1.110", op::t(y, op::adi("")));
         }

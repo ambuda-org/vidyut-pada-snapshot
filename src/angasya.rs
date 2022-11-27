@@ -18,7 +18,7 @@ use crate::term::{Term, TermView};
 /// Applies rules that replace an initial "J" in a pratyaya with the appropriate sounds.
 /// (7.1.3 - 7.1.7)
 fn maybe_do_jha_adesha(p: &mut Prakriya, i: usize) {
-    if !p.has(i, |t| t.text.starts_with('J')) {
+    if !p.has(i, |t| t.has_adi('J')) {
         return;
     }
     let b = match p.terms()[..i]
@@ -36,7 +36,7 @@ fn maybe_do_jha_adesha(p: &mut Prakriya, i: usize) {
 
     if p.has(b, f::tag(T::Abhyasta)) {
         p.op("7.1.4", op::t(i, to_at));
-    } else if p.has(b, |t| !t.text.ends_with('a')) && p.has(i, f::atmanepada) {
+    } else if p.has(b, |t| !t.has_antya('a')) && p.has(i, f::atmanepada) {
         p.op("7.1.5", op::t(i, to_at));
     } else {
         p.op("7.1.3", op::t(i, to_ant));
@@ -76,7 +76,7 @@ pub fn pratyaya_adesha(p: &mut Prakriya) {
             _ => panic!("Unexpected"),
         };
         p.op("7.1.2", op::t(i, op::adi(sub)));
-    } else if t.text.starts_with('J') {
+    } else if t.has_adi('J') {
         maybe_do_jha_adesha(p, i);
     // -tAt substitution needs to occur early because it conditions samprasarana.
     } else if p.has(i, |t| t.has_tag(T::Tin) && t.has_text(&["tu", "hi"])) {
@@ -462,7 +462,7 @@ fn try_sarvadhatuke(p: &mut Prakriya) {
                 agama.text = agama.text.replace('s', "");
 
                 let tin = &mut p.terms_mut()[i];
-                if tin.text.ends_with('s') {
+                if tin.has_antya('s') {
                     tin.text = tin.text.replace('s', "");
                 } else {
                     tin.text = tin.text.replace('s', "") + "s";
@@ -471,13 +471,13 @@ fn try_sarvadhatuke(p: &mut Prakriya) {
         }
 
         // yAs -> yA due to 7.2.79 above.
-        if p.has(i_anga, |t| t.text.ends_with('a')) && p.has(i_agama, f::text("yA")) {
+        if p.has(i_anga, |t| t.has_antya('a')) && p.has(i_agama, f::text("yA")) {
             p.op_term("7.2.80", i, op::text("Iy"));
         }
     }
 
     // TODO: not sure where to put this. Not lin.
-    if p.has(i - 1, |t| t.text.ends_with('a')) && p.has(i, |t| t.text.starts_with('A') && t.has_tag(T::Nit)) {
+    if p.has(i - 1, |t| t.has_antya('a')) && p.has(i, |t| t.has_adi('A') && t.has_tag(T::Nit)) {
         p.op_term("7.2.81", i, op::adi("Iy"));
     }
 }
@@ -692,7 +692,7 @@ fn try_ato_dirgha(p: &mut Prakriya, i: usize) {
         let last = al::to_guna(t.antya().unwrap()).unwrap();
         op::antya(last)(t);
     };
-    let ends_in_a = |t: &Term| t.text.ends_with('a');
+    let ends_in_a = |t: &Term| t.has_antya('a');
 
     if n.has_tag(T::Sarvadhatuka) {
         if p.has(i, ends_in_a) && s("yaY").contains_opt(n.adi()) {
@@ -719,7 +719,7 @@ fn try_ato_dirgha(p: &mut Prakriya, i: usize) {
                 p.op_term("7.3.108", i, to_guna);
             } else if n.has_u("jas") {
                 p.op_term("7.3.109", i, to_guna);
-            } else if p.has(i, |t| t.text.ends_with('f'))
+            } else if p.has(i, |t| t.has_antya('f'))
                 && (n.has_u("Ni") || n.has_tag(T::Sarvanamasthana))
             {
                 p.op_term("7.3.110", i, to_guna);

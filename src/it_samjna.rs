@@ -82,8 +82,8 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
     }
 
     if let Some(t) = p.get_mut(i) {
-        if u.has_antya(&HAL) && !irit {
-            let vibhaktau_tusmah = t.has_tag(T::Vibhakti) && u.has_antya(&TUSMA);
+        if u.has_antya(&*HAL) && !irit {
+            let vibhaktau_tusmah = t.has_tag(T::Vibhakti) && u.has_antya(&*TUSMA);
             if !vibhaktau_tusmah {
                 t.add_tag(T::parse_it(&u.antya().unwrap().to_string())?);
                 let n = t.text.len();
@@ -111,11 +111,11 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
 
     if let Some(t) = p.get_mut(i) {
         if t.has_tag(T::Pratyaya) {
-            if u.text.starts_with('z') {
+            if u.has_adi('z') {
                 t.add_tag(T::parse_it(&u.adi().unwrap().to_string())?);
                 t.text = t.text[1..].to_string();
                 p.step("1.3.6")
-            } else if u.has_adi(&CUTU) {
+            } else if u.has_adi(&*CUTU) {
                 // The sounds C, J, W, and Q are replaced later in the grammar.
                 // If we substitute them now, those rules will become vyartha.
                 if !u.has_adi(&s("C J W Q")) {
@@ -123,7 +123,7 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
                     t.text = t.text[1..].to_string();
                 }
                 p.step("1.3.7");
-            } else if !t.has_tag(T::Taddhita) && t.has_adi(&LASHAKU) {
+            } else if !t.has_tag(T::Taddhita) && t.has_adi(&*LASHAKU) {
                 // Keep the first "l" of the lakAras.
                 // Otherwise, rule 3.4.77 will become vyartha.
                 let lakara = [
