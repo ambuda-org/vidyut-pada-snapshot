@@ -204,6 +204,13 @@ impl<'a> TermView<'a> {
         None
     }
 
+    pub fn has_u(&self, u: &str) -> bool {
+        match self.slice().first() {
+            Some(t) => t.has_u(u),
+            None => false
+        }
+    }
+
     pub fn has_tag(&self, tag: Tag) -> bool {
         self.slice().iter().any(|t| t.has_tag(tag))
     }

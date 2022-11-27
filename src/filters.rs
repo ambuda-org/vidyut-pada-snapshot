@@ -73,6 +73,10 @@ pub fn ends_with(sub: &'static str) -> impl Fn(&Term) -> bool {
     move |t| t.text.ends_with(sub)
 }
 
+pub fn empty(t: &Term) -> bool {
+    t.text.is_empty()
+}
+
 pub fn not_empty(t: &Term) -> bool {
     !t.text.is_empty()
 }

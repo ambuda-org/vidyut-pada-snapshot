@@ -11,20 +11,16 @@ rest of the text selects rules based on their priority and allows a rule to appl
 the tripādi applies rules in order and will never "go back" to apply an earlier rule.
 */
 
+use lazy_static::lazy_static;
+use crate::constants::Tag as T;
+use crate::filters as f;
+use crate::operations as op;
 use crate::prakriya::Prakriya;
+use crate::sounds::{s, SoundSet};
+use crate::term::Term;
+
 
 /*
-import re
-from typing import Optional
-
-from padmini.term_views import StringView, TermView
-from padmini.sounds import s
-from padmini import filters as f
-from padmini import operations as op
-from padmini import sounds
-from .utils import per_term
-from padmini.prakriya import Prakriya, VyakaranaException
-from padmini.constants import Tag as T
 
 ADESHA_CACHE = {}
 
@@ -85,49 +81,63 @@ fn al_adesha(
     adesha(p, index)
     ADESHA_CACHE[rule] = adesha
     return adesha
+*/
 
+/// Runs rules for lopa of the final `n` of a prAtipadika.
+/// Example: rAjan + Bis -> rAjaBis.
+///
+/// (8.2.7 - 8.2.8)
+fn try_na_lopa(p: &mut Prakriya) {
+    let i = match p.find_last(T::Sup) {
+        Some(i) => i,
+        None => return,
+    };
+    let i_anga = i - 1;
 
-fn na_lopa(p: Prakriya):
-    sup = p.terms[-1]
-    if not sup.any(T.SUP):
-        return
-    anga = p.terms[-2]
+    if p.has(i_anga, |t| t.text.ends_with('n') && t.has_tag(T::Pratipadika)) && p.has(i, f::empty) {
+        if p.has(i, |t| t.has_tag(T::Sambuddhi) || t.has_u("Ni")) {
+            p.step("8.2.8");
+        } else {
+            p.op_term("8.2.7", i_anga, op::antya(""));
+        }
+    }
+}
 
-    if anga.antya == "n" and anga.any(T.PRATIPADIKA) and not sup.text:
-        op.antya("8.2.7", p, anga, "")
+/// Runs rules that change r to l.
+/// Example: girati -> gilati.
+///
+/// (8.2.18 - 8.2.20)
+fn try_ra_to_la(p: &mut Prakriya) {
+    let do_ra_la = |t: &mut Term| t.text = t.text.replace("f", "x").replace("r", "l");
 
+    for i in 0..p.terms().len() {
+        let n = i + 1;
+        // HACK to exclude kfpa (cur-gana root).
+        if p.has(i, |t| t.text.starts_with("kfp") && !t.has_u("kfpa")) {
+            p.op("8.2.18", op::t(i, do_ra_la));
+        } else if p.has(i, f::u("gF")) && p.has(n, f::u("yaN")) {
+            p.op("8.2.20", op::t(i, do_ra_la));
+        } else if p.has(i, |t| t.has_u("gF") && t.gana == Some(6)) && p.has(n, |t| t.has_adi(&s("ac"))) {
+            // TODO: where is it specified that this is only for gF/girati?
+            p.op("8.2.21", op::t(i, do_ra_la));
+        }
+    }
+}
 
-fn ra_to_la(p: Prakriya):
-    """Change of r to l. (8.2.18 - 8.2.20)"""
-    for c, n in per_term(p):
-        if not n:
-            continue
-        # HACK to exclude kfpa (cur-gana root)
-        if c.u.startswith("kfp") and c.u != "kfpa":
-            c.text = c.text.replace("f", "x").replace("r", "l")
-            p.step("8.2.18")
-        } else if  c.u == "gF" and n.u == "yaN":
-            c.text = c.text.replace("r", "l")
-            p.step("8.2.20")
-        # TODO: where is it specified that this is only for gF/girati?
-        } else if  c.u == "gF" and c.gana == 6 and n.adi in s("ac"):
-            res = c.text.replace("r", "l")
-            op.optional(op.text, "8.2.21", p, c, res)
-
-
+/*
 fn samyoganta_and_salopa(p: Prakriya):
     """Final samyoga. (8.2.23 - 8.2.29)"""
 
-    # Exception to 8.2.23.
+    // Exception to 8.2.23.
     sk = s("s k").regex
     hal = s("hal").regex
     jhal = s("Jal").regex
 
-    # TODO: jhal case
+    // TODO: jhal case
     pattern = f"({sk}+){hal}+"
     jhal = f"{jhal}"
 
-    # jhalo jhali
+    // jhalo jhali
     view = StringView(p.terms)
     lopa_offset = 0
     for match in re.finditer(f"{jhal}(s){jhal}", view.text):
@@ -135,28 +145,28 @@ fn samyoganta_and_salopa(p: Prakriya):
         view.delete_span(start - lopa_offset, end - lopa_offset)
         p.step("8.2.26")
 
-    # saMst can be handled only with difficulty. For details, see the
-    # commentary in the mAdhavIya-dhAtuvRtti:
-    #
-    # https://archive.org/details/237131938MadhaviyaDhatuVrtti/page/n434/mode/1up
+    // saMst can be handled only with difficulty. For details, see the
+    // commentary in the mAdhavIya-dhAtuvRtti:
+    //
+    // https://archive.org/details/237131938MadhaviyaDhatuVrtti/page/n434/mode/1up
     view = StringView(p.terms)
     vtext = view.text
-    # We find all matches at the beginning of the loop. If multiple sa-lopas
-    # apply, then each lopa will cause a frame shift that will affect later
-    # sa-lopas. As a quick hack, manage this with `offset` so that the deletion
-    # indices are always properly aligned.
+    // We find all matches at the beginning of the loop. If multiple sa-lopas
+    // apply, then each lopa will cause a frame shift that will affect later
+    // sa-lopas. As a quick hack, manage this with `offset` so that the deletion
+    // indices are always properly aligned.
     lopa_offset = 0
     for match in re.finditer(pattern + f"({jhal}|$)", vtext):
         can_apply = True
         if "sanst" in vtext:
-            # Apply the rule only if the change would not affect "sanst."
+            // Apply the rule only if the change would not affect "sanst."
             offset = 0
             for t in p.terms:
                 offset += len(t.text)
                 if t.text == "sanst":
                     break
             if match.span(1)[0] <= offset:
-                # rule would apply to "sanst" -- block.
+                // rule would apply to "sanst" -- block.
                 can_apply = False
         if can_apply:
             start, end = match.span(1)
@@ -169,12 +179,12 @@ fn samyoganta_and_salopa(p: Prakriya):
             continue
         if c.antya == "r" and n.text == "s" and n is p.terms[-1]:
             op.adi("8.2.24", p, n, "")
-        # Per kAzikA, applies only to s of si~c. But this seems to cause
-        # problems e.g. for tAs + Dve.
-        } else if  c.antya == "s" and n.adi == "D":
+        // Per kAzikA, applies only to s of si~c. But this seems to cause
+        // problems e.g. for tAs + Dve.
+        } else if c.antya == "s" and n.adi == "D":
             op.antya("8.2.25", p, c, "")
 
-    # hrasvAd aGgAt
+    // hrasvAd aGgAt
     for i, c in enumerate(p.terms):
         try:
             n = p.terms[i + 1]
@@ -194,9 +204,9 @@ fn samyoganta_and_salopa(p: Prakriya):
         if x.u == "iw" and y.u == "si~c" and z.u == "Iw":
             op.lopa("8.2.28", p, y)
 
-            # sic-lopa is siddha with respect to prior rules (8.2.3 vArttika)
+            // sic-lopa is siddha with respect to prior rules (8.2.3 vArttika)
             z.text = ""
-            # HACK: x should always have text at this point. Temp workaround.
+            // HACK: x should always have text at this point. Temp workaround.
             if x.text:
                 op.antya("6.1.101", p, x, "I")
 
@@ -204,28 +214,48 @@ fn samyoganta_and_salopa(p: Prakriya):
         last = len(view.text) - 1
         view[last] = ""
         p.step("8.2.23")
+*/
 
+/// Runs rules that change the final "h" of a dhatu.
+/// Example: muh + ta -> mugdha.
+///
+/// (8.2.31 - 8.2.35)
+fn try_ha_adesha(p: &mut Prakriya) {
+    lazy_static!{
+        static ref JHAL: SoundSet = s("Jal");
+    }
 
-fn ha_adesha(p: Prakriya):
-    for index, (c, n) in enumerate(per_term(p)):
-        is_dhatu = c.all(T.DHATU)
-        # TODO: implement padAnta
-        # By a vArttika, this applies only at term boundaries.
-        druha_muha = {"dru\\ha~", "mu\\ha~", "zRu\\ha~", "zRi\\ha~"}
-        if is_dhatu and c.u in druha_muha:
-            op.optional(al_adesha, "8.2.33", p, index, None, "h", "Jal", "G")
-        } else if  is_dhatu and c.u == "Ra\\ha~^" and c.antya == "h":
-            al_adesha("8.2.34", p, index, None, "h", "Jal", "D")
-        } else if  is_dhatu and c.text == "Ah":
-            al_adesha("8.2.35", p, index, None, "h", "Jal", "T")
-        } else if  is_dhatu and c.adi == "d":
-            al_adesha("8.2.32", p, index, None, "h", "Jal", "G")
+    // TODO: implement padAnta
+    // By a vArttika, this applies only at term boundaries.
+    let druha_muha = &["dru\\ha~", "mu\\ha~", "zRu\\ha~", "zRi\\ha~"];
 
-        al_adesha("8.2.31", p, index, None, "h", "Jal", "Q")
-        if c.antya == "h" and not n:
-            op.antya("8.2.31", p, c, "Q")
+    for i in 0..p.terms().len() {
+        let is_dhatu = p.has(i, f::tag(T::Dhatu));
+        let jhali = p.has(i + 1, |t| JHAL.contains_opt(t.adi()));
+        let ante = i == p.terms().len() - 1;
 
+        if jhali || ante {
+            if is_dhatu {
+                let dhatu = &p.terms()[i];
+                if dhatu.has_u_in(druha_muha) {
+                    p.op_optional("8.2.33", |p| p.set(i, op::antya("G")));
+                } else if dhatu.has_u("Ra\\ha~^") {
+                    p.op_term("8.2.34", i, op::antya("D"));
+                } else if dhatu.text == "Ah" {
+                    p.op_term("8.2.35", i, op::antya("T"));
+                } else if dhatu.adi() == Some('d') {
+                    p.op_term("8.2.35", i, op::antya("G"));
+                }
+            }
+            // If no change was made, use the default.
+            if p.has(i, |t| t.text.ends_with('h')) {
+                p.op_term("8.2.31", i, op::antya("Q"));
+            }
+        }
+    }
+}
 
+/*
 fn per_term_1b(p: Prakriya, index: int):
     c = p.terms[index]
     try:
@@ -247,7 +277,7 @@ fn per_term_1b(p: Prakriya, index: int):
     jhali_ante = not n or n.adi in s("Jal")
     if (c.u in vrascha or c.antya in s("C S")) and jhali_ante:
         if c.text.endswith("tC"):
-            # TODO: seems implied, not sure.
+            // TODO: seems implied, not sure.
             c.text = c.text[:-2] + "z"
             p.step("8.2.36")
         else:
@@ -262,18 +292,18 @@ fn per_term_1b(p: Prakriya, index: int):
     if c.adi in basho_bhash and c.antya in s("JaS") and sdhvoh:
         op.adi("8.2.37", p, c, basho_bhash[c.adi])
 
-    # Exclude the following from 8.2.39 so that the corresponding rules aren't
-    # vyartha:
-    # - c for 8.2.30 (coH kuH)
-    # - S for 8.2.36 (vraSca-Brasja-...-Ca-SAM zaH)
-    # - s for 8.2.66 (sasajuSo ruH)
-    # - h for 8.2.31 (ho QaH)
+    // Exclude the following from 8.2.39 so that the corresponding rules aren't
+    // vyartha:
+    // - c for 8.2.30 (coH kuH)
+    // - S for 8.2.36 (vraSca-Brasja-...-Ca-SAM zaH)
+    // - s for 8.2.66 (sasajuSo ruH)
+    // - h for 8.2.31 (ho QaH)
     if c.antya in s("Jal") and c.antya not in s("c S s h") and not n:
         mapping = sounds.map_sounds(s("Jal"), s("jaS"))
         op.antya("8.2.39", p, c, mapping[c.antya])
 
     if c.all(T.DHATU) and c.u != "quDA\\Y":
-        # TODO: abhyasa
+        // TODO: abhyasa
         if c.antya in s("Jaz") and n and n.adi in s("t T"):
             op.adi("8.2.40", p, n, "D")
 
@@ -283,7 +313,7 @@ fn per_term_1b(p: Prakriya, index: int):
     if c.any(T.DHATU) and c.antya == "m" and n.adi in {"m", "v"}:
         op.antya("8.2.65", p, c, "n")
 
-    # TODO: sajuS
+    // TODO: sajuS
 
     try:
         rn = p.terms[index + 1]
@@ -291,10 +321,10 @@ fn per_term_1b(p: Prakriya, index: int):
         rn = None
     next_is_last = index + 1 == len(p.terms) - 1
     if c.antya == "s" and next_is_last and rn.text == "" and rn.u == "tip":
-        # Exception to general rule 8.2.66 below
+        // Exception to general rule 8.2.66 below
         op.antya("8.2.73", p, c, "d")
 
-    } else if  c.antya == "s" and (not n or (next_is_last and rn.text == "")):
+    } else if c.antya == "s" and (not n or (next_is_last and rn.text == "")):
         op.antya("8.2.66", p, c, "ru~")
 
     if c.antya in s("s d") and rn and rn.text == "" and rn.u == "sip":
@@ -303,18 +333,18 @@ fn per_term_1b(p: Prakriya, index: int):
         else:
             op.optional(op.antya, "8.2.75", p, c, "ru~")
 
-    # 8.2.77
-    # TODO: sajuS
+    // 8.2.77
+    // TODO: sajuS
     if c.all(T.DHATU):
-        # TODO: bha
+        // TODO: bha
         if c.text in ("kur", "Cur"):
-            # Do nothing.
+            // Do nothing.
             p.step("8.2.79")
-        } else if  c.antya in s("r v"):
+        } else if c.antya in s("r v"):
             if c.upadha in {"i", "u", "f", "x"}:
                 if n and n.adi in s("hal"):
                     op.upadha("8.2.77", p, c, sounds.dirgha(c.upadha))
-                } else if  not n:
+                } else if not n:
                     op.upadha("8.2.76", p, c, sounds.dirgha(c.upadha))
         if (
             len(c.text) >= 3
@@ -325,18 +355,22 @@ fn per_term_1b(p: Prakriya, index: int):
             c.text = c.text[:-3] + sounds.dirgha(c.text[-3]) + c.text[-2:]
             p.step("8.2.78")
 
-    # 8.3.15
-    # TODO: next pada
+    // 8.3.15
+    // TODO: next pada
     has_ru = c.text.endswith("ru~") or c.text.endswith("r")
     if has_ru and not n:
         c.text = c.text.replace("ru~", "H")
         if c.text.endswith("r"):
             c.text = c.text[:-1] + "H"
         p.step("8.3.15")
+*/
 
-
-fn natva(p: Prakriya):
-    """Rules that change `n` to `R`. (8.4.1 - 8.4.39)
+/// Runs rules that change `n` to `R`.
+/// Example: muh + ta -> mugdha.
+///
+/// (8.2.31 - 8.2.35)
+/*
+fn try_natva(p: &mut Prakriya) {
 
     :param p: the prakriya
     """
@@ -348,13 +382,13 @@ fn natva(p: Prakriya):
         p.step("8.4.39")
         return
 
-    # TODO: AG and num
+    // TODO: AG and num
     view = StringView(p.terms)
     between = s("aw ku~ pu~ M").regex
     match = re.search(f"[rzfF]({between}*)n", view.text)
 
     if match:
-        # End of pada
+        // End of pada
         if match.span(0)[1] == len(view.text):
             p.step("8.4.37")
         else:
@@ -367,7 +401,7 @@ fn natva(p: Prakriya):
                     p.step("8.4.1")
                 else:
                     p.step("8.4.1-v")
-
+}
 
 fn stoh_scuna_stuna(p):
     view = StringView(p.terms)
@@ -417,16 +451,16 @@ fn murdhanya(p: Prakriya):
         if not n:
             continue
         inku = s("iR2 ku~")
-        # HACK: don't include agama
+        // HACK: don't include agama
         adesha_pratyaya = n.any(T.PRATYAYA, T.F_ADESHA_ADI, T.AGAMA)
         apadanta = not (n.text == s and n is p.terms[-1])
         if c.antya in inku and n.adi == "s" and adesha_pratyaya and apadanta:
             op.adi("8.3.59", p, n, "z")
 
-        } else if  c.u in {"va\\sa~", "SAsu~", "Gasx~"} and c.upadha in inku:
+        } else if c.u in {"va\\sa~", "SAsu~", "Gasx~"} and c.upadha in inku:
             op.antya("8.3.60", p, c, "z")
 
-        # HACK
+        // HACK
         for i, u in enumerate(p.terms):
             if c is u:
                 break
@@ -462,9 +496,9 @@ fn overall_1(p: Prakriya):
 
     view = StringView(p.terms)
 
-    # 8.3.24
-    # TODO: next term
-    # TODO: a-padAnta
+    // 8.3.24
+    // TODO: next term
+    // TODO: a-padAnta
     jhal = s("Jal").regex
     for match in re.finditer(f"([mn])({jhal})", view.text):
         view[match.span(1)[0]] = "M"
@@ -474,20 +508,20 @@ fn overall_1(p: Prakriya):
 fn dha(p: Prakriya):
     """Rules for retroflex Dha."""
     view = StringView(p.terms)
-    # Save the text before Dha-lopa for a cleaner comparison below.
+    // Save the text before Dha-lopa for a cleaner comparison below.
     vtext = view.text
 
-    # Placed after 8.4.41, otherwise this is vyartha
+    // Placed after 8.4.41, otherwise this is vyartha
     match = re.search(f"([Q])[Q]", view.text)
     if match:
         view[match.span(0)[0]] = ""
         p.step("8.3.13")
 
-        # Placed here, otherwise this is vyartha
-        # matches aN (no f, x)
+        // Placed here, otherwise this is vyartha
+        // matches aN (no f, x)
         match = re.search(f"([aAiIuU])[Q]", view.text)
         if match:
-            # HACK to check for sah and vah
+            // HACK to check for sah and vah
             if "saQ" in vtext or "sAQ" in vtext or "vaQ" in vtext or "vAQ" in vtext:
                 view[match.span(0)[0]] = "o"
                 p.step("6.3.112")
@@ -510,13 +544,13 @@ fn savarna(p):
         replacement = None
         if para in s("ku~"):
             replacement = "N"
-        } else if  para in s("cu~"):
+        } else if para in s("cu~"):
             replacement = "Y"
-        } else if  para in s("wu~"):
+        } else if para in s("wu~"):
             replacement = "R"
-        } else if  para in s("tu~"):
+        } else if para in s("tu~"):
             replacement = "n"
-        } else if  para in s("pu~"):
+        } else if para in s("pu~"):
             replacement = "m"
         else:
             raise VyakaranaException(f"Unknown following sound {para}.")
@@ -562,7 +596,7 @@ fn per_term_2(p: Prakriya, index: int):
     if c.all(T.ABHYASA):
         al_adesha("8.4.54", p, index, None, "Jal", None, "jaS car")
 
-    # 8.2.38, but indicated here by use of "dadhas" in the rule.
+    // 8.2.38, but indicated here by use of "dadhas" in the rule.
     sdhvoh = n and (n.adi == "s" or n.all(T.PRATYAYA) and n.u.startswith("Dv"))
     if c.u == "quDA\\Y" and c.text == "D" and (n.adi in s("t T") or sdhvoh):
         prev = p.terms[index - 1]
@@ -575,21 +609,22 @@ fn per_term_2(p: Prakriya, index: int):
     if c.antya in s("Jal") and not n:
         mapping = sounds.map_sounds(s("Jal"), s("car"))
         op.optional(op.antya, "8.4.56", p, c, mapping[c.antya])
+*/
 
+pub fn run(p: &mut Prakriya) {
+    try_na_lopa(p);
+    try_ra_to_la(p);
+    // samyoganta_and_salopa(p)
+    try_ha_adesha(p)
 
-fn run(p: Prakriya):
-    na_lopa(p)
-    ra_to_la(p)
-    samyoganta_and_salopa(p)
-    ha_adesha(p)
-
+        /*
     for i, _ in enumerate(p.terms):
         per_term_1b(p, i)
 
     murdhanya(p)
     overall_1(p)
 
-    natva(p)
+    try_natva(p)
     stoh_scuna_stuna(p)
     dha(p)
 
@@ -597,6 +632,5 @@ fn run(p: Prakriya):
         per_term_2(p, i)
 
     savarna(p)
-*/
-
-pub fn run(p: &mut Prakriya) {}
+    */
+}

@@ -642,39 +642,60 @@ fn dhatu_rt_adesha(p: Prakriya, index: int):
         else:
             op.antya("7.1.100", p, c, "ir")
     // HACK: 7.1.101 before dvitva
+*/
 
+/// Runs rules that lengthen the last `a` of the anga when certain suffixes follow.
+///
+/// Example: `Bava + mi -> BavAmi`
+///
+/// (7.3.101 - 7.3.111)
+fn try_ato_dirgha(p: &mut Prakriya, i: usize) {
+    let n = match TermView::new(p.terms(), i+1) {
+        Some(n) => n,
+        None => return,
+    };
 
-fn ato_dirgha(p: Prakriya, index: int):
-    """Lengthen -a of the anga when certain suffixes follow."""
-    c = p.terms[index]
-    n = TermView.make_pratyaya(p, index)
-    if not n:
-        return
+    let to_guna = |t: &mut Term| {
+        let last = al::to_guna(t.antya().unwrap()).unwrap();
+        op::antya(last)(t);
+    };
+    let ends_in_a = |t: &Term| t.text.ends_with('a');
 
-    n.u = n.terms[0].u
+    if n.has_tag(T::Sarvadhatuka) {
+        if p.has(i, ends_in_a) && s("yaY").contains_opt(n.adi()) {
+            p.op_term("7.3.101", i, op::antya("A"));
+        }
+    } else if n.has_tag(T::Sup) {
+        if p.has(i, ends_in_a) {
+            if n.has_tag(T::Bahuvacana) && s("Jal").contains_opt(n.adi()) {
+                p.op_term("7.3.103", i, op::antya("e"));
+            } else if s("yaY").contains_opt(n.adi()) {
+                p.op_term("7.3.102", i, op::antya("A"));
+            } else if n.slice()[0].text == "os" {
+                p.op_term("7.3.104", i, op::antya("e"));
+            }
+        }
 
-    if n.all(T.SARVADHATUKA):
-        if c.antya == "a" and n.adi in s("yaY"):
-            op.antya("7.3.101", p, c, "A")
-    } else if n.all(T.SUP):
-        if c.antya == "a":
-            if n.all(T.BAHUVACANA) and n.adi in s("Jal"):
-                op.antya("7.3.103", p, c, "e")
-            } else if n.adi in s("yaY"):
-                op.antya("7.3.102", p, c, "A")
-            } else if n.terms[0].text == "os":
-                op.antya("7.3.104", p, c, "e")
-        if c.antya in sounds.HRASVA and c.antya != "a":
-            if n.any(T.SAMBUDDHI):
-                op.antya("7.3.108", p, c, sounds.guna(c.antya))
-            } else if n.u == "jas":
-                op.antya("7.3.109", p, c, sounds.guna(c.antya))
-            } else if c.antya == "f" and (n.u == "Ni" or n.any(T.SARVANAMASTHANA)):
-                op.antya("7.3.110", p, c, sounds.guna(c.antya))
-            } else if c.any(T.GHI) and n.any("N"):
-                op.antya("7.3.111", p, c, sounds.guna(c.antya))
+        let c = &p.terms()[i];
+        let n = match TermView::new(p.terms(), i+1) {
+            Some(n) => n,
+            None => return,
+        };
+        if al::is_hrasva(c.antya().unwrap()) && c.antya() != Some('a') {
+            if n.has_tag(T::Sambuddhi) {
+                p.op_term("7.3.108", i, to_guna);
+            } else if n.has_u("jas") {
+                p.op_term("7.3.109", i, to_guna);
+            } else if p.has(i, |t| t.text.ends_with('f')) && (n.has_u("Ni") || n.has_tag(T::Sarvanamasthana)) {
+                p.op_term("7.3.110", i, to_guna);
+            } else if p.has(i, f::tag(T::Ghi)) && n.has_tag(T::Nit) {
+                p.op_term("7.3.111", i, to_guna);
+            }
+        }
+    }
+}
 
-
+/*
 fn optional_rule(rule: str, p: Prakriya):
     if p.allow(rule):
         return rule
@@ -1010,28 +1031,31 @@ pub fn run_remainder(p: &mut Prakriya) {
     }
 
     /*
-        // Rules for various lun-vikaranas.
-        liti(p)
-        ani(p)
+    // Rules for various lun-vikaranas.
+    liti(p)
+    ani(p)
 
-        // Asiddhavat must run before cani for "Ner aniTi"
-        for index, _ in enumerate(p.terms):
-            c = p.terms[index]
-            if c.text:
-                asiddhavat.run_nau(p, index)
+    // Asiddhavat must run before cani for "Ner aniTi"
+    for index, _ in enumerate(p.terms):
+        c = p.terms[index]
+        if c.text:
+            asiddhavat.run_nau(p, index)
 
-        cani_after_guna(p)
-        abhyasasya.run_sani_cani(p)
-
-        for index, _ in enumerate(p.terms):
-            c = p.terms[index]
-            if not c.text:
-                continue
-
-            asiddhavat.run_after_guna(p, index)
-            dhatu_rt_adesha(p, index)
-            ato_dirgha(p, index)
-
-        asiddhavat.run_dirgha(p)
+    cani_after_guna(p)
+    abhyasasya.run_sani_cani(p)
     */
+
+    for index in 0..p.terms().len() {
+        /*
+        c = p.terms[index]
+        if not c.text:
+            continue
+
+        asiddhavat.run_after_guna(p, index)
+        dhatu_rt_adesha(p, index)
+        */
+        try_ato_dirgha(p, index)
+    }
+
+    // asiddhavat.run_dirgha(p)
 }
