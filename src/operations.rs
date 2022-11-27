@@ -23,7 +23,7 @@ closures.
 */
 use crate::constants::Tag as T;
 use crate::it_samjna;
-use crate::prakriya::Prakriya;
+use crate::prakriya::{Prakriya, Rule};
 use crate::sounds::is_ac;
 use crate::term::Term;
 
@@ -121,6 +121,27 @@ pub fn upadesha(p: &mut Prakriya, i: usize, sub: &str) {
         }
         t.u = Some(sub.to_string());
         t.text = sub.to_string();
+        it_samjna::run(p, i).unwrap();
+    }
+}
+
+/// Complex op
+pub fn append_agama(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
+    let agama = Term::make_agama(sub);
+    p.insert_after(i, agama);
+    p.step(rule);
+    it_samjna::run(p, i + 1).unwrap();
+}
+
+/// Complex op
+pub fn adesha(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
+    if let Some(t) = p.get_mut(i) {
+        if let Some(u) = &t.u {
+            t.lakshana.push(u.to_string());
+        }
+        t.u = Some(sub.to_string());
+        t.text = sub.to_string();
+        p.step(rule);
         it_samjna::run(p, i).unwrap();
     }
 }

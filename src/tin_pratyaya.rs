@@ -76,7 +76,7 @@ pub fn adesha(p: &mut Prakriya, purusha: Purusha, vacana: Vacana) {
                 pada,
             ]);
         });
-        p.rule("3.4.78", |_| true, |p| op::upadesha(p, i, tin));
+        op::adesha("3.4.78", p, i, tin);
 
         // Ignore Nit-tva that we get from the lakAra. Kashika on 3.4.103:
         //
@@ -96,7 +96,7 @@ fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) {
     }
 
     if matches!(la, La::AshirLin | La::VidhiLin) {
-        p.op("3.4.108", |p| op::upadesha(p, i, "jus"));
+        op::adesha("3.4.108", p, i, "jus");
     } else if la.is_nit() {
         let i_dhatu = match p.find_last(T::Dhatu) {
             Some(i) => i,
@@ -119,9 +119,9 @@ fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) {
         if p.has(i_prev, |t| {
             t.has_u("si~c") || t.has_tag(T::Abhyasta) || is_vid
         }) {
-            p.op("3.4.109", |p| op::upadesha(p, i, "jus"));
+            op::adesha("3.4.109", p, i, "jus");
         } else if p.has(i_dhatu, |t| t.has_antya(&s("A"))) && p.has(i_prev, |t| t.has_u("si~c")) {
-            p.op("3.4.110", |p| op::upadesha(p, i, "jus"));
+            op::adesha("3.4.110", p, i, "jus");
         } else if la == La::Lan {
             if p.has(i_prev, |t| t.has_antya(&s("A")) && t.has_tag(T::Dhatu)) {
                 p.op_optional("3.4.111", |p| op::upadesha(p, i, "jus"));
@@ -144,7 +144,7 @@ fn maybe_do_lut_siddhi(p: &mut Prakriya, i_la: usize, la: La) {
             } else {
                 panic!("Unknown state");
             };
-            p.op("2.4.85", |p| op::upadesha(p, i_la, ending));
+            op::adesha("2.4.85", p, i_la, ending);
         }
     }
 }
@@ -228,9 +228,9 @@ fn maybe_do_lin_siddhi(p: &mut Prakriya, i_tin: usize, la: La) -> Result<(), Box
         it_samjna::run(p, i - 1)?;
 
         if p.has(i, |t| t.has_u("Ja")) {
-            p.op("3.4.105", |p| op::upadesha(p, i, "ran"));
+            op::adesha("3.4.105", p, i, "ran");
         } else if p.has(i, |t| t.has_u("iw")) {
-            p.op("3.4.106", |p| op::upadesha(p, i, "a"));
+            op::adesha("3.4.106", p, i, "a");
         }
     }
 
@@ -296,7 +296,7 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
         if p.has(i, |t| t.has_lakshana("li~w") && t.has_text(ta_jha)) {
             p.op("3.4.81", |p| op::upadesha_yatha(p, i, ta_jha, es_irec));
         } else if p.has(i, |t| t.text == "TAs") {
-            p.op("3.4.80", |p| op::upadesha(p, i, "se"));
+            op::adesha("3.4.80", p, i, "se");
         } else {
             p.op_term("3.4.79", i, op::ti("e"));
         }

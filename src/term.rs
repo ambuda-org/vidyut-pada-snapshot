@@ -242,6 +242,10 @@ impl<'a> TermView<'a> {
         self.slice().iter().any(|t| t.has_lakshana(s))
     }
 
+    pub fn has_lakshana_in(&self, items: &[&str]) -> bool {
+        self.slice().iter().any(|t| t.has_any_lakshana(items))
+    }
+
     pub fn all(&self, tags: &[Tag]) -> bool {
         for tag in tags {
             if self.slice().iter().any(|t| t.has_tag(*tag)) {

@@ -400,13 +400,16 @@ pub fn run_before_guna(p: &mut Prakriya, i: usize) {
 
     try_add_a_agama(p, i);
 
-    /*
-    ardhadhatuke(p, index)
+    // ardhadhatuke(p, index)
 
     // Must run before guNa
-    if c.text == "BU" and n.any("lu~N", "li~w"):
-        op.insert_agama_after("6.4.88", p, index, "vu~k")
+    if let Some(n) = p.view(i + 1) {
+        if p.has(i, f::text("BU")) && n.has_lakshana_in(&["lu~N", "li~w"]) {
+            op::append_agama("6.4.88", p, i, "vu~k");
+        }
+    }
 
+    /*
     if c.u == "ciR" and n.text == "ta":
         op.luk("6.4.104", p, n.terms[0])
 
