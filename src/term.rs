@@ -137,6 +137,10 @@ impl Term {
     }
 
     // Mutators
+    pub fn set_upadesha(&mut self, s: &str) {
+        self.u = Some(s.to_string());
+        self.text = s.to_string();
+    }
 
     pub fn add_tag(&mut self, tag: Tag) {
         self.tags.insert(tag);

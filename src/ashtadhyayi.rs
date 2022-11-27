@@ -61,7 +61,8 @@ pub fn tinanta(
     samjna::run(&mut p);
 
     // Do lit-siddhi and AzIrlin-siddhi first to support the valAdi vArttika for aj>vi.
-    if la == La::Lit || la == La::AshirLin {
+    let is_lit_or_ashirlin = matches!(la, La::Lit | La::AshirLin);
+    if is_lit_or_ashirlin {
         tin_pratyaya::siddhi(&mut p, la)?;
     }
 
@@ -78,7 +79,7 @@ pub fn tinanta(
 
     dvitva::run(&mut p);
 
-    if la != La::AshirLin {
+    if !is_lit_or_ashirlin {
         tin_pratyaya::siddhi(&mut p, la)?;
     }
 

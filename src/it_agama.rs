@@ -21,7 +21,6 @@ use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
 use crate::filters as f;
 use crate::it_samjna;
-use crate::operations as op;
 use crate::prakriya::{Prakriya, Rule};
 use crate::sounds::{s, SoundSet};
 use crate::term::Term;

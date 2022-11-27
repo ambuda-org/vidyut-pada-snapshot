@@ -131,14 +131,14 @@ pub fn upadesha_yatha(p: &mut Prakriya, i: usize, old: &[&str], new: &[&str]) {
         if let Some(u) = &t.u {
             t.lakshana.push(u.to_string());
 
-            for (i, x) in old.iter().enumerate() {
+            for (i_entry, x) in old.iter().enumerate() {
                 if u == x {
-                    t.u = Some(new[i].to_string());
-                    t.text = new[i].to_string();
-                    break;
+                    t.set_upadesha(new[i_entry]);
+                    it_samjna::run(p, i).unwrap();
+                    return;
                 }
             }
-            it_samjna::run(p, i).unwrap();
+            panic!("Should not have reached here {:?} {:?} {:?}", old, new, t.u);
         }
     }
 }
@@ -180,11 +180,12 @@ pub fn slu(t: &mut Term) {
 }
 
 /// Deletes all of the text in the given term through *lup*.
+/*
 fn lup(t: &mut Term) {
     lopa(t);
     t.add_tag(T::Lup);
 }
-
+*/
 // Tags
 // ====
 
@@ -262,6 +263,7 @@ mod tests {
         assert!(t.has_tag(T::Slu));
     }
 
+    /*
     #[test]
     fn test_lup() {
         let mut t = Term::make_text("ti");
@@ -269,4 +271,5 @@ mod tests {
         assert_eq!(t.text, "");
         assert!(t.has_tag(T::Lup));
     }
+    */
 }

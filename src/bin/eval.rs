@@ -90,11 +90,11 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     }
 
     let p = A::tinanta(
-        "kurda~\\",
-        "1.0021",
-        La::Lat,
+        "BU",
+        "1.0001",
+        La::Lit,
         Prayoga::Kartari,
-        Purusha::Uttama,
+        Purusha::Prathama,
         Vacana::Eka,
     )?;
     println!("------------------------------");

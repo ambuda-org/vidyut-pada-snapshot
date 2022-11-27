@@ -23,7 +23,7 @@ use crate::sounds::s;
 use crate::term::Term;
 use std::error::Error;
 
-const TIN_PARA: &[&str] = &["ti", "tas", "Ji", "si", "Tas", "Ta", "mi", "vas", "mas"];
+const TIN_PARA: &[&str] = &["tip", "tas", "Ji", "sip", "Tas", "Ta", "mip", "vas", "mas"];
 const NAL_PARA: &[&str] = &["Ral", "atus", "us", "Tal", "aTus", "a", "Ral", "va", "ma"];
 
 fn find_tin_parasmai(purusha: Purusha, vacana: Vacana) -> &'static str {
