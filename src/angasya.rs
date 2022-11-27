@@ -6,6 +6,7 @@
 //!
 //! This section of the text is massive, so we break it down into several smaller prakaraṇas.
 
+use crate::asiddhavat;
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::it_samjna;
@@ -1083,15 +1084,13 @@ pub fn run_remainder(p: &mut Prakriya) {
 
     // Must come before asiddhavat rule 6.4.78 (e.g. "iyarti", ekahalmadhya)
     abhyasasya.run(p)
+    */
 
-    index = 0
-    while index < len(p.terms):
-        has_at = p.any(T.F_AT_AGAMA)
-        asiddhavat.run_before_guna(p, index)
-        // Added at-Agama -- this causes a frame shift. Correct the pointer.
-        if p.any(T.F_AT_AGAMA) != has_at:
-            index += 1
+    for i in 0..p.terms().len() {
+        asiddhavat::run_before_guna(p, i);
+    }
 
+    /*
         // num-Agama must come after asiddhavat rule 6.2.24, which causes na-lopa.
         num_agama(p, index)
         index += 1

@@ -10,19 +10,26 @@ defined within this section.
 see the `angasya` module.
 */
 
+use crate::constants::Tag as T;
+use crate::filters as f;
+use crate::it_samjna;
+use crate::operations as op;
+use crate::prakriya::Prakriya;
+use crate::term::Term;
+
 /*
 
 fn run_kniti_ardhadhatuka(p: Prakriya, index: int):
     c = p.terms[index]
     n = TermView.make(p, index)
 
-    # Run only if followed by kit/Nit Ardhadhatuka
+    // Run only if followed by kit/Nit Ardhadhatuka
     if not n:
         return
 
     kniti_ardha = n.any("k", "N") and n.any(T.ARDHADHATUKA)
 
-    # HACK
+    // HACK
     n.u = n.terms[0].u
 
     if c.u == "dI\\N" and n.adi in s("ac"):
@@ -35,7 +42,7 @@ fn run_kniti_ardhadhatuka(p: Prakriya, index: int):
     ):
         op.antya("6.4.64", p, c, "")
 
-    # TODO: rule has iwi, but we have aci already. So what's the point?
+    // TODO: rule has iwi, but we have aci already. So what's the point?
     ma_stha = {"mA", "sTA", "gA", "sA"}
     if c.antya == "A" and kniti_ardha:
         if n.adi in s("hal") and (
@@ -51,7 +58,7 @@ fn run_kniti_ardhadhatuka(p: Prakriya, index: int):
         } else if  f.samyogadi(c):
             dhatu = TermView.make_dhatu(p, index)
             if dhatu and dhatu.antya not in s("ac"):
-                # HACK: skip dhatus with agama
+                // HACK: skip dhatus with agama
                 pass
             } else if  n.u == "lyap":
                 p.step("6.4.69")
@@ -72,7 +79,7 @@ fn run_kniti(p: Prakriya, index):
 
     prev = p.terms[index - 1] if index > 0 else None
 
-    # View up to and including current term
+    // View up to and including current term
     view = StringView(p.terms[: index + 1])
     prefix = view.text[:-1]
     try:
@@ -108,7 +115,7 @@ fn run_kniti(p: Prakriya, index):
 
     sarvadhatuka = n.all(T.SARVADHATUKA)
     if sarvadhatuka:
-        # Must come before 6.4.111
+        // Must come before 6.4.111
         if (c.u == "asa~" or c.all(T.GHU)) and n.terms[-1].u == "hi":
             for t in p.terms:
                 if t.any(T.ABHYASA):
@@ -116,10 +123,10 @@ fn run_kniti(p: Prakriya, index):
             op.antya("6.4.119", p, c, "e")
 
         if c.all("Snam"):
-            # TODO: unsafe?
+            // TODO: unsafe?
             c.text = c.text.replace("na", "n")
             p.step("6.4.111")
-        # Match on the upadesha so we don't include asu~ (asyati).
+        // Match on the upadesha so we don't include asu~ (asyati).
         } else if  c.u == "asa~":
             c.text = c.text.replace("a", "")
             p.step("6.4.111")
@@ -156,15 +163,15 @@ fn lit_et(p: Prakriya, index: int):
 
     abhyasa = p.terms[index - 1]
     if not abhyasa.any(T.ABHYASA):
-        # For example, if nuT-Agama separates the abhyAsa from the abhyasta.
+        // For example, if nuT-Agama separates the abhyAsa from the abhyasta.
         return
 
     n = TermView.make(p, index)
 
     ekahalmadhya = len(c.text) == 3 and c.adi in s("hal") and c.antya in s("hal")
-    # aspirated consonants become usaspirated in the tripAdi, which hasn't run
-    # yet at this stage in the derivation. So, also "look ahead" and check for
-    # aspirated consonants.
+    // aspirated consonants become usaspirated in the tripAdi, which hasn't run
+    // yet at this stage in the derivation. So, also "look ahead" and check for
+    // aspirated consonants.
     anadeshadi = abhyasa.adi == c.adi and abhyasa.adi not in sounds.MAHAPRANA
 
     kniti = n.any("k", "N")
@@ -187,7 +194,7 @@ fn lit_et(p: Prakriya, index: int):
         op.upadha("6.4.122.v1", p, c, "e")
     } else if  c.text == "graT":
         abhyasa.text = ""
-        # TODO: attested, but can't find the rule for it.
+        // TODO: attested, but can't find the rule for it.
         op.upadha("???", p, c, "e")
     } else if  c.text == "rAD":
         if p.allow("6.4.123"):
@@ -207,7 +214,7 @@ fn lit_et(p: Prakriya, index: int):
             op.upadha("6.4.125", p, c, "e")
         else:
             p.decline("6.4.125")
-    # General cases
+    // General cases
     } else if  c.text in {"Sas", "dad"} or c.adi == "v" or c.any(T.F_GUNA):
         p.step("6.4.126")
     } else if  ekahalmadhya and c.upadha == "a" and n.all("li~w") and anadeshadi:
@@ -228,7 +235,7 @@ fn ardhadhatuke(p: Prakriya, index: int):
     n = TermView.make(p, index)
     if not n or not n.any(T.ARDHADHATUKA):
         return
-    # HACK to avoid abhyasa-at-lopa
+    // HACK to avoid abhyasa-at-lopa
     if c.all(T.ABHYASA):
         return
 
@@ -238,7 +245,7 @@ fn ardhadhatuke(p: Prakriya, index: int):
     } else if  c.antya == "a":
         op.antya("6.4.48", p, c, "")
         c.add_tags(T.F_AT_LOPA)
-        # TODO: remove P F_AT_LOPA
+        // TODO: remove P F_AT_LOPA
         p.add_tags(T.F_AT_LOPA)
 
 
@@ -269,7 +276,7 @@ fn run_dirgha(p: Prakriya):
         tr_exclude = {"pitf", "pitar", "jAmAtf", "jAmAtar", "BrAtf", "BrAtar"}
         if anga.antya == "n":
             op.upadha("6.4.8", p, anga, sounds.dirgha(anga.upadha))
-        # TODO: restrict
+        // TODO: restrict
         } else if  (
             anga.antya == "f" or anga.text.endswith("ar")
         ) and anga.text not in tr_exclude:
@@ -294,7 +301,7 @@ fn antya_nalopa(p: Prakriya, index):
     kniti = f.is_knit(n)
 
     if c.text in {"jan", "san", "Kan"}:
-        # jan + Syan should always be jAyate.
+        // jan + Syan should always be jAyate.
         if (n.adi == "y" and kniti) and not (c.text == "jan" and n.u == "Syan"):
             op.optional(op.antya, "6.4.38", p, c, "A")
         } else if  (jhali and kniti) or n.u == "san":
@@ -311,37 +318,45 @@ fn antya_nalopa(p: Prakriya, index):
 */
 
 fn try_add_a_agama(p: &mut Prakriya, i: usize) {
-    last = p.terms[-1]
-    if c.all(T.DHATU) and last.any("lu~N", "la~N", "lf~N"):
-        # Since this mutates the list, check that we haven't inserted this
-        # already.
-        if not p.any(T.F_AT_AGAMA):
-            # Dhatu may be multi-part, so insert before abhyasa.
-            # But abhyasa may follow main dhatu (e.g. undidizati) --
-            # So, keep the first.
-            first = None
-            for t in p.terms:
-                if t.any(T.ABHYASA, T.DHATU):
-                    first = t
-                    break
-            assert first
+    if p.find_last(T::Dhatu).is_none() {
+        return;
+    };
+    let i_tin = match p.find_last(T::Tin) {
+        Some(i) => i,
+        None => return,
+    };
 
-            agama = None
-            if c.adi in s("ac"):
-                agama = Term.agama("Aw")
-                op.insert_before("6.4.72", p, first, agama)
-            else:
-                agama = Term.agama("aw")
-                op.insert_before("6.4.71", p, first, agama)
-            it_samjna.run_no_index(p, agama)
+    if !p.has(i_tin, f::lakshana_in(&["lu~N", "la~N", "lf~N"])) {
+        return;
+    }
+    // Dhatu may be multi-part, so insert before abhyasa.
+    // But abhyasa may follow main dhatu (e.g. undidizati) --
+    // So, use the first match we find.
+    let i_start = match p.find_first_where(|t| t.any(&[T::Abhyasa, T::Dhatu])) {
+        Some(i) => i,
+        None => return,
+    };
 
-            index += 1
-            # Remake term view due to mutation
-            n = TermView.make(p, index)
-            p.add_tags(T.F_AT_AGAMA)
+    // Agama already added in a previous iteration, so return.
+    // (To prevent infinite loops)
+    if i_start > 0 && p.has(i_start - 1, f::tag(T::Agama)) {
+        return;
+    }
+
+    if p.has(i, f::adi("ac")) {
+        let agama = Term::make_agama("Aw");
+        p.insert_before(i, agama);
+        p.step("6.4.72");
+        it_samjna::run(p, i).unwrap();
+    } else {
+        let agama = Term::make_agama("aw");
+        p.insert_before(i, agama);
+        p.step("6.4.71");
+        it_samjna::run(p, i).unwrap();
+    }
 }
 
-fn run_before_guna(p: &mut Prakriya, i: usize) {
+pub fn run_before_guna(p: &mut Prakriya, i: usize) {
     /*
     c = p.terms[index]
     n = TermView.make(p, index)
@@ -358,7 +373,7 @@ fn run_before_guna(p: &mut Prakriya, i: usize) {
 
     if anidit_hal and kniti and c.upadha == "n":
         do = True
-        # ancu gati-pUjanayoH
+        // ancu gati-pUjanayoH
         if c.u == "ancu~":
             if p.allow("6.4.30"):
                 p.step("6.4.30")
@@ -379,7 +394,7 @@ fn run_before_guna(p: &mut Prakriya, i: usize) {
 
     antya_nalopa(p, index)
 
-    # Blocked by 7.3.84
+    // Blocked by 7.3.84
     can_guna = n.any(T.SARVADHATUKA, T.ARDHADHATUKA) and not f.is_knit(n)
     */
 
@@ -388,14 +403,14 @@ fn run_before_guna(p: &mut Prakriya, i: usize) {
     /*
     ardhadhatuke(p, index)
 
-    # Must run before guNa
+    // Must run before guNa
     if c.text == "BU" and n.any("lu~N", "li~w"):
         op.insert_agama_after("6.4.88", p, index, "vu~k")
 
     if c.u == "ciR" and n.text == "ta":
         op.luk("6.4.104", p, n.terms[0])
 
-    # 6.4.114 has a vArttika for ArdhadhAtuke:
+    // 6.4.114 has a vArttika for ArdhadhAtuke:
     } else if  c.u == "daridrA" and n.any(T.ARDHADHATUKA):
         if p.terms[-1].all("lu~N"):
             if p.allow("6.4.114.v2"):
@@ -404,13 +419,14 @@ fn run_before_guna(p: &mut Prakriya, i: usize) {
             else:
                 p.decline("6.4.114.v2")
 
-        # Should replace just the last sound, but sak-Agama causes issues
-        # here.
-        # TODO: what is the correct prakriya here?
+        // Should replace just the last sound, but sak-Agama causes issues
+        // here.
+        // TODO: what is the correct prakriya here?
         op.text("6.4.114.v1", p, c, "daridr")
     */
 }
 
+/*
 fn run_aci(p: Prakriya, index: int):
     """Apply sound changes when a vowel follows.
 
@@ -425,7 +441,7 @@ fn run_aci(p: Prakriya, index: int):
         except IndexError:
             n = None
 
-    # All of the rules below condition on a following vowel.
+    // All of the rules below condition on a following vowel.
     if not n or n.adi not in s("ac"):
         return
 
@@ -445,7 +461,7 @@ fn run_aci(p: Prakriya, index: int):
         p.debug(prev)
         op.antya("6.4.87", p, c, "v")
 
-    # General case
+    // General case
     if c.antya in iyuv:
         if c.u == "i\\R":
             op.antya("6.4.81", p, c, "y")
@@ -458,7 +474,7 @@ fn run_aci(p: Prakriya, index: int):
         if (
             c.all(T.DHATU)
             and c.antya in s("i")
-            # HACK to infer "aneka-ac" from abhyasta
+            // HACK to infer "aneka-ac" from abhyasta
             and (aneka_ac or c.all(T.ABHYASTA))
             and not samyogapurva
         ):
@@ -476,7 +492,7 @@ fn run_aci(p: Prakriya, index: int):
         } else if  c.all(T.DHATU) or c.u in ("Snu", "BrU"):
             if c.u == "i\\R":
                 op.antya("6.4.81", p, c, "y")
-            # Some grammarians include ik in the scope of 6.4.81.
+            // Some grammarians include ik in the scope of 6.4.81.
             } else if  c.u == "i\\k":
                 op.optional(op.antya, "6.4.81", p, c, "y")
 
@@ -503,8 +519,8 @@ fn run_nau(p: Prakriya, index: int):
         if n_text in {"Am", "anta", "Alu", "Ayya", "itnu", "iznu"}:
             op.antya("6.4.55", p, c, "ay")
         else:
-            # Apply ac_sandhi before lopa, since later rules depend on this
-            # being done (e.g. cayyAt)
+            // Apply ac_sandhi before lopa, since later rules depend on this
+            // being done (e.g. cayyAt)
             ac_sandhi.general_vowel_sandhi(p, p.terms[index - 1 : index + 1])
             op.antya("6.4.51", p, c, "")
 
@@ -524,9 +540,9 @@ fn run_after_guna(p: Prakriya, index: int):
     if f.is_knit(n):
         run_kniti(p, index)
 
-    # TODO: fails kniti check because this depends on the last affix, and
-    # term view includes only "u" here. So the rule is awkwardly placed
-    # here.
+    // TODO: fails kniti check because this depends on the last affix, and
+    // term view includes only "u" here. So the rule is awkwardly placed
+    // here.
     last = p.terms[-1]
     sarva_kniti = last.all(T.SARVADHATUKA) and last.any("k", "N")
     if c.u == "qukf\\Y" and c.text == "kar" and n.adi == "u" and sarva_kniti:

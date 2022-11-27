@@ -89,6 +89,17 @@ impl Prakriya {
 
     /// Returns the index of the first `Term` that has the given tag or `None` if no such term
     /// exists.
+    pub fn find_first_where(&self, f: impl Fn(&Term) -> bool) -> Option<usize> {
+        for (i, t) in self.terms.iter().enumerate() {
+            if f(t) {
+                return Some(i);
+            }
+        }
+        None
+    }
+
+    /// Returns the index of the first `Term` that has the given tag or `None` if no such term
+    /// exists.
     pub fn find_first(&self, tag: Tag) -> Option<usize> {
         for (i, t) in self.terms.iter().enumerate() {
             if t.has_tag(tag) {
@@ -239,11 +250,11 @@ impl Prakriya {
 
     /// Add a rule to the history.
     pub fn step(&mut self, rule: Rule) {
-        let state = self.terms.iter().fold(String::new(), |a, b| a + " " + &b.text);
-        self.history.push(Step {
-            rule,
-            state,
-        })
+        let state = self
+            .terms
+            .iter()
+            .fold(String::new(), |a, b| a + " " + &b.text);
+        self.history.push(Step { rule, state })
     }
 
     // Optional rules
