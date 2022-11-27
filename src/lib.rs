@@ -5,6 +5,7 @@ pub mod ashtadhyayi;
 pub mod asiddhavat;
 pub mod atidesha;
 pub mod atmanepada;
+pub mod char_view;
 pub mod constants;
 pub mod dhatu_gana;
 pub mod dhatu_karya;

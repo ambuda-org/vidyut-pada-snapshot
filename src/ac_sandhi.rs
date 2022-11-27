@@ -2,82 +2,14 @@
 //! =========
 //! (6.1.66 - 6.1.101)
 
+use crate::char_view::{char_rule_legacy, get_at, set_at, xy2};
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operations as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
-use crate::term::Term;
 use lazy_static::lazy_static;
-
-/// Gets the term corresponding to character `i` of the current prakriya.
-fn get_at(p: &mut Prakriya, index: usize) -> Option<&Term> {
-    let mut cur = 0;
-    for t in p.terms() {
-        let delta = t.text.len();
-        if (cur..cur + delta).contains(&index) {
-            return Some(t);
-        } else {
-            cur += delta;
-        }
-    }
-    None
-}
-
-/// Replaces character `i` of the current prakriya with the given substitute.
-fn set_at(p: &mut Prakriya, index: usize, substitute: &str) {
-    let mut cur = 0;
-    for t in p.terms_mut() {
-        let delta = t.text.len();
-        if (cur..cur + delta).contains(&index) {
-            let t_offset = index - cur;
-            t.text = String::from(&t.text[..t_offset]) + substitute + &t.text[t_offset + 1..];
-            return;
-        } else {
-            cur += delta;
-        }
-    }
-}
-
-/// Applies a sound-based rule to the given prakriya.
-fn char_rule(
-    p: &mut Prakriya,
-    filter: impl Fn(&mut Prakriya, char, char, usize, usize) -> bool,
-    operator: impl Fn(&mut Prakriya, char, char, usize, usize),
-) {
-    loop {
-        let text = p.text();
-        let mut applied_rule = false;
-
-        for i in 0..text.len() {
-            let j = i + 1;
-            // Set up windowed iteration of characters.
-            let x = text.as_bytes().get(i);
-            let y = text.as_bytes().get(j);
-            let (x, y) = match (x, y) {
-                (Some(a), Some(b)) => (*a as char, *b as char),
-                _ => continue,
-            };
-
-            if filter(p, x, y, i, j) {
-                operator(p, x, y, i, j);
-                applied_rule = true;
-                break;
-            }
-        }
-
-        if !applied_rule {
-            break;
-        }
-    }
-}
-
-fn xy(
-    inner: impl Fn(char, char) -> bool,
-) -> impl Fn(&mut Prakriya, char, char, usize, usize) -> bool {
-    move |_, x, y, _, _| inner(x, y)
-}
 
 /// Runs various general rules of vowel sandhi.
 fn apply_general_ac_sandhi(p: &mut Prakriya) {
@@ -90,7 +22,7 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
         static ref VAL: SoundSet = s("val");
     }
 
-    char_rule(
+    char_rule_legacy(
         p,
         |p, x, y, i, _| {
             let vyor_vali = (x == 'v' || x == 'y') && VAL.contains_char(y);
@@ -107,14 +39,18 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
         },
     );
 
-    char_rule(p, xy(|x, y| x == 'a' && al::is_guna(y)), |p, _, _, i, _| {
-        set_at(p, i, "");
-        p.step("6.1.97");
-    });
-
-    char_rule(
+    char_rule_legacy(
         p,
-        xy(|x, y| EC.contains_char(x) && AC.contains_char(y)),
+        xy2(|x, y| x == 'a' && al::is_guna(y)),
+        |p, _, _, i, _| {
+            set_at(p, i, "");
+            p.step("6.1.97");
+        },
+    );
+
+    char_rule_legacy(
+        p,
+        xy2(|x, y| EC.contains_char(x) && AC.contains_char(y)),
         |p, x, _, i, _| {
             let sub = match x {
                 'e' => "ay",
@@ -128,9 +64,9 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
         },
     );
 
-    char_rule(
+    char_rule_legacy(
         p,
-        xy(|x, y| AK.contains_char(x) && AK.contains_char(y) && al::savarna(x).contains_char(y)),
+        xy2(|x, y| AK.contains_char(x) && AK.contains_char(y) && al::savarna(x).contains_char(y)),
         |p, x, _, i, j| {
             set_at(p, j, "");
             set_at(p, i, &al::to_dirgha(x).expect("should be ac").to_string());
@@ -138,9 +74,9 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
         },
     );
 
-    char_rule(
+    char_rule_legacy(
         p,
-        xy(|x, y| EC.contains_char(x) && AC.contains_char(y)),
+        xy2(|x, y| EC.contains_char(x) && AC.contains_char(y)),
         |p, x, _, i, _| {
             let res = match x {
                 'i' | 'I' => "y",
@@ -154,9 +90,9 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
         },
     );
 
-    char_rule(
+    char_rule_legacy(
         p,
-        xy(|x, y| A.contains_char(x) && AC.contains_char(y)),
+        xy2(|x, y| A.contains_char(x) && AC.contains_char(y)),
         |p, _, y, i, j| {
             if EC.contains_char(y) {
                 set_at(p, j, al::to_vrddhi(y).expect("should be set"));

@@ -11,6 +11,7 @@ rest of the text selects rules based on their priority and allows a rule to appl
 the tripādi applies rules in order and will never "go back" to apply an earlier rule.
 */
 
+use crate::char_view::{char_rule, set_at, xy};
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operations as op;
@@ -23,72 +24,11 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     static ref INKU: SoundSet = s("iR2 ku~");
+    static ref JHAL: SoundSet = s("Jal");
     static ref IK: SoundSet = s("ik");
+    static ref YAY: SoundSet = s("yay");
     static ref HAL: SoundSet = s("hal");
 }
-
-/*
-
-ADESHA_CACHE = {}
-
-
-fn al_adesha(
-    rule: str,
-    p: &mut Prakriya,
-    i: usize,
-    tasmat: Optional[str],
-    tasya: str,
-    tasmin: str,
-    sthani: str,
-):
-    """Apply letter substitution rules at term boundaries.
-
-    :param rule: the rule ID
-    :param p: the prakriya
-    :param index: the index to apply the rule to
-    :param tasmat: term before
-    :param tasya: term replaced
-    :param tasmin: term after
-    :param sthana: replacement
-    """
-    if rule in ADESHA_CACHE:
-        func = ADESHA_CACHE[rule]
-        return func(p, index)
-
-    assert tasya
-    assert sthani
-
-    def sound_pattern(expression):
-        if expression:
-            return s(expression).regex
-        else:
-            return ""
-
-    re_tasmat = sound_pattern(tasmat)
-    re_tasya = sound_pattern(tasya)
-    re_tasmin = sound_pattern(tasmin)
-    mapping = sounds.map_sounds(s(tasya), s(sthani))
-
-    def adesha(p, index):
-        c = p.terms[index]
-        next_text = "".join(x.text for x in p.terms[index + 1 :])
-
-        pattern = f"({re_tasmat})({re_tasya})({re_tasmin})"
-
-        for match in re.finditer(pattern, c.text + next_text):
-            prefix = c.text[: match.start(2)]
-            sthana = match.group(2)
-            sthani = mapping[sthana]
-            if prefix != c.text and sthana != sthani:
-                suffix = c.text[match.start(2) + 1 :]
-                result = prefix + sthani + suffix
-                c.text = result
-                p.step(rule)
-
-    adesha(p, index)
-    ADESHA_CACHE[rule] = adesha
-    return adesha
-*/
 
 /// Runs rules for lopa of the final `n` of a prAtipadika.
 /// Example: rAjan + Bis -> rAjaBis.
@@ -565,21 +505,22 @@ fn try_murdhanya(p: &mut Prakriya) {
                 p.step("8.3.78")
 */
 
-/*
-fn overall_1(p: &mut Prakriya):
-    """Rules that apply to the overall prakriya."""
-
-    view = StringView(p.terms)
-
-    // 8.3.24
-    // TODO: next term
+/// Converts "m" and "n" to the anusvara when a consonant follows.
+///
+/// Example: Sankate -> SaMkate
+fn try_mn_to_anusvara(p: &mut Prakriya) {
     // TODO: a-padAnta
-    jhal = s("Jal").regex
-    for match in re.finditer(f"([mn])({jhal})", view.text):
-        view[match.span(1)[0]] = "M"
-        p.step("8.3.24")
+    char_rule(
+        p,
+        xy(|x, y| (x == 'm' || x == 'n') && JHAL.contains_char(y)),
+        |p, _, i| {
+            set_at(p, i, "M");
+            p.step("8.3.24");
+        },
+    );
+}
 
-
+/*
 /// Run rules for retroflex Dha.
 fn dha(p: &mut Prakriya):
     view = StringView(p.terms)
@@ -604,34 +545,29 @@ fn dha(p: &mut Prakriya):
                 res = match.group(1)
                 view[match.span(0)[0]] = sounds.dirgha(res)
                 p.step("6.3.111")
+*/
 
+/// Runs rules that convert sounds to their savarna version.
+fn try_to_savarna(p: &mut Prakriya) {
+    char_rule(
+        p,
+        xy(|x, y| x == 'M' && YAY.contains_char(y)),
+        |p, text, i| {
+            let y = text.as_bytes()[i + 1] as char;
+            let sub = match y {
+                'k' | 'K' | 'g' | 'G' | 'N' => "N",
+                'c' | 'C' | 'j' | 'J' | 'Y' => "Y",
+                'w' | 'W' | 'q' | 'Q' | 'R' => "R",
+                't' | 'T' | 'd' | 'D' | 'n' => "n",
+                'p' | 'P' | 'b' | 'B' | 'm' => "m",
+                _ => "M",
+            };
+            set_at(p, i, sub);
+            p.step("8.4.58");
+        },
+    )
 
-fn savarna(p):
-    """Rules dealing with savarna letters."""
-
-    view = StringView(p.terms)
-    vtext = view.text
-    yay = s("yay").regex
-    for match in re.finditer(f"(M)({yay})", vtext):
-        anusvara_index = match.span(1)[0]
-        para = match.group(2)
-
-        replacement = None
-        if para in s("ku~"):
-            replacement = "N"
-        } else if para in s("cu~"):
-            replacement = "Y"
-        } else if para in s("wu~"):
-            replacement = "R"
-        } else if para in s("tu~"):
-            replacement = "n"
-        } else if para in s("pu~"):
-            replacement = "m"
-        else:
-            raise VyakaranaException(f"Unknown following sound {para}.")
-        view[anusvara_index] = replacement
-        p.step("8.4.58")
-
+    /*
     hal = s("hal").regex
     yam = s("yam").regex
     jhar = s("Jar").regex
@@ -657,8 +593,10 @@ fn savarna(p):
                 view.delete_span(*match.span(1))
             else:
                 p.decline("8.4.65")
+    */
+}
 
-
+/*
 fn per_term_2(p: &mut Prakriya, i: usize):
     try:
         n = [u for u in p.terms[index + 1 :] if u.text][0]
@@ -697,9 +635,8 @@ pub fn run(p: &mut Prakriya) {
     }
 
     try_murdhanya(p);
+    try_mn_to_anusvara(p);
     /*
-    overall_1(p)
-
     try_natva(p)
     stoh_scuna_stuna(p)
     */
@@ -708,7 +645,7 @@ pub fn run(p: &mut Prakriya) {
     /*
     for i, _ in enumerate(p.terms):
         per_term_2(p, i)
-
-    savarna(p)
     */
+
+    try_to_savarna(p);
 }
