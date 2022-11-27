@@ -5,5 +5,5 @@ coverage:
 	cargo llvm-cov --lib --html
 
 profile-time-osx:
-	cargo instruments -t time --release
+	cargo instruments -t time --release --bin main
 

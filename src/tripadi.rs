@@ -475,7 +475,9 @@ fn stoh_scuna_stuna(p):
 ///
 /// (8.3.55 - 8.3.119)
 fn try_murdhanya(p: &mut Prakriya) {
-    let inku = "iR2 ku~";
+    lazy_static! {
+        static ref INKU: SoundSet = s("iR2 ku~");
+    }
 
     for i in 0..p.terms().len() {
         let n = i + 1;
@@ -486,10 +488,10 @@ fn try_murdhanya(p: &mut Prakriya) {
         let apadanta = p.has(n, f::not_empty);
         // HACK: don't include Agama.
         let adesha_pratyaya = p.has(n, |t| t.any(&[T::Pratyaya, T::FlagAdeshadi, T::Agama]));
-        if p.has(i, f::antya(inku)) && p.has(n, f::adi("s")) && adesha_pratyaya && apadanta {
+        if p.has(i, |t| t.has_antya(&*INKU)) && p.has(n, f::adi("s")) && adesha_pratyaya && apadanta {
             p.op_term("8.3.59", n, op::adi("z"));
         } else if p.has(i, |t| {
-            t.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && t.has_upadha(&s(inku))
+            t.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && t.has_upadha(&*INKU)
         }) {
             p.op_term("8.3.60", i, op::antya("z"));
         }
