@@ -34,21 +34,19 @@ pub fn set_at(p: &mut Prakriya, index: usize, substitute: &str) {
 pub fn char_rule(
     p: &mut Prakriya,
     filter: impl Fn(&mut Prakriya, &str, usize) -> bool,
-    operator: impl Fn(&mut Prakriya, &str, usize),
+    operator: impl Fn(&mut Prakriya, &str, usize) -> bool,
 ) {
     loop {
         let text = p.text();
-        let mut applied_rule = false;
+        let mut changed_text = false;
 
         for i in 0..text.len() {
             if filter(p, &text, i) {
-                operator(p, &text, i);
-                applied_rule = true;
-                break;
+                changed_text = changed_text || operator(p, &text, i);
             }
         }
 
-        if !applied_rule {
+        if !changed_text {
             break;
         }
     }
@@ -90,9 +88,10 @@ pub fn char_rule_legacy(
             let y = text.as_bytes().get(i + 1);
             let (x, y) = match (x, y) {
                 (Some(a), Some(b)) => (*a as char, *b as char),
-                _ => return,
+                _ => return false,
             };
             operator(p, x, y, i, j);
+            true
         },
     );
 }

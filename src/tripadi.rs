@@ -407,45 +407,94 @@ fn try_natva(p: &mut Prakriya) {
                 else:
                     p.step("8.4.1-v")
 }
-
-fn stoh_scuna_stuna(p):
-    view = StringView(p.terms)
-    scu = s("S cu~")
-    swu = s("z wu~")
-    stu = s("s tu~")
-    match = re.search(f"({stu.regex})({scu.regex})", view.text)
-    if match:
-        first, second = match.group(1), match.group(2)
-        if first in s("tu~") and second == "z":
-            p.step("8.4.43")
-        else:
-            mapping = dict(zip(stu.items, scu.items))
-            view[match.span(0)[0]] = mapping[first]
-            p.step("8.4.40")
-
-    match = re.search(f"({scu.regex})({stu.regex})", view.text)
-    if match:
-        first, second = match.group(1), match.group(2)
-        if first == "S":
-            p.step("8.4.44")
-        else:
-            mapping = dict(zip(stu.items, scu.items))
-            view[match.span(0)[0] + 1] = mapping[second]
-            p.step("8.4.40")
-
-    match = re.search(f"({stu.regex}){swu.regex}", view.text)
-    if match:
-        res = match.group(1)
-        mapping = dict(zip(stu.items, swu.items))
-        view[match.span(0)[0]] = mapping[res]
-        p.step("8.4.41")
-    match = re.search(f"({swu.regex})({stu.regex})", view.text)
-    if match:
-        res = match.group(2)
-        mapping = dict(zip(stu.items, swu.items))
-        view[match.span(0)[0] + 1] = mapping[res]
-        p.step("8.4.41")
 */
+
+fn stu_to_scu(c: char) -> Option<&'static str> {
+    // FIXME: use char map?
+    let res = match c {
+        's' => "S",
+        't' => "c",
+        'T' => "C",
+        'd' => "j",
+        'D' => "J",
+        'n' => "Y",
+        _ => return None,
+    };
+    Some(res)
+}
+
+fn stu_to_swu(c: char) -> Option<&'static str> {
+    // FIXME: use char map?
+    let res = match c {
+        's' => "z",
+        't' => "w",
+        'T' => "W",
+        'd' => "q",
+        'D' => "Q",
+        'n' => "R",
+        _ => return None,
+    };
+    Some(res)
+}
+
+fn try_change_stu_to_parasavarna(p: &mut Prakriya) {
+    lazy_static! {
+        static ref SCU: SoundSet = s("S cu~");
+        static ref SWU: SoundSet = s("z wu~");
+        static ref STU: SoundSet = s("s tu~");
+        static ref TU: SoundSet = s("tu~");
+    };
+    char_rule(
+        p,
+        xy(|x, y| {
+            (STU.contains_char(x) && SCU.contains_char(y))
+                || (SCU.contains_char(x) && STU.contains_char(y))
+        }),
+        |p, text, i| {
+            let x = text.as_bytes()[i] as char;
+            let y = text.as_bytes()[i + 1] as char;
+            if x == 'S' {
+                p.step("8.4.44");
+                false
+            } else {
+                if STU.contains_char(x) {
+                    let sub = stu_to_scu(x).expect("");
+                    set_at(p, i, sub);
+                } else {
+                    let sub = stu_to_scu(y).expect("");
+                    set_at(p, i + 1, sub);
+                }
+                p.step("8.4.40");
+                true
+            }
+        },
+    );
+    char_rule(
+        p,
+        xy(|x, y| {
+            (STU.contains_char(x) && SWU.contains_char(y))
+                || (SWU.contains_char(x) && STU.contains_char(y))
+        }),
+        |p, text, i| {
+            let x = text.as_bytes()[i] as char;
+            let y = text.as_bytes()[i + 1] as char;
+            if TU.contains_char(x) && y == 'z' {
+                p.step("8.4.43");
+                false
+            } else {
+                if STU.contains_char(x) {
+                    let sub = stu_to_swu(x).expect("");
+                    set_at(p, i, sub);
+                } else {
+                    let sub = stu_to_swu(y).expect("");
+                    set_at(p, i + 1, sub);
+                }
+                p.step("8.4.41");
+                true
+            }
+        },
+    );
+}
 
 /// Runs rules that make a sound mUrdhanya when certain sounds precede.
 ///
@@ -516,6 +565,7 @@ fn try_mn_to_anusvara(p: &mut Prakriya) {
         |p, _, i| {
             set_at(p, i, "M");
             p.step("8.3.24");
+            true
         },
     );
 }
@@ -564,6 +614,7 @@ fn try_to_savarna(p: &mut Prakriya) {
             };
             set_at(p, i, sub);
             p.step("8.4.58");
+            true
         },
     )
 
@@ -638,8 +689,8 @@ pub fn run(p: &mut Prakriya) {
     try_mn_to_anusvara(p);
     /*
     try_natva(p)
-    stoh_scuna_stuna(p)
     */
+    try_change_stu_to_parasavarna(p);
     // dha(p);
 
     /*
