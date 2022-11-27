@@ -349,6 +349,13 @@ pub fn is_ac(c: Sound) -> bool {
     AC.contains_char(c)
 }
 
+pub fn is_hal(c: Sound) -> bool {
+    lazy_static! {
+        static ref AC: SoundSet = s("hal");
+    }
+    AC.contains_char(c)
+}
+
 pub fn to_guna(s: Sound) -> Option<&'static str> {
     let res = match s {
         'i' | 'I' => "e",

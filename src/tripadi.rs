@@ -15,10 +15,17 @@ use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operations as op;
 use crate::prakriya::Prakriya;
+use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
 use crate::term::Term;
 use crate::term::TermView;
 use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref INKU: SoundSet = s("iR2 ku~");
+    static ref IK: SoundSet = s("ik");
+    static ref HAL: SoundSet = s("hal");
+}
 
 /*
 
@@ -257,6 +264,54 @@ fn try_ha_adesha(p: &mut Prakriya) {
     }
 }
 
+/// (8.2.76 - 8.2.79)
+fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) {
+    if !p.has(i, f::dhatu) {
+        return;
+    }
+
+    let is_rv = |opt| match opt {
+        Some(c) => c == 'r' || c == 'v',
+        None => false,
+    };
+    let is_ik = |opt| match opt {
+        Some(c) => al::is_hrasva(c) && IK.contains_char(c),
+        None => false,
+    };
+    let is_hal = |opt| match opt {
+        Some(c) => al::is_hal(c),
+        None => false,
+    };
+    let before_upadha = |t: &Term| t.text.chars().rev().nth(2);
+
+    // TODO: bha
+    let dhatu = &p.terms()[i];
+    if dhatu.has_text(&["kur", "Cur"]) {
+        p.step("8.2.79");
+    } else if is_ik(dhatu.upadha()) && is_rv(dhatu.antya()) {
+        let upadha = dhatu.upadha().expect("");
+        let upadha_to_dirgha = |t: &mut Term| {
+            let sub = al::to_dirgha(upadha).unwrap().to_string();
+            op::set_upadha(&t.text, &sub);
+        };
+        if p.has(i + 1, |t| HAL.contains_opt(t.adi())) {
+            p.op_term("8.2.77", i, upadha_to_dirgha);
+        } else {
+            p.op_term("8.2.76", i, upadha_to_dirgha);
+        }
+    } else if is_ik(before_upadha(dhatu)) && is_rv(dhatu.upadha()) && is_hal(dhatu.antya()) {
+        p.op("8.2.78", |p| {
+            let dhatu = &p.terms()[i];
+            let n = dhatu.text.len();
+            let pre_upadha = before_upadha(dhatu).unwrap();
+            let sub = al::to_dirgha(pre_upadha).unwrap().to_string();
+            p.set(i, |t| {
+                t.text = String::from(&t.text[..n - 3]) + &sub + &t.text[n - 2..]
+            });
+        });
+    }
+}
+
 fn per_term_1b(p: &mut Prakriya, i: usize) {
     let is_padanta = |n: Option<TermView>| match n {
         Some(n) => n.is_empty() && n.ends_word(),
@@ -267,6 +322,8 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
     if p.has(i, |t| t.has_antya('s')) && is_padanta(n) {
         p.op_term("8.2.66", i, op::antya("ru~"));
     }
+
+    try_lengthen_dhatu_vowel(p, i);
 
     // 8.3.15
     // TODO: next pada
@@ -361,25 +418,6 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
 
         // 8.2.77
         // TODO: sajuS
-        if c.all(T.DHATU):
-            // TODO: bha
-            if c.text in ("kur", "Cur"):
-                // Do nothing.
-                p.step("8.2.79")
-            } else if c.antya in s("r v"):
-                if c.upadha in {"i", "u", "f", "x"}:
-                    if n and n.adi in s("hal"):
-                        op.upadha("8.2.77", p, c, sounds.dirgha(c.upadha))
-                    } else if not n:
-                        op.upadha("8.2.76", p, c, sounds.dirgha(c.upadha))
-            if (
-                len(c.text) >= 3
-                and c.text[-3] in s("ik")
-                and c.upadha in "rv"
-                and c.antya in s("hal")
-            ):
-                c.text = c.text[:-3] + sounds.dirgha(c.text[-3]) + c.text[-2:]
-                p.step("8.2.78")
 
         // 8.3.15
         // TODO: next pada
@@ -475,10 +513,6 @@ fn stoh_scuna_stuna(p):
 ///
 /// (8.3.55 - 8.3.119)
 fn try_murdhanya(p: &mut Prakriya) {
-    lazy_static! {
-        static ref INKU: SoundSet = s("iR2 ku~");
-    }
-
     for i in 0..p.terms().len() {
         let n = i + 1;
         if p.get(n).is_none() {

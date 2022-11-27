@@ -59,12 +59,16 @@ pub fn antya(sub: &'static str) -> impl Fn(&mut Term) {
     }
 }
 
+pub fn set_upadha(text: &str, sub: &str) -> String {
+    let n = text.len();
+    String::from(&text[..n - 2]) + sub + &text[n - 1..]
+}
+
 /// Replaces the penultimate sound in the given term.
 pub fn upadha(sub: &'static str) -> impl Fn(&mut Term) {
     |t| {
         if t.upadha().is_some() {
-            let n = t.text.len();
-            t.text = String::from(&t.text[..n - 2]) + sub + &t.text[n - 1..];
+            t.text = set_upadha(&t.text, sub);
         }
     }
 }

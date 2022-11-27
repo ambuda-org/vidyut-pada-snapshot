@@ -91,6 +91,11 @@ pub fn tag_in(tags: &'static [T]) -> impl Fn(&Term) -> bool {
     move |t| t.any(tags)
 }
 
+/// Returns whether the term is a dhatu.
+pub fn dhatu(t: &Term) -> bool {
+    t.has_tag(T::Dhatu)
+}
+
 /// Returns whether the term is an Atmanepada pratyaya.
 pub fn atmanepada(t: &Term) -> bool {
     t.has_tag(T::Atmanepada)

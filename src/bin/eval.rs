@@ -90,12 +90,12 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     }
 
     let p = A::tinanta(
-        "BU",
-        "1.0001",
-        La::Lot,
+        "kurda~\\",
+        "1.0021",
+        La::Lat,
         Prayoga::Kartari,
         Purusha::Uttama,
-        Vacana::Dvi,
+        Vacana::Eka,
     )?;
     println!("------------------------------");
     for step in p.history() {
