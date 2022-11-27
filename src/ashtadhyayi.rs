@@ -21,7 +21,7 @@ use std::error::Error;
 /// jha_adesha --> it_agama --> atidesha --> samprasarana
 fn dhatu_samprasarana_tasks(p: &mut Prakriya) {
     // Needed transitively for dhatu-samprasarana.
-    angasya::pratyaya_adesha(p);
+    angasya::try_pratyaya_adesha(p);
     // Depends on jha_adesha since it conditions on the first sound.
     // angasya::it_agama::run_before_attva(p)
     // Depends on it_agama for certain rules.

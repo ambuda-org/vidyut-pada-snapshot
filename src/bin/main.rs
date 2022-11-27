@@ -6,7 +6,7 @@ use vidyut_prakriya::dhatupatha as D;
 
 const LAKARA: &[La] = &[
     La::Lat,
-    /* La::Lit,
+    La::Lit,
     La::Lut,
     La::Lrt,
     La::Let,
@@ -16,7 +16,6 @@ const LAKARA: &[La] = &[
     La::VidhiLin,
     La::Lun,
     La::Lrn,
-    */
 ];
 
 const TIN: &[&str] = &[
@@ -51,9 +50,6 @@ fn run() -> Result<(), Box<dyn Error>> {
                 )?;
                 println!("{la:?}: {}", p.text());
             }
-        }
-        if i > 10 {
-            break;
         }
     }
     Ok(())

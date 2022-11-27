@@ -138,10 +138,10 @@ fn maybe_add_upasarga(p: &mut Prakriya, i: usize) {
     );
 }
 
-pub fn run(p: &mut Prakriya, d: &str, code: &str) -> Result<(), Box<dyn Error>> {
+pub fn run(p: &mut Prakriya, dhatu: &str, code: &str) -> Result<(), Box<dyn Error>> {
     let i = 0;
 
-    init(p, d, code)?;
+    init(p, dhatu, code)?;
     add_samjnas(p, i)?;
     gana_sutras(p, i);
 
