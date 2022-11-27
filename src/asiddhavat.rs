@@ -11,17 +11,6 @@ see the `angasya` module.
 */
 
 /*
-from padmini.sounds import s
-from padmini import filters as f
-from padmini import operations as op
-from padmini import sounds
-from . import it_samjna
-from . import ac_sandhi
-from padmini.prakriya import Term, Prakriya
-from padmini.constants import Tag as T
-from padmini.term_views import TermView, StringView
-from padmini.dhatu_gana import TAN_ADI, PHAN_ADI
-
 
 fn run_kniti_ardhadhatuka(p: Prakriya, index: int):
     c = p.terms[index]
@@ -319,9 +308,41 @@ fn antya_nalopa(p: Prakriya, index):
             op.optional(op.antya, "6.4.37", p, c, "")
         else:
             op.antya("6.4.37", p, c, "")
+*/
 
+fn try_add_a_agama(p: &mut Prakriya, i: usize) {
+    last = p.terms[-1]
+    if c.all(T.DHATU) and last.any("lu~N", "la~N", "lf~N"):
+        # Since this mutates the list, check that we haven't inserted this
+        # already.
+        if not p.any(T.F_AT_AGAMA):
+            # Dhatu may be multi-part, so insert before abhyasa.
+            # But abhyasa may follow main dhatu (e.g. undidizati) --
+            # So, keep the first.
+            first = None
+            for t in p.terms:
+                if t.any(T.ABHYASA, T.DHATU):
+                    first = t
+                    break
+            assert first
 
-fn run_before_guna(p: Prakriya, index):
+            agama = None
+            if c.adi in s("ac"):
+                agama = Term.agama("Aw")
+                op.insert_before("6.4.72", p, first, agama)
+            else:
+                agama = Term.agama("aw")
+                op.insert_before("6.4.71", p, first, agama)
+            it_samjna.run_no_index(p, agama)
+
+            index += 1
+            # Remake term view due to mutation
+            n = TermView.make(p, index)
+            p.add_tags(T.F_AT_AGAMA)
+}
+
+fn run_before_guna(p: &mut Prakriya, i: usize) {
+    /*
     c = p.terms[index]
     n = TermView.make(p, index)
     if not n:
@@ -360,36 +381,11 @@ fn run_before_guna(p: Prakriya, index):
 
     # Blocked by 7.3.84
     can_guna = n.any(T.SARVADHATUKA, T.ARDHADHATUKA) and not f.is_knit(n)
+    */
 
-    last = p.terms[-1]
-    if c.all(T.DHATU) and last.any("lu~N", "la~N", "lf~N"):
-        # Since this mutates the list, check that we haven't inserted this
-        # already.
-        if not p.any(T.F_AT_AGAMA):
-            # Dhatu may be multi-part, so insert before abhyasa.
-            # But abhyasa may follow main dhatu (e.g. undidizati) --
-            # So, keep the first.
-            first = None
-            for t in p.terms:
-                if t.any(T.ABHYASA, T.DHATU):
-                    first = t
-                    break
-            assert first
+    try_add_a_agama(p, i);
 
-            agama = None
-            if c.adi in s("ac"):
-                agama = Term.agama("Aw")
-                op.insert_before("6.4.72", p, first, agama)
-            else:
-                agama = Term.agama("aw")
-                op.insert_before("6.4.71", p, first, agama)
-            it_samjna.run_no_index(p, agama)
-
-            index += 1
-            # Remake term view due to mutation
-            n = TermView.make(p, index)
-            p.add_tags(T.F_AT_AGAMA)
-
+    /*
     ardhadhatuke(p, index)
 
     # Must run before guNa
@@ -412,6 +408,8 @@ fn run_before_guna(p: Prakriya, index):
         # here.
         # TODO: what is the correct prakriya here?
         op.text("6.4.114.v1", p, c, "daridr")
+    */
+}
 
 fn run_aci(p: Prakriya, index: int):
     """Apply sound changes when a vowel follows.

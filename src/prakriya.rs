@@ -31,7 +31,7 @@ pub enum RuleDecision {
 pub struct Prakriya {
     terms: Vec<Term>,
     tags: HashSet<Tag>,
-    steps: Vec<Step>,
+    history: Vec<Step>,
     options_config: HashMap<Rule, RuleOption>,
     rule_decisions: Vec<(Rule, RuleDecision)>,
 }
@@ -43,7 +43,7 @@ impl Prakriya {
         Prakriya {
             terms: Vec::new(),
             tags: HashSet::new(),
-            steps: Vec::new(),
+            history: Vec::new(),
             options_config: HashMap::new(),
             rule_decisions: Vec::new(),
         }
@@ -57,8 +57,8 @@ impl Prakriya {
 
     // Term accessors
 
-    pub fn steps(&self) -> &Vec<Step> {
-        &self.steps
+    pub fn history(&self) -> &Vec<Step> {
+        &self.history
     }
 
     /// Returns all terms.
@@ -239,9 +239,10 @@ impl Prakriya {
 
     /// Add a rule to the history.
     pub fn step(&mut self, rule: Rule) {
-        self.steps.push(Step {
+        let state = self.terms.iter().fold(String::new(), |a, b| a + " " + &b.text);
+        self.history.push(Step {
             rule,
-            state: self.text(),
+            state,
         })
     }
 

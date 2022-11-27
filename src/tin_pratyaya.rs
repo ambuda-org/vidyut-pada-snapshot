@@ -243,7 +243,12 @@ fn maybe_do_lin_siddhi(p: &mut Prakriya, i_tin: usize, la: La) -> Result<(), Box
 }
 
 // Includes lo~w by 3.4.85
-fn maybe_do_lot_and_nit_siddhi(p: &mut Prakriya, i: usize, la: La) {
+fn maybe_do_lot_and_nit_siddhi(p: &mut Prakriya, la: La) {
+    let i = match p.find_last(T::Tin) {
+        Some(i) => i,
+        None => return,
+    };
+
     if la == La::Lot || la.is_nit() {
         let tas_thas = &["tas", "Tas", "Ta", "mi"];
         let taam_tam = &["tAm", "tam", "ta", "am"];
@@ -315,7 +320,7 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
     maybe_do_lot_only_siddhi(p, i)?;
     // Must occur before 3.4.100 in loT/nit siddhi.
     maybe_replace_jhi_with_jus(p, i, la);
-    maybe_do_lot_and_nit_siddhi(p, i, la);
+    maybe_do_lot_and_nit_siddhi(p, la);
     maybe_do_lin_siddhi(p, i, la)?;
 
     // The 'S' of 'eS' is just for sarva-Adeza (1.1.55). If it is kept, it will

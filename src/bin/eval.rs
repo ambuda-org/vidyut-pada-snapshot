@@ -84,12 +84,14 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         "1.0001",
         La::Lot,
         Prayoga::Kartari,
-        Purusha::Prathama,
-        Vacana::Eka,
+        Purusha::Uttama,
+        Vacana::Dvi,
     )?;
-    for step in p.steps() {
-        println!("{} : {}", step.rule, step.state);
+    println!("------------------------------");
+    for step in p.history() {
+        println!("{:<8} | {}", step.rule, step.state);
     }
+    println!("------------------------------");
 
     let pct = 100_f32 * (num_matches as f32) / (n as f32);
     println!("Results: {num_matches} / {n} ({pct:.2}%)");
