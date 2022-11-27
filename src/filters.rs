@@ -96,6 +96,11 @@ pub fn atmanepada(t: &Term) -> bool {
     t.has_tag(T::Atmanepada)
 }
 
+/// Returns whether the term is a Sarvadhatuka pratyaya.
+pub fn sarvadhatuka(t: &Term) -> bool {
+    t.has_tag(T::Sarvadhatuka)
+}
+
 /// Returns whether the term is a sup pratyaya.
 pub fn sup(t: &Term) -> bool {
     t.has_tag(T::Sup)

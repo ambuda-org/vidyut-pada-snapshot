@@ -52,7 +52,7 @@ fn run() -> Result<(), Box<dyn Error>> {
                 println!("{la:?}: {}", p.text());
             }
         }
-        if i == 0 {
+        if i > 10 {
             break;
         }
     }

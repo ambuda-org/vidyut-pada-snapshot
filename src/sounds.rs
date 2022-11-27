@@ -305,7 +305,6 @@ pub fn map_sounds(xs: &str, ys: &str) -> HashMap<Sound, Sound> {
             .unwrap();
 
         let d = x_props.distance(SOUND_PROPS.get(&best_y).unwrap());
-        println!("The closest sound to {x} is {best_y} with distance {d}.");
         mapping.insert(x, best_y);
     }
 

@@ -428,36 +428,61 @@ fn iit_agama(p: Prakriya):
         else:
             p.decline("7.3.99")
             op.insert_agama_after("7.3.98", p, index, "Iw")
+*/
 
+/// Runs rules conditioned on a following sarvadhatuka affix.
+///
+/// Example: `labh + Ate -> labh + Iyte (-> labhete)`
+///
+/// (7.2.76 - 7.2.81)
+fn try_sarvadhatuke(p: &mut Prakriya) {
+    let i = match p.find_last(T::Tin) {
+        Some(i) => i,
+        None => return,
+    };
 
-fn lin_karya(p: Prakriya):
-    tin = p.terms[-1]
+    if !p.has(i, f::sarvadhatuka) {
+        return;
+    }
 
-    if not tin.all(T.SARVADHATUKA):
-        return
+    if p.has(i, f::lakshana("li~N")) {
+        // At this stage, all liN verbs will have an Agama (such as yAsu~w) between the
+        // dhatu/vikarana and the tin-pratyaya.
+        let i_anga = i - 2;
+        let i_agama = i - 1;
 
-    if tin.all("li~N"):
-        anga = p.terms[-3]
-        agama = p.terms[-2]
-        assert agama.all(T.AGAMA)
+        if !p.has(i_agama, f::tag(T::Agama)) {
+            return;
+        }
 
-        if "s" in agama.text or "s" in tin.text:
-            agama.text = agama.text.replace("s", "")
-            if tin.antya == "s":
-                tin.text = tin.text.replace("s", "") + "s"
-            else:
-                tin.text = tin.text.replace("s", "")
-            p.step("7.2.79")
+        let contains_s = |t: &Term| t.text.contains('s');
+        if p.has(i_agama, contains_s) || p.has(i, contains_s) {
+            p.op("7.2.79", |p| {
+                let agama = &mut p.terms_mut()[i_agama];
+                agama.text = agama.text.replace('s', "");
+
+                let tin = &mut p.terms_mut()[i];
+                if tin.text.ends_with('s') {
+                    tin.text = tin.text.replace('s', "");
+                } else {
+                    tin.text = tin.text.replace('s', "") + "s";
+                }
+            });
+        }
+
         // yAs -> yA due to 7.2.79 above.
-        if anga.antya == "a" and agama.text == "yA":
-            op.text("7.2.80", p, agama, "Iy")
+        if p.has(i_anga, |t| t.text.ends_with('a')) && p.has(i_agama, f::text("yA")) {
+            p.op_term("7.2.80", i, op::text("Iy"));
+        }
+    }
 
     // TODO: not sure where to put this. Not lin.
-    prev = p.terms[-2]
-    if prev.antya == "a" and tin.adi == "A" and tin.all("N"):
-        op.adi("7.2.81", p, tin, "Iy")
+    if p.has(i - 1, |t| t.text.ends_with('a')) && p.has(i, |t| t.text.starts_with('A') && t.has_tag(T::Nit)) {
+        p.op_term("7.2.81", i, op::adi("Iy"));
+    }
+}
 
-
+/*
 fn final_f_and_dirgha(p: Prakriya, index: int):
     c = p.terms[index]
     if not c.text:
@@ -1009,9 +1034,11 @@ pub fn run_remainder(p: &mut Prakriya) {
     // ksasya must run lin_karya so that at-lopa takes effect and prevents
     // "ato yeyaH"
     ksasya(p)
-    // 7.2.79 - 7.2.81
-    lin_karya(p)
+    */
 
+    try_sarvadhatuke(p);
+
+    /*
     for index, _ in enumerate(p.terms):
         shiti(p, index)
 
