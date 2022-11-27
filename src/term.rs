@@ -158,6 +158,7 @@ impl Term {
 }
 
 /// An abstra
+#[derive(Debug)]
 pub struct TermView<'a> {
     terms: &'a Vec<Term>,
     start: usize,
@@ -180,8 +181,14 @@ impl<'a> TermView<'a> {
         Some(TermView { terms, start, end })
     }
 
+    // Accessors
+
     pub fn slice(&self) -> &[Term] {
         &self.terms[self.start..=self.end]
+    }
+
+    pub fn last(&self) -> Option<&Term> {
+        self.terms.get(self.end)
     }
 
     pub fn end(&self) -> usize {

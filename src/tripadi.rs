@@ -488,7 +488,8 @@ fn try_murdhanya(p: &mut Prakriya) {
         let apadanta = p.has(n, f::not_empty);
         // HACK: don't include Agama.
         let adesha_pratyaya = p.has(n, |t| t.any(&[T::Pratyaya, T::FlagAdeshadi, T::Agama]));
-        if p.has(i, |t| t.has_antya(&*INKU)) && p.has(n, f::adi("s")) && adesha_pratyaya && apadanta {
+        if p.has(i, |t| t.has_antya(&*INKU)) && p.has(n, f::adi("s")) && adesha_pratyaya && apadanta
+        {
             p.op_term("8.3.59", n, op::adi("z"));
         } else if p.has(i, |t| {
             t.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && t.has_upadha(&*INKU)

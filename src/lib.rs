@@ -11,6 +11,7 @@ pub mod dhatu_karya;
 pub mod dhatupatha;
 pub mod dvitva;
 pub mod filters;
+pub mod it_agama;
 pub mod it_samjna;
 pub mod la_karya;
 pub mod operations;

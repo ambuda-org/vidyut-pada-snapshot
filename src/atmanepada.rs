@@ -12,11 +12,9 @@
 //! *Atmanepada* to it as appropriate.
 
 use crate::constants::Tag as T;
-use crate::dhatu_gana::DYUT_ADI;
+use crate::dhatu_gana::{DYUT_ADI, VRDBHYAH};
 use crate::prakriya::{Prakriya, Rule};
 use crate::term::Term;
-
-const VRDBHYAH: &[&str] = &["vftu~\\", "vfDu~\\", "SfDu~\\", "SfDu~^", "syandU~\\"];
 
 enum Pada {
     Parasmai,

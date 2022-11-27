@@ -245,7 +245,7 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) {
         // e.g. nenijAma
         p.step("7.3.87")
     } else if p.has(i, |t| {
-        can_guna(t.upadha()) && t.upadha().map(al::is_hrasva).is_some()
+        can_guna(t.upadha()) && al::is_hrasva(t.upadha().unwrap())
     }) {
         let upadha = p.terms()[i].upadha().unwrap();
         p.op("7.3.86", |p| {

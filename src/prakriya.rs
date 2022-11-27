@@ -87,8 +87,6 @@ impl Prakriya {
         TermView::new(self.terms(), i)
     }
 
-    /// Returns the index of the first `Term` that has the given tag or `None` if no such term
-    /// exists.
     pub fn find_first_where(&self, f: impl Fn(&Term) -> bool) -> Option<usize> {
         for (i, t) in self.terms.iter().enumerate() {
             if f(t) {
@@ -103,6 +101,15 @@ impl Prakriya {
     pub fn find_first(&self, tag: Tag) -> Option<usize> {
         for (i, t) in self.terms.iter().enumerate() {
             if t.has_tag(tag) {
+                return Some(i);
+            }
+        }
+        None
+    }
+
+    pub fn find_last_where(&self, f: impl Fn(&Term) -> bool) -> Option<usize> {
+        for (i, t) in self.terms.iter().enumerate().rev() {
+            if f(t) {
                 return Some(i);
             }
         }

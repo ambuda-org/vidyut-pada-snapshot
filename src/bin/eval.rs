@@ -9,6 +9,8 @@ use vidyut_prakriya::constants::{La, Prayoga, Purusha, Vacana};
 struct Args {
     #[arg(long)]
     limit: Option<i32>,
+    #[arg(long)]
+    la: Option<String>,
 }
 
 fn parse_la(s: &str) -> La {
@@ -53,6 +55,8 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let mut n = 0;
     let limit = args.limit.unwrap_or(std::i32::MAX);
 
+    let la_filter = args.la.map(|x| parse_la(&x));
+
     for maybe_row in rdr.records() {
         let r = maybe_row?;
         let pada = &r[0];
@@ -62,6 +66,12 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         let la = parse_la(&r[4]);
         let purusha = parse_purusha(&r[5]);
         let vacana = parse_vacana(&r[6]);
+
+        if let Some(x) = la_filter {
+            if la != x {
+                continue;
+            }
+        }
 
         let p = A::tinanta(dhatu, &code, la, Prayoga::Kartari, purusha, vacana)?;
 

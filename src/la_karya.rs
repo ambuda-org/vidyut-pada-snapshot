@@ -30,7 +30,10 @@ pub fn run(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
         La::Let => add_la("3.4.7", p, i, "le~w")?,
         La::Lot => add_la("3.3.162", p, i, "lo~w")?,
         La::Lan => add_la("3.2.111", p, i, "la~N")?,
-        La::AshirLin => add_la("3.3.173", p, i, "li~N")?,
+        La::AshirLin => {
+            p.add_tag(T::Ashih);
+            add_la("3.3.173", p, i, "li~N")?;
+        }
         La::VidhiLin => add_la("3.3.161", p, i, "li~N")?,
         La::Lun => add_la("3.2.110", p, i, "lu~N")?,
         La::Lrn => add_la("3.3.139", p, i, "lf~N")?,

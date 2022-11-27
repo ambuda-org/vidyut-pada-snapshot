@@ -243,3 +243,5 @@ pub const PU_ADI: &[&str] = &[
     // TODO: include blI?
     "blI\\",
 ];
+
+pub const VRDBHYAH: &[&str] = &["vftu~\\", "vfDu~\\", "SfDu~\\", "SfDu~^", "syandU~\\"];

@@ -293,7 +293,7 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
     if tin.has_tag(T::Atmanepada) && tin.has_any_lakshana(wits) {
         let ta_jha = &["ta", "Ja"];
         let es_irec = &["eS", "irec"];
-        if p.has(i, |t| t.has_u("li~w") && t.has_text(ta_jha)) {
+        if p.has(i, |t| t.has_lakshana("li~w") && t.has_text(ta_jha)) {
             p.op("3.4.81", |p| op::upadesha_yatha(p, i, ta_jha, es_irec));
         } else if p.has(i, |t| t.text == "TAs") {
             p.op("3.4.80", |p| op::upadesha(p, i, "se"));
