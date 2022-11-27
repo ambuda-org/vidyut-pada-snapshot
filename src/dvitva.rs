@@ -79,9 +79,10 @@ fn _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
         if p.terms[i + 3].u in ("Ric", "RiN"):
             p.terms[i + 3].add_tags(T.ABHYASTA)
         p.step("6.1.5")
+*/
 
-
-fn run_for_each(p: Prakriya, dhatu: Term, i: int):
+fn run_for_each(p: &mut Prakriya, i: usize) {
+    /*
     n = TermView.make_pratyaya(p, i)
     if not n:
         return
@@ -110,20 +111,17 @@ fn run_for_each(p: Prakriya, dhatu: Term, i: int):
         _double("6.1.10", p, dhatu, i)
     } else if  n.u == "caN":
         _double("6.1.11", p, dhatu, i)
-*/
+    }
+    */
+}
 
 pub fn run(p: &mut Prakriya) {
-    /*
-    i = 0
-    num_terms = len(p.terms)
-    while i < num_terms:
-        c = p.terms[i]
-        // HACK to avoid doubling the nic / nin
-        if c.any(T.DHATU) and c.u not in {"Ric", "RiN"}:
-            run_for_each(p, c, i)
+    let is_undoubled = |t: &Term| t.has_tag(T::Dhatu) && !t.has_tag(T::Abhyasta);
 
-        // Skip new terms
-        i += 1 + (len(p.terms) - num_terms)
-        num_terms = len(p.terms)
-    */
+    for i in 0..p.terms().len() {
+        // HACK to avoid doubling the nic / nin
+        if p.has(i, |t| is_undoubled(t) && !t.has_u_in(&["Ric", "RiN"])) {
+            run_for_each(p, i);
+        }
+    }
 }

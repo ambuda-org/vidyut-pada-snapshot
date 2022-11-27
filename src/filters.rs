@@ -9,7 +9,7 @@ filters and various utilities for working with filters in the rest of the system
 use crate::constants::Tag as T;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
-use crate::sounds::{s, Pattern, SoundSet};
+use crate::sounds::{s, SoundSet};
 use crate::term::Term;
 use lazy_static::lazy_static;
 
@@ -150,4 +150,11 @@ pub fn u(u: &'static str) -> impl Fn(&Term) -> bool {
 /// Returns whether the term's upadesha is contained in `xs`.
 pub fn u_in(us: &'static [&str]) -> impl Fn(&Term) -> bool {
     move |t| t.has_u_in(us)
+}
+
+pub fn is_asti(t: &Term) -> bool {
+    match &t.u {
+        Some(x) => x == "asa~" && t.gana == Some(2),
+        None => false,
+    }
 }

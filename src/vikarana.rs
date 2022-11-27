@@ -484,16 +484,15 @@ pub fn run(p: &mut Prakriya) -> Result<(), Box<dyn Error>> {
             p.op("3.1.33", add_vikarana("tAsi~"));
         }
     } else if tin.has_lakshana("lu~N") {
-        add_lun_vikarana(p)
+        add_lun_vikarana(p);
     } else if tin.has_lakshana("li~w") {
-        maybe_add_am_pratyaya_for_lit(p)
+        maybe_add_am_pratyaya_for_lit(p);
     } else if tin.has_tag(T::Sarvadhatuka) {
         if tin.has_lakshana("lo~w") {
             // Just for vidāṅkurvantu, etc.
-            maybe_add_am_pratyaya_for_lot(p)
-        } else {
-            add_sarvadhatuka_vikarana(p)
+            maybe_add_am_pratyaya_for_lot(p);
         }
+        add_sarvadhatuka_vikarana(p);
     }
 
     if let Some(i_vikarana) = p.find_first(T::Vikarana) {

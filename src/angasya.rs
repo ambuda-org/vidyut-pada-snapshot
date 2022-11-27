@@ -470,16 +470,16 @@ fn try_sarvadhatuke(p: &mut Prakriya) {
 
                 let tin = &mut p.terms_mut()[i];
                 if tin.has_antya('s') {
-                    tin.text = tin.text.replace('s', "");
-                } else {
                     tin.text = tin.text.replace('s', "") + "s";
+                } else {
+                    tin.text = tin.text.replace('s', "");
                 }
             });
         }
 
         // yAs -> yA due to 7.2.79 above.
         if p.has(i_anga, |t| t.has_antya('a')) && p.has(i_agama, f::text("yA")) {
-            p.op_term("7.2.80", i, op::text("Iy"));
+            p.op_term("7.2.80", i_agama, op::text("Iy"));
         }
     }
 
@@ -546,6 +546,19 @@ fn nittva(p, index):
         op.antya("7.1.94", p, c, "an")
 */
 
+fn try_tas_asti_lopa(p: &mut Prakriya, i: usize) {
+    if p.has(i, |t| t.text == "tAs" || f::is_asti(t)) {
+        let n = i + 1;
+        if p.has(n, |t| t.has_adi('s')) {
+            p.op_term("7.4.50", i, op::antya(""));
+        } else if p.has(n, |t| t.has_adi('r')) {
+            p.op_term("7.4.51", i, op::antya(""));
+        } else if p.has(n, |t| t.has_adi('e')) {
+            p.op_term("7.4.52", i, op::antya("h"));
+        }
+    }
+}
+
 fn run_for_each_2(p: &mut Prakriya, index: usize) {
     /*
     terms = p.terms
@@ -575,16 +588,12 @@ fn run_for_each_2(p: &mut Prakriya, index: usize) {
         and n.all(T.ARDHADHATUKA)
     ):
         op.antya("7.4.49", p, c, "t")
+    */
 
-    if p.has(i, f::text("tAs" or f.is_asti(c):
-        if n.adi == "s":
-            op.antya("7.4.50", p, c, "")
-        } else if n.adi == "r":
-            op.antya("7.4.51", p, c, "")
-        } else if n.adi == "e":
-            op.antya("7.4.52", p, c, "h")
+    try_tas_asti_lopa(p, index);
 
-    } else if c.u in ("dIDIN", "vevIN") and n.adi in s("i u"):
+    /*
+    if c.u in ("dIDIN", "vevIN") and n.adi in s("i u"):
         op.antya("7.4.53", p, c, "")
 
     // Must occur before guna and after 7.3.77 (gam -> gacC).

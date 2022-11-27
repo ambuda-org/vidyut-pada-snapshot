@@ -2,6 +2,7 @@ pub mod ac_sandhi;
 pub mod angasya;
 pub mod ardhadhatuka;
 pub mod ashtadhyayi;
+pub mod asiddhavat;
 pub mod atidesha;
 pub mod atmanepada;
 pub mod constants;

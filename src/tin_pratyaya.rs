@@ -151,7 +151,7 @@ fn maybe_do_lut_siddhi(p: &mut Prakriya, i_la: usize, la: La) {
 
 /// Applies tin-siddhi rules that apply to just loT.
 fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
-    if p.has(i, |t| t.has_u("lo~w")) {
+    if p.has(i, |t| t.has_lakshana("lo~w")) {
         // let mut t = p.get_mut(i).unwrap();
         if p.has(i, |t| t.text == "si") {
             p.op(
@@ -169,7 +169,7 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
         } else if p.has(i, f::ends_with("mi")) {
             p.op_term("3.4.89", i, op::text("ni"));
         } else if p.has(i, f::ends_with("i")) {
-            p.op_term("3.4.86", i, op::text("u"));
+            p.op_term("3.4.86", i, op::antya("u"));
         } else if p.has(i, f::ends_with("e")) {
             if p.has(i, |t| t.has_tag(T::Uttama) && t.text.ends_with('e')) {
                 p.op_term("3.4.93", i, op::antya("E"));
@@ -195,7 +195,7 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
                 p.set(i, |t| t.add_tag(T::Pit));
                 p.insert_before(i, agama);
             });
-            it_samjna::run(p, i - 1)?;
+            it_samjna::run(p, i)?;
         }
     }
 

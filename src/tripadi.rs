@@ -467,26 +467,36 @@ fn stoh_scuna_stuna(p):
         mapping = dict(zip(stu.items, swu.items))
         view[match.span(0)[0] + 1] = mapping[res]
         p.step("8.4.41")
+*/
 
+/// Runs rules that make a sound mUrdhanya when certain sounds precede.
+///
+/// Example: `nesyati -> nezyati`
+///
+/// (8.3.55 - 8.3.119)
+fn try_murdhanya(p: &mut Prakriya) {
+    let inku = "iR2 ku~";
 
-fn murdhanya(p: &mut Prakriya):
-    """mUrdhanya when preceded by certain sounds.
+    for i in 0..p.terms().len() {
+        let n = i + 1;
+        if p.get(n).is_none() {
+            return;
+        }
 
-    (8.3.55 - 8.3.119)
-    """
-    for i, (c, n) in enumerate(per_term(p)):
-        if not n:
-            continue
-        inku = s("iR2 ku~")
-        // HACK: don't include agama
-        adesha_pratyaya = n.any(T.PRATYAYA, T.F_ADESHA_ADI, T.AGAMA)
-        apadanta = not (n.text == s and n is p.terms[-1])
-        if c.antya in inku and n.adi == "s" and adesha_pratyaya and apadanta:
-            op.adi("8.3.59", p, n, "z")
+        let apadanta = p.has(n, f::not_empty);
+        // HACK: don't include Agama.
+        let adesha_pratyaya = p.has(n, |t| t.any(&[T::Pratyaya, T::FlagAdeshadi, T::Agama]));
+        if p.has(i, f::antya(inku)) && p.has(n, f::adi("s")) && adesha_pratyaya && apadanta {
+            p.op_term("8.3.59", n, op::adi("z"));
+        } else if p.has(i, |t| {
+            t.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && t.has_upadha(&s(inku))
+        }) {
+            p.op_term("8.3.60", i, op::antya("z"));
+        }
+    }
+}
 
-        } else if c.u in {"va\\sa~", "SAsu~", "Gasx~"} and c.upadha in inku:
-            op.antya("8.3.60", p, c, "z")
-
+/*
         // HACK
         for i, u in enumerate(p.terms):
             if c is u:
@@ -516,8 +526,9 @@ fn murdhanya(p: &mut Prakriya):
             if do:
                 last.text = last.text.replace("D", "Q")
                 p.step("8.3.78")
+*/
 
-
+/*
 fn overall_1(p: &mut Prakriya):
     """Rules that apply to the overall prakriya."""
 
@@ -648,8 +659,8 @@ pub fn run(p: &mut Prakriya) {
         per_term_1b(p, i);
     }
 
+    try_murdhanya(p);
     /*
-    murdhanya(p)
     overall_1(p)
 
     try_natva(p)

@@ -1,4 +1,4 @@
-"""
+/*!
 asiddhavat (6.4.22 - 6.4.175 [end])
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -8,8 +8,9 @@ defined within this section.
 
 *asiddhavat* rules are within the scope of the *aNgasya* adhikAra. For details,
 see the `angasya` module.
-"""
+*/
 
+/*
 from padmini.sounds import s
 from padmini import filters as f
 from padmini import operations as op
@@ -412,7 +413,6 @@ fn run_before_guna(p: Prakriya, index):
         # TODO: what is the correct prakriya here?
         op.text("6.4.114.v1", p, c, "daridr")
 
-
 fn run_aci(p: Prakriya, index: int):
     """Apply sound changes when a vowel follows.
 
@@ -539,3 +539,4 @@ fn run_after_guna(p: Prakriya, index: int):
 
     if n.terms[0].all("q"):
         op.ti("6.4.143", p, c, "")
+*/

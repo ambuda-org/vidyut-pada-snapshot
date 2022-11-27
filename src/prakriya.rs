@@ -7,9 +7,9 @@ pub type Rule = &'static str;
 /// Represents a step of the derivation.
 pub struct Step {
     /// The rule that produced the current step.
-    rule: Rule,
+    pub rule: Rule,
     /// Output for the current step.
-    state: String,
+    pub state: String,
 }
 
 #[derive(Eq, PartialEq)]
@@ -56,6 +56,10 @@ impl Prakriya {
     }
 
     // Term accessors
+
+    pub fn steps(&self) -> &Vec<Step> {
+        &self.steps
+    }
 
     /// Returns all terms.
     pub fn terms(&self) -> &Vec<Term> {
