@@ -241,7 +241,6 @@ impl Prakriya {
     pub fn op_optional(&mut self, code: Rule, operator: impl Fn(&mut Prakriya)) -> bool {
         if self.is_allowed(code) {
             operator(self);
-            self.accept(code);
             self.step(code);
             true
         } else {
@@ -290,7 +289,11 @@ impl Prakriya {
     // Optional rules
 
     pub fn is_allowed(&mut self, r: Rule) -> bool {
-        *self.options_config.get(r).unwrap_or(&RuleOption::Allow) == RuleOption::Allow
+        let status = *self.options_config.get(r).unwrap_or(&RuleOption::Allow) == RuleOption::Allow;
+        if status {
+            self.accept(r);
+        }
+        status
     }
 
     pub fn accept(&mut self, r: Rule) {

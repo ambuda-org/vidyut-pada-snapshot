@@ -1,3 +1,4 @@
+use crate::constants::La;
 use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::operators as op;
@@ -30,7 +31,7 @@ fn add_sanadi(
 
 // TODO: 3.1.8 - 3.1.24
 // TODO: 3.1.26 - 3.1.27
-pub fn run(p: &mut Prakriya, is_ardhadhatuka: bool) -> Result<(), Box<dyn Error>> {
+pub fn run(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
     let i = match p.find_first(T::Dhatu) {
         Some(i) => i,
         None => return Ok(()),
@@ -57,7 +58,7 @@ pub fn run(p: &mut Prakriya, is_ardhadhatuka: bool) -> Result<(), Box<dyn Error>
     } else if p.has(i, |t| t.has_u_in(AYADAYA)) {
         let mut add_pratyaya = true;
 
-        if is_ardhadhatuka {
+        if la.is_ardhadhatuka() {
             if p.is_allowed("3.1.31") {
                 add_pratyaya = false;
                 p.step("3.1.31");
@@ -91,7 +92,7 @@ mod tests {
         let mut p = Prakriya::new();
         dhatu_karya::run(&mut p, dhatu, code).unwrap();
 
-        run(&mut p, false).unwrap();
+        run(&mut p, La::Lat).unwrap();
         let dhatu = p.get(0).unwrap();
         let pratyaya = p.get(1).unwrap();
         (dhatu.clone(), pratyaya.clone())

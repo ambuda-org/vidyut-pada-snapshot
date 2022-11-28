@@ -51,7 +51,7 @@ pub fn tinanta(
 
     // Create the dhatu.
     dhatu_karya::run(&mut p, dhatu, code)?;
-    sanadi::run(&mut p, la.is_sarvadhatuka())?;
+    sanadi::run(&mut p, la)?;
 
     // Add the lakAra and convert it to a basic tin ending.
     la_karya::run(&mut p, la)?;

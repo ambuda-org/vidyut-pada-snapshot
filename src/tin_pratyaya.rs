@@ -132,7 +132,7 @@ fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) {
     }
 }
 
-fn maybe_do_lut_siddhi(p: &mut Prakriya, i_la: usize, la: La) {
+fn maybe_do_lut_siddhi(p: &mut Prakriya, i_la: usize, la: La) -> bool {
     if p.has(i_la, |t| t.has_tag(T::Prathama) && la == La::Lut) {
         if let Some(tin) = p.get_mut(i_la) {
             let ending = if tin.has_tag(T::Ekavacana) {
@@ -146,6 +146,9 @@ fn maybe_do_lut_siddhi(p: &mut Prakriya, i_la: usize, la: La) {
             };
             op::adesha("2.4.85", p, i_la, ending);
         }
+        true
+    } else {
+        false
     }
 }
 
@@ -284,7 +287,9 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
     };
 
     // Special case: handle lut_siddhi first.
-    maybe_do_lut_siddhi(p, i, la);
+    if maybe_do_lut_siddhi(p, i, la) {
+        return Ok(());
+    }
 
     let tin = p.get(i).unwrap();
     // Matching for "w" will cause errors because the ending 'iw' has 'w' as an
