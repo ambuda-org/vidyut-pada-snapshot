@@ -40,7 +40,7 @@ pub fn t(i: usize, f: impl Fn(&mut Term)) -> impl Fn(&mut Prakriya) {
 // ============
 
 /// Replaces the first sound in the given term.
-pub fn adi(sub: &'static str) -> impl Fn(&mut Term) {
+pub fn adi(sub: &str) -> impl Fn(&mut Term) + '_ {
     move |t| {
         let n = t.text.len();
         if n > 0 {
@@ -50,7 +50,7 @@ pub fn adi(sub: &'static str) -> impl Fn(&mut Term) {
 }
 
 /// Replaces the last sound in the given term.
-pub fn antya(sub: &'static str) -> impl Fn(&mut Term) {
+pub fn antya(sub: &str) -> impl Fn(&mut Term) + '_ {
     |t| {
         let n = t.text.len();
         if n > 0 {
@@ -65,7 +65,7 @@ pub fn set_upadha(text: &str, sub: &str) -> String {
 }
 
 /// Replaces the penultimate sound in the given term.
-pub fn upadha(sub: &'static str) -> impl Fn(&mut Term) {
+pub fn upadha(sub: &str) -> impl Fn(&mut Term)  + '_ {
     |t| {
         if t.upadha().is_some() {
             t.text = set_upadha(&t.text, sub);

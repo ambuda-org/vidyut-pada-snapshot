@@ -169,6 +169,9 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) {
         Some(n) => n,
         None => return,
     };
+    if n.any(&[T::kit, T::Nit]) {
+        return;
+    }
 
     let is_sarva_ardha = n.any(&[T::Sarvadhatuka, T::Ardhadhatuka]);
     /*

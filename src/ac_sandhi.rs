@@ -76,7 +76,7 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
 
     char_rule_legacy(
         p,
-        xy2(|x, y| EC.contains_char(x) && AC.contains_char(y)),
+        xy2(|x, y| IK.contains_char(x) && AC.contains_char(y)),
         |p, x, _, i, _| {
             let res = match x {
                 'i' | 'I' => "y",

@@ -2,6 +2,7 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 
 type Sound = char;
+pub type SoundMap = HashMap<Sound, Sound>;
 
 lazy_static! {
     static ref SUTRAS: Vec<Sutra> = create_shiva_sutras();
@@ -141,6 +142,10 @@ pub fn is_hrasva(c: Sound) -> bool {
     matches!(c, 'a' | 'i' | 'u' | 'f' | 'x')
 }
 
+pub fn is_dirgha(c: Sound) -> bool {
+    matches!(c, 'A' | 'I' | 'U' | 'F' | 'X' | 'e' | 'E' | 'o' | 'O')
+}
+
 pub fn is_guna(c: Sound) -> bool {
     matches!(c, 'a' | 'e' | 'o')
 }
@@ -185,7 +190,7 @@ pub fn to_vrddhi(s: Sound) -> Option<&'static str> {
 }
 
 // 1.1.48 UkAlojjhrasvadIrghaplutaH
-fn to_hrasva(s: Sound) -> Option<Sound> {
+pub fn to_hrasva(s: Sound) -> Option<Sound> {
     let res = match s {
         'a' | 'A' => 'a',
         'i' | 'I' => 'i',
@@ -391,7 +396,7 @@ pub fn savarna(c: Sound) -> SoundSet {
     SoundSet::new(sounds)
 }
 
-pub fn map_sounds(xs: &str, ys: &str) -> HashMap<Sound, Sound> {
+pub fn map_sounds(xs: &str, ys: &str) -> SoundMap {
     let xs = s(xs);
     let ys = s(ys);
 

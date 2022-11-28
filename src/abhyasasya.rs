@@ -11,12 +11,13 @@ use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
-use crate::sounds::{s, SoundSet};
+use crate::sounds::{s, SoundSet, SoundMap, map_sounds};
 use lazy_static::lazy_static;
 
 lazy_static! {
     static ref SHAR: SoundSet = s("Sar");
     static ref KHAY: SoundSet = s("Kay");
+    static ref KUH_CU: SoundMap = map_sounds("ku~ h", "cu~");
 }
 
 /*
@@ -161,13 +162,18 @@ pub fn run(p: &mut Prakriya) {
         }
     }
 
-    /*
-    kuhozcu = sounds.map_sounds(s("ku~ h"), s("cu~"))
-    if c.adi in kuhozcu:
-        op.adi("7.4.62", p, c, kuhozcu[c.adi])
-    if c.antya in sounds.DIRGHA:
-        op.antya("7.4.59", p, c, sounds.hrasva(c.antya))
-        */
+    let abhyasa = &p.terms()[i];
+    if KUH_CU.contains_key(&abhyasa.adi().unwrap()) {
+        if let Some(val) = KUH_CU.get(&abhyasa.adi().unwrap()) {
+            p.op_term("7.4.62", i, op::adi(&val.to_string()));
+        }
+    }
+
+    let abhyasa = &p.terms()[i];
+    if al::is_dirgha(abhyasa.antya().unwrap()) {
+        let val = al::to_hrasva(abhyasa.antya().unwrap()).unwrap();
+        p.op_term("7.4.62", i, op::antya(&val.to_string()));
+    }
 
     if p.has(i, |t| t.has_antya('f')) {
         p.op_term("7.4.66", i, op::antya("a"));

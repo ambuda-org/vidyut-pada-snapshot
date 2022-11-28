@@ -10,6 +10,8 @@ struct Args {
     limit: Option<i32>,
     #[arg(long)]
     la: Option<String>,
+    #[arg(long)]
+    dhatu: Option<String>,
 }
 
 fn parse_la(s: &str) -> La {
@@ -66,8 +68,14 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         let purusha = parse_purusha(&r[5]);
         let vacana = parse_vacana(&r[6]);
 
+        // Filter by args
         if let Some(x) = la_filter {
             if la != x {
+                continue;
+            }
+        }
+        if let Some(x) = &args.dhatu {
+            if dhatu != x {
                 continue;
             }
         }
@@ -89,12 +97,12 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     }
 
     let p = A::tinanta(
-        "BU",
-        "1.0001",
+        "qukf\\Y",
+        "0.0010",
         La::Lit,
         Prayoga::Kartari,
         Purusha::Prathama,
-        Vacana::Eka,
+        Vacana::Bahu,
     )?;
     println!("------------------------------");
     for step in p.history() {
