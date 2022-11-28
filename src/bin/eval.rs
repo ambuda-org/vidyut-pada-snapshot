@@ -85,10 +85,10 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         n += 1;
         let actual = p.text();
         if actual == pada {
-            println!("[  OK  ]  {code:<10} {pada}");
+            println!("[  OK  ]  {code:<10} {dhatu:<10} {pada}");
             num_matches += 1;
         } else {
-            println!("[ FAIL ]  {code:<10} {pada} ({actual})");
+            println!("[ FAIL ]  {code:<10} {dhatu:<10} {pada} ({actual})");
         }
 
         if n >= limit {

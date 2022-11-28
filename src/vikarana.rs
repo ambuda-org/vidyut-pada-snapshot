@@ -362,7 +362,7 @@ fn add_sarvadhatuka_vikarana(p: &mut Prakriya) {
     } else if p.has(i, |t| t.gana == Some(7)) {
         p.op("3.1.78", |p| {
             p.set(i, |t| t.add_tag(T::Snam));
-            add_vikarana("Snam")(p);
+            p.set(i, op::mit("na"));
         });
     } else if p.has(i, |t| t.gana == Some(8) || t.has_u("qukf\\Y")) {
         p.op("3.1.79", add_vikarana("u"));

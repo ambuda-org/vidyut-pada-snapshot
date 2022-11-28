@@ -357,6 +357,14 @@ fn try_add_a_agama(p: &mut Prakriya, i: usize) {
 }
 
 pub fn run_before_guna(p: &mut Prakriya, i: usize) {
+    if p.get(i).is_none() {
+        return;
+    }
+
+    let anga = p.get(i).unwrap();
+    if anga.has_tag(T::Snam) && anga.upadha().unwrap() == 'n' {
+        p.op_term("6.4.23", i, op::upadha(""));
+    }
     /*
     c = p.terms[index]
     n = TermView.make(p, index)
@@ -365,8 +373,6 @@ pub fn run_before_guna(p: &mut Prakriya, i: usize) {
 
     n.u = n.terms[0].u
 
-    if c.all("Snam") and c.upadha == "n":
-        op.upadha("6.4.23", p, c, "")
 
     anidit_hal = (not c.any("i")) and c.antya in s("hal")
     kniti = f.is_knit(n)
