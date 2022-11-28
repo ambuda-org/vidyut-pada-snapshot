@@ -99,7 +99,9 @@ fn _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
 */
 
 pub fn run(p: &mut Prakriya) {
-    let i = match p.find_first_where(|t| t.has_tag(T::Dhatu) && !t.has_tag(T::Abhyasta)) {
+    // Select !pratyaya to avoid sanAdi, which are also labeled as Dhatu.
+    let i = match p.find_last_where(|t| t.has_tag(T::Dhatu) && !t.any(&[T::Abhyasta, T::Pratyaya]))
+    {
         Some(i) => i,
         None => return,
     };

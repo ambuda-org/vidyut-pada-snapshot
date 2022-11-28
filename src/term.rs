@@ -208,7 +208,7 @@ impl<'a> TermView<'a> {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.slice().iter().any(|t| !t.text.is_empty())
+        self.slice().iter().all(|t| t.text.is_empty())
     }
 
     pub fn ends_word(&self) -> bool {

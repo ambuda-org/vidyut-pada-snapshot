@@ -253,13 +253,13 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) {
 }
 
 fn per_term_1b(p: &mut Prakriya, i: usize) {
-    let is_padanta = |n: Option<TermView>| match n {
+    let is_padanta = |n: &Option<TermView>| match n {
         Some(n) => n.is_empty() && n.ends_word(),
         None => true,
     };
 
-    let n = p.view(i);
-    if p.has(i, |t| t.has_antya('s')) && is_padanta(n) {
+    let n = p.view(i + 1);
+    if p.has(i, |t| t.has_antya('s')) && is_padanta(&n) {
         p.op_term("8.2.66", i, op::antya("ru~"));
     }
 
@@ -267,9 +267,9 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
 
     // 8.3.15
     // TODO: next pada
-    let n = p.view(i);
+    let n = p.view(i + 1);
     let has_ru = p.has(i, |t| t.text.ends_with("ru~") || t.has_antya('r'));
-    if has_ru && is_padanta(n) {
+    if has_ru && is_padanta(&n) {
         p.op_term("8.3.15", i, |t| {
             if let Some(p) = t.text.strip_suffix("ru~") {
                 t.text = p.to_owned() + "H";

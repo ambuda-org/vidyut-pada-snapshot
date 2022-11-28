@@ -279,10 +279,13 @@ impl Prakriya {
 
     /// Add a rule to the history.
     pub fn step(&mut self, rule: Rule) {
-        let state = self
-            .terms
-            .iter()
-            .fold(String::new(), |a, b| a + " " + &b.text);
+        let state = self.terms.iter().fold(String::new(), |a, b| {
+            if a.is_empty() {
+                a + &b.text
+            } else {
+                a + " + " + &b.text
+            }
+        });
         self.history.push(Step { rule, state })
     }
 
