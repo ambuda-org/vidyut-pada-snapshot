@@ -11,7 +11,7 @@ use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
-use crate::sounds::{s, SoundSet, SoundMap, map_sounds};
+use crate::sounds::{map_sounds, s, SoundMap, SoundSet};
 use lazy_static::lazy_static;
 
 lazy_static! {

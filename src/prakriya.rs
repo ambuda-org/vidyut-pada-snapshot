@@ -20,6 +20,7 @@ pub enum RuleOption {
     Ignore,
 }
 
+#[derive(Debug)]
 pub enum RuleDecision {
     /// Whether a rule was used during the derivation.
     Accepted,
@@ -56,6 +57,10 @@ impl Prakriya {
     }
 
     // Term accessors
+
+    pub fn rule_decisions(&self) -> &Vec<(Rule, RuleDecision)> {
+        &self.rule_decisions
+    }
 
     pub fn history(&self) -> &Vec<Step> {
         &self.history
@@ -236,6 +241,7 @@ impl Prakriya {
     pub fn op_optional(&mut self, code: Rule, operator: impl Fn(&mut Prakriya)) -> bool {
         if self.is_allowed(code) {
             operator(self);
+            self.accept(code);
             self.step(code);
             true
         } else {
@@ -285,6 +291,10 @@ impl Prakriya {
 
     pub fn is_allowed(&mut self, r: Rule) -> bool {
         *self.options_config.get(r).unwrap_or(&RuleOption::Allow) == RuleOption::Allow
+    }
+
+    pub fn accept(&mut self, r: Rule) {
+        self.rule_decisions.push((r, RuleDecision::Accepted));
     }
 
     pub fn decline(&mut self, r: Rule) {

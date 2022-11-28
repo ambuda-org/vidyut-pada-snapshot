@@ -10,11 +10,11 @@ use crate::operators as op;
 use crate::prakriya::Prakriya;
 
 fn run_before_attva_at_index(p: &mut Prakriya, i: usize) {
-    let n = match p.view(i+1) {
+    let n = match p.view(i + 1) {
         Some(x) => x,
         None => return,
     };
-    let n = p.view(i+1).unwrap();
+    let n = p.view(i + 1).unwrap();
     let add_nit = op::add_tag(T::Nit);
     let add_kit = op::add_tag(T::kit);
 

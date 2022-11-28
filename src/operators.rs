@@ -65,7 +65,7 @@ pub fn set_upadha(text: &str, sub: &str) -> String {
 }
 
 /// Replaces the penultimate sound in the given term.
-pub fn upadha(sub: &str) -> impl Fn(&mut Term)  + '_ {
+pub fn upadha(sub: &str) -> impl Fn(&mut Term) + '_ {
     |t| {
         if t.upadha().is_some() {
             t.text = set_upadha(&t.text, sub);

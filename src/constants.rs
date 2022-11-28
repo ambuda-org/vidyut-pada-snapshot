@@ -39,7 +39,7 @@ impl Prayoga {
     }
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Purusha {
     Prathama,
     Madhyama,
@@ -55,7 +55,7 @@ impl Purusha {
     }
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Vacana {
     Eka,
     Dvi,

@@ -10,7 +10,7 @@ pub struct Dhatu {
 
 impl Dhatu {
     pub fn code(&self) -> String {
-        format!("{}.{}", self.gana, self.number)
+        format!("{:0>2}.{:0>4}", self.gana, self.number)
     }
 }
 

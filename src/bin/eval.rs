@@ -11,7 +11,7 @@ struct Args {
     #[arg(long)]
     la: Option<String>,
     #[arg(long)]
-    dhatu: Option<String>,
+    code: Option<String>,
 }
 
 fn parse_la(s: &str) -> La {
@@ -74,8 +74,8 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
                 continue;
             }
         }
-        if let Some(x) = &args.dhatu {
-            if dhatu != x {
+        if let Some(x) = &args.code {
+            if code != *x {
                 continue;
             }
         }
@@ -85,30 +85,16 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         n += 1;
         let actual = p.text();
         if actual == pada {
-            println!("[  OK  ]: {pada}");
+            println!("[  OK  ]  {code:<10} {pada}");
             num_matches += 1;
         } else {
-            println!("[ FAIL ]: {pada} ({actual})");
+            println!("[ FAIL ]  {code:<10} {pada} ({actual})");
         }
 
         if n >= limit {
             break;
         }
     }
-
-    let p = A::tinanta(
-        "qukf\\Y",
-        "0.0010",
-        La::Lit,
-        Prayoga::Kartari,
-        Purusha::Prathama,
-        Vacana::Bahu,
-    )?;
-    println!("------------------------------");
-    for step in p.history() {
-        println!("{:<8} | {}", step.rule, step.state);
-    }
-    println!("------------------------------");
 
     let pct = 100_f32 * (num_matches as f32) / (n as f32);
     println!("Results: {num_matches} / {n} ({pct:.2}%)");
