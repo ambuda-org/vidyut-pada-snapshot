@@ -1,6 +1,5 @@
 use clap::Parser;
 use std::error::Error;
-use std::path::Path;
 use vidyut_prakriya::ashtadhyayi as A;
 use vidyut_prakriya::constants::{La, Prayoga, Purusha, Vacana};
 

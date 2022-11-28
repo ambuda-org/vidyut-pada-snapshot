@@ -1,12 +1,29 @@
 use crate::constants::Tag as T;
-use crate::constants::{La, Purusha, Vacana};
 use crate::filters as f;
-use crate::it_samjna;
+use crate::sounds as al;
 use crate::operations as op;
-use crate::prakriya::Prakriya;
-use crate::sounds::s;
+use crate::prakriya::{Prakriya, Rule};
 use crate::term::Term;
-use std::error::Error;
+
+fn do_dvitva(rule: Rule, p: &mut Prakriya, i: usize) {
+    let dhatu = &p.terms()[i];
+    if f::is_eka_ac(dhatu) || al::is_hal(dhatu.adi().expect("")) {
+        // TODO: correctly double jAgR
+        p.insert_before(i, Term::make_text(&dhatu.text));
+        p.step(rule);
+
+        let i_abhyasa = i;
+        let i_dhatu = i + 1;
+        p.op_term("6.1.4", i_abhyasa, op::add_tag(T::Abhyasa));
+
+        p.set(i_abhyasa, |t| t.add_tag(T::Abhyasta));
+        p.set(i_dhatu, |t| t.add_tag(T::Abhyasta));
+        if p.has(i_dhatu + 1, |t| t.has_u_in(&["Ric", "RiN"])) {
+            p.set(i_dhatu + 1, |t| t.add_tag(T::Abhyasta));
+        }
+        p.step("6.1.5")
+    }
+}
 
 /*
 fn _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
@@ -81,47 +98,41 @@ fn _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
         p.step("6.1.5")
 */
 
-fn run_for_each(p: &mut Prakriya, i: usize) {
-    /*
-    n = TermView.make_pratyaya(p, i)
-    if not n:
-        return
+pub fn run(p: &mut Prakriya) {
+    let i = match p.find_first_where(|t| t.has_tag(T::Dhatu) && !t.has_tag(T::Abhyasta)) {
+        Some(i) => i,
+        None => return,
+    };
 
-    // HACK for Nic + caN
-    if n.terms[0].u in ("Ric", "RiN"):
-        n = TermView.make_pratyaya(p, i + 1)
+    let n = match p.find_next_where(i, |t| !t.has_tag(T::Dhatu)) {
+        Some(i) => p.view(i).unwrap(),
+        None => return,
+    };
+    let i_n = n.start();
 
-    n.u = n.terms[0].u
-    if dhatu.text in {"jakz", "jAgf", "daridrA", "cakAs", "SAs", "dIDI", "vevI"}:
+    let jaksh_adi = &["jakz", "jAgf", "daridrA", "cakAs", "SAs", "dIDI", "vevI"];
+    if p.has(i, |t| t.has_text(jaksh_adi)) {
         // These are termed abhyasta, but they can still undergo dvitva because
         // the rules below inherit "anabhyAsasya" from 6.1.8.
-        op.tag("6.1.6", p, dhatu, T.ABHYASTA)
+        p.op_term("6.1.6", i, op::add_tag(T::Abhyasta));
+    }
 
-    if n.all("li~w"):
+    let n = p.view(i_n).expect("");
+    if n.has_lakshana("li~w") {
+        let dhatu = &p.terms()[i];
         // kAshikA:
         //   dayateḥ iti dīṅo grahaṇaṃ na tu daya dāne ityasya.
         //   digyādeśena dvirvacanasya bādhanam iṣyate.
-        if dhatu.u == "de\\N":
-            op.text("7.4.9", p, dhatu, "digi")
-        else:
-            _double("6.1.8", p, dhatu, i)
-    } else if  n.u in ("san", "yaN"):
-        _double("6.1.9", p, dhatu, i)
-    } else if  n.terms[0].any(T.SLU):
-        _double("6.1.10", p, dhatu, i)
-    } else if  n.u == "caN":
-        _double("6.1.11", p, dhatu, i)
-    }
-    */
-}
-
-pub fn run(p: &mut Prakriya) {
-    let is_undoubled = |t: &Term| t.has_tag(T::Dhatu) && !t.has_tag(T::Abhyasta);
-
-    for i in 0..p.terms().len() {
-        // HACK to avoid doubling the nic / nin
-        if p.has(i, |t| is_undoubled(t) && !t.has_u_in(&["Ric", "RiN"])) {
-            run_for_each(p, i);
+        if dhatu.has_u("de\\N") {
+            p.op_term("7.4.9", i, op::text("digi"));
+        } else {
+            do_dvitva("6.1.8", p, i);
         }
+    } else if n.has_u_in(&["san", "yaN"]) {
+        do_dvitva("6.1.9", p, i);
+    } else if n.first().unwrap().has_tag(T::Slu) {
+        do_dvitva("6.1.10", p, i);
+    } else if n.has_u("caN") {
+        do_dvitva("6.1.11", p, i);
     }
 }

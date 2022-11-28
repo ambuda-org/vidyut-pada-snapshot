@@ -59,13 +59,6 @@ fn xyz(p: &mut Prakriya, i: usize, f: impl Fn(&Term, &Term, &Term) -> bool) -> b
     }
 }
 
-fn xy(p: &mut Prakriya, i: usize, f: impl Fn(&Term, &Term) -> bool) -> bool {
-    match (p.get(i), p.get(i + 1)) {
-        (Some(x), Some(y)) => f(x, y),
-        _ => false,
-    }
-}
-
 /// Returns whether the dhatu at index `i` is followed by the `cli~` vikarana as opposed to some
 /// substitution.
 fn has_cli(p: &Prakriya, i: usize) -> bool {

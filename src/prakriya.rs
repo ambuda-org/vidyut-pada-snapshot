@@ -107,6 +107,23 @@ impl Prakriya {
         None
     }
 
+    pub fn find_next_where(
+        &self,
+        start_index: usize,
+        filter: impl Fn(&Term) -> bool,
+    ) -> Option<usize> {
+        if self.terms.get(start_index).is_some() {
+            self.terms
+                .iter()
+                .enumerate()
+                .filter(|(i, t)| *i > start_index && filter(t))
+                .map(|(i, _)| i)
+                .next()
+        } else {
+            None
+        }
+    }
+
     pub fn find_last_where(&self, f: impl Fn(&Term) -> bool) -> Option<usize> {
         for (i, t) in self.terms.iter().enumerate().rev() {
             if f(t) {

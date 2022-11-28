@@ -191,8 +191,16 @@ impl<'a> TermView<'a> {
         &self.terms[self.start..=self.end]
     }
 
+    pub fn first(&self) -> Option<&Term> {
+        self.terms.get(self.start)
+    }
+
     pub fn last(&self) -> Option<&Term> {
         self.terms.get(self.end)
+    }
+
+    pub fn start(&self) -> usize {
+        self.start
     }
 
     pub fn end(&self) -> usize {
@@ -230,6 +238,13 @@ impl<'a> TermView<'a> {
     pub fn has_u(&self, u: &str) -> bool {
         match self.slice().first() {
             Some(t) => t.has_u(u),
+            None => false,
+        }
+    }
+
+    pub fn has_u_in(&self, us: &[&str]) -> bool {
+        match self.slice().first() {
+            Some(t) => t.has_u_in(us),
             None => false,
         }
     }
