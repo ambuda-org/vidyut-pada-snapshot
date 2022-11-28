@@ -5,7 +5,7 @@
 use crate::char_view::{char_rule_legacy, get_at, set_at, xy2};
 use crate::constants::Tag as T;
 use crate::filters as f;
-use crate::operations as op;
+use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{s, SoundSet};

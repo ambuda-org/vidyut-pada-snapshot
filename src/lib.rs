@@ -1,3 +1,4 @@
+pub mod abhyasasya;
 pub mod ac_sandhi;
 pub mod angasya;
 pub mod ardhadhatuka;
@@ -15,7 +16,7 @@ pub mod filters;
 pub mod it_agama;
 pub mod it_samjna;
 pub mod la_karya;
-pub mod operations;
+pub mod operators;
 pub mod prakriya;
 pub mod samjna;
 pub mod sanadi;

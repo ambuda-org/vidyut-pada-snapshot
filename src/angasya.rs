@@ -6,11 +6,12 @@
 //!
 //! This section of the text is massive, so we break it down into several smaller prakaraṇas.
 
+use crate::abhyasasya;
 use crate::asiddhavat;
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::it_samjna;
-use crate::operations as op;
+use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::s;
@@ -1083,8 +1084,8 @@ pub fn run_remainder(p: &mut Prakriya) {
         shiti(p, index)
 
     // Must come before asiddhavat rule 6.4.78 (e.g. "iyarti", ekahalmadhya)
-    abhyasasya.run(p)
     */
+    abhyasasya::run(p);
 
     for i in 0..p.terms().len() {
         asiddhavat::run_before_guna(p, i);

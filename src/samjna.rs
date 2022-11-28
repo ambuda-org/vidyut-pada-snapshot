@@ -1,6 +1,6 @@
 use crate::constants::Tag as T;
 use crate::filters as f;
-use crate::operations as op;
+use crate::operators as op;
 use crate::prakriya::Prakriya;
 
 fn run_for_prakriya(p: &mut Prakriya, i: usize) {

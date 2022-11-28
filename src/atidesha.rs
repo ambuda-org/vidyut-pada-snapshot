@@ -6,7 +6,7 @@ atidesha (1.2.1 - 1.2.17)
 use crate::constants::Tag as T;
 use crate::dhatupatha::is_kutadi;
 use crate::filters as f;
-use crate::operations as op;
+use crate::operators as op;
 use crate::prakriya::Prakriya;
 
 fn run_before_attva_at_index(p: &mut Prakriya, i: usize) {

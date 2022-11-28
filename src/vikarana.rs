@@ -20,7 +20,7 @@ use crate::constants::Tag as T;
 use crate::dhatu_gana::{DYUT_ADI, PUSH_ADI, TAN_ADI};
 use crate::filters as f;
 use crate::it_samjna;
-use crate::operations as op;
+use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::s;
 use crate::term::Term;

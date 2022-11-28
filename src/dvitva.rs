@@ -1,8 +1,8 @@
 use crate::constants::Tag as T;
 use crate::filters as f;
-use crate::sounds as al;
-use crate::operations as op;
+use crate::operators as op;
 use crate::prakriya::{Prakriya, Rule};
+use crate::sounds as al;
 use crate::term::Term;
 
 fn do_dvitva(rule: Rule, p: &mut Prakriya, i: usize) {

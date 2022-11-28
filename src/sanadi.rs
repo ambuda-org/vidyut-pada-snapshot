@@ -1,6 +1,6 @@
 use crate::constants::Tag as T;
 use crate::it_samjna;
-use crate::operations as op;
+use crate::operators as op;
 use crate::prakriya::{Prakriya, Rule};
 use crate::term::Term;
 use std::error::Error;

@@ -3,7 +3,7 @@
 use crate::constants::La;
 use crate::constants::Tag as T;
 use crate::filters as f;
-use crate::operations as op;
+use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::s;
 

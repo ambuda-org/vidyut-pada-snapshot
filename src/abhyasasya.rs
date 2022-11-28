@@ -1,22 +1,25 @@
-"""
+/*!
 abhyasasya
-~~~~~~~~~~
- (7.4.58 - end of 7.4)
+==========
+(7.4.58 - end of 7.4)
 
 Rules that modify the abhyāsa.
-"""
+*/
 
+use crate::constants::Tag as T;
+use crate::filters as f;
+use crate::operators as op;
+use crate::prakriya::Prakriya;
+use crate::sounds as al;
+use crate::sounds::{s, SoundSet};
+use lazy_static::lazy_static;
 
-from padmini import filters as f
-from padmini import operations as op
-from padmini import sounds
-from padmini.constants import Tag as T
-from padmini.prakriya import Prakriya, Term, VyakaranaException
-from padmini.sounds import s
+lazy_static! {
+    static ref SHAR: SoundSet = s("Sar");
+    static ref KHAY: SoundSet = s("Kay");
+}
 
-from .sanadyanta import MAN_BADHA
-
-
+/*
 fn _has_following_san(p: Prakriya, needle: Term) -> bool:
     seen_needle = False
     for t in p.terms:
@@ -31,101 +34,41 @@ fn _has_following_san(p: Prakriya, needle: Term) -> bool:
             else:
                 continue
     return False
+*/
 
+/// Simplifies the abhyasa per 7.4.60.
+fn try_haladi(text: &str) -> String {
+    let mut ret = String::new();
+    for (i, c) in text.chars().enumerate() {
+        if al::is_hal(c) {
+            if i == 0 {
+                ret.push(c);
+            }
+        } else {
+            ret.push(c);
+            break;
+        }
+    }
+    ret
+}
 
-fn haladi(text: str) -> str:
-    """Simplifies the abhyasa per 7.4.60."""
-    buf = []
-    for i, L in enumerate(text):
-        if L in s("hal"):
-            if i == 0:
-                buf.append(L)
-        else:
-            buf.append(L)
-            return "".join(buf)
-    raise VyakaranaException(f"abhyasa without vowel: {text}")
+/// Simplifies the absyasa per 7.4.61.
+fn try_shar_purva(text: &str) -> String {
+    let mut ret = String::new();
+    for (i, c) in text.chars().enumerate() {
+        if i == 0 {
+            assert!(SHAR.contains_char(c));
+        } else if KHAY.contains_char(c) {
+            ret.push(c)
+        } else if al::is_ac(c) {
+            ret.push(c);
+            break;
+        }
+    }
+    ret
+}
 
-
-fn sharpurva(text: str) -> str:
-    """Simplifies the abhyasa per 7.4.61."""
-    buf = []
-    found = False
-    for i, L in enumerate(text):
-        if i == 0:
-            assert L in s("Sar")
-        } else if  L in s("Kay"):
-            buf.append(L)
-        } else if  L in s("ac"):
-            buf.append(L)
-            return "".join(buf)
-    raise VyakaranaException(f"abhyasa without vowel: {text}")
-
-
-fn run_for_each(p: Prakriya, c: Term, dhatu: Term):
-    """Rules that modify the abhyasa."""
-    la = p.terms[-1]
-
-    # TODO: svAp
-    if dhatu.text == "dyut":
-        op.text("7.4.67", p, c, "dit")
-    if dhatu.text == "vyaT" and la.any("li~w"):
-        op.text("7.4.68", p, c, "viT")
-
-    if c.adi in s("Sar") and c.text[1] in s("Kay"):
-        res = sharpurva(c.text)
-        if res != c.text:
-            op.text("7.4.61", p, c, res)
-    else:
-        res = haladi(c.text)
-        if res != c.text:
-            op.text("7.4.60", p, c, res)
-
-    kuhozcu = sounds.map_sounds(s("ku~ h"), s("cu~"))
-    if c.adi in kuhozcu:
-        op.adi("7.4.62", p, c, kuhozcu[c.adi])
-    if c.antya in sounds.DIRGHA:
-        op.antya("7.4.59", p, c, sounds.hrasva(c.antya))
-    if c.antya == "f":
-        op.antya("7.4.66", p, c, "a")
-
-    if dhatu.u == "i\\R" and la.any("k"):
-        op.adi("7.4.69", p, c, "I")
-
-    # liT changes (7.4.70 - 7.4.74)
-    if la.all("li~w"):
-        if c.text == "a":
-            op.text("7.4.70", p, c, "A")
-            # From the Kashika-vrtti:
-            #
-            #     ṛkāraikadeśo repho halgrahaṇena gṛhyate, tena iha api dvihalo
-            #     'ṅgasya nuḍāgamo bhavati. ānṛdhatuḥ, ānṛdhuḥ.
-            #
-            #
-            if dhatu.antya in s("hal") and dhatu.upadha in s("f hal"):
-                # 'A' acepted only by some grammarians
-                if dhatu.adi == "A":
-                    op.optional(op.insert_agama_after_by_term, "7.4.71", p, c, "nu~w")
-                else:
-                    op.insert_agama_after_by_term("7.4.71", p, c, "nu~w")
-            # For aSnoti only, not aSnAti
-            } else if  dhatu.text == "aS" and dhatu.gana == 5:
-                op.insert_agama_after_by_term("7.4.72", p, c, "nu~w")
-        # 2 is for as -> bhU
-        } else if  dhatu.text == "BU" and dhatu.gana in (1, 2):
-            op.text("7.4.73", p, c, "ba")
-        # TODO: 7.4.74
-
-    # Slu changes
-    if p.find(lambda x: x.all(T.SLU)):
-        if dhatu.text in ("nij", "vij", "viz"):
-            op.antya("7.4.75", p, c, sounds.guna(c.antya))
-        } else if  dhatu.u in ("quBf\\Y", "mA\\N", "o~hA\\N"):
-            op.antya("7.4.76", p, c, "i")
-        } else if  dhatu.text in ("f", "pf", "pF"):
-            op.antya("7.4.77", p, c, "i")
-        # TODO: 7.4.78
-
-
+/*
 fn run_sani_cani_for_each(p: Prakriya, c: Term, dhatu: Term):
     # san and sanvat changes
     abhyasta_index, _ = p.find_last(T.ABHYASTA)
@@ -173,15 +116,6 @@ fn run_sani_cani_for_each(p: Prakriya, c: Term, dhatu: Term):
         op.antya("3.1.6", p, c, sounds.dirgha(c.antya))
 
 
-fn run(p: Prakriya):
-    for i, t in enumerate(p.terms):
-        if not t.any(T.ABHYASA):
-            continue
-
-        dhatu = p.terms[i + 1]
-        run_for_each(p, t, dhatu)
-
-
 fn run_sani_cani(p: Prakriya):
     for i, t in enumerate(p.terms):
         if not t.any(T.ABHYASA):
@@ -189,3 +123,113 @@ fn run_sani_cani(p: Prakriya):
 
         dhatu = p.terms[i + 1]
         run_sani_cani_for_each(p, t, dhatu)
+*/
+
+pub fn run(p: &mut Prakriya) {
+    let i = match p.find_first(T::Abhyasa) {
+        Some(i) => i,
+        None => return,
+    };
+
+    // TODO: expand for abhyasa after dhatu.
+    let i_dhatu = i + 1;
+    if !p.has(i_dhatu, f::dhatu) {
+        return;
+    }
+
+    let dhatu = &p.terms()[i_dhatu];
+    let abhyasa = &p.terms()[i];
+    let last = p.terms().last().unwrap();
+
+    if dhatu.text == "dyut" {
+        p.op_term("7.4.67", i_dhatu, op::text("dit"));
+    } else if dhatu.text == "vyaT" && last.has_lakshana("li~w") {
+        p.op_term("7.4.68", i_dhatu, op::text("viT"));
+    } else if SHAR.contains_opt(abhyasa.adi()) && KHAY.contains_opt(abhyasa.get(1)) {
+        let mut abhyasa = &mut p.terms_mut()[i];
+        let res = try_shar_purva(&abhyasa.text);
+        if res != abhyasa.text {
+            abhyasa.text = res;
+            p.step("7.4.61");
+        }
+    } else {
+        let mut abhyasa = &mut p.terms_mut()[i];
+        let res = try_haladi(&abhyasa.text);
+        if res != abhyasa.text {
+            abhyasa.text = res;
+            p.step("7.4.60");
+        }
+    }
+
+    /*
+    kuhozcu = sounds.map_sounds(s("ku~ h"), s("cu~"))
+    if c.adi in kuhozcu:
+        op.adi("7.4.62", p, c, kuhozcu[c.adi])
+    if c.antya in sounds.DIRGHA:
+        op.antya("7.4.59", p, c, sounds.hrasva(c.antya))
+        */
+
+    if p.has(i, |t| t.has_antya('f')) {
+        p.op_term("7.4.66", i, op::antya("a"));
+    }
+
+    /*
+       if dhatu.u == "i\\R" and la.any("k"):
+           op.adi("7.4.69", p, c, "I")
+
+       # liT changes (7.4.70 - 7.4.74)
+       if la.all("li~w"):
+           if c.text == "a":
+               op.text("7.4.70", p, c, "A")
+               # From the Kashika-vrtti:
+               #
+               #     ṛkāraikadeśo repho halgrahaṇena gṛhyate, tena iha api dvihalo
+               #     'ṅgasya nuḍāgamo bhavati. ānṛdhatuḥ, ānṛdhuḥ.
+               #
+               #
+               if dhatu.antya in s("hal") and dhatu.upadha in s("f hal"):
+                   # 'A' acepted only by some grammarians
+                   if dhatu.adi == "A":
+                       op.optional(op.insert_agama_after_by_term, "7.4.71", p, c, "nu~w")
+                   else:
+                       op.insert_agama_after_by_term("7.4.71", p, c, "nu~w")
+               # For aSnoti only, not aSnAti
+               } else if  dhatu.text == "aS" and dhatu.gana == 5:
+                   op.insert_agama_after_by_term("7.4.72", p, c, "nu~w")
+           # 2 is for as -> bhU
+           } else if  dhatu.text == "BU" and dhatu.gana in (1, 2):
+               op.text("7.4.73", p, c, "ba")
+           # TODO: 7.4.74
+
+       # Slu changes
+       if p.find(lambda x: x.all(T.SLU)):
+           if dhatu.text in ("nij", "vij", "viz"):
+               op.antya("7.4.75", p, c, sounds.guna(c.antya))
+           } else if  dhatu.u in ("quBf\\Y", "mA\\N", "o~hA\\N"):
+               op.antya("7.4.76", p, c, "i")
+           } else if  dhatu.text in ("f", "pf", "pF"):
+               op.antya("7.4.77", p, c, "i")
+           # TODO: 7.4.78
+
+
+    */
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_try_haladi() {
+        assert_eq!(try_haladi("BU"), "BU");
+        assert_eq!(try_haladi("i"), "i");
+        assert_eq!(try_haladi("kram"), "ka");
+    }
+
+    #[test]
+    fn test_try_shar_purva() {
+        assert_eq!(try_shar_purva("sTA"), "TA");
+        assert_eq!(try_shar_purva("Scyut"), "cu");
+        assert_eq!(try_shar_purva("sparD"), "pa");
+    }
+}
