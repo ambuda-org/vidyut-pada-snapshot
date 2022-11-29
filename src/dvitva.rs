@@ -1,3 +1,4 @@
+/// Runs rules that perform `dvitva` (doubling) on the dhAtu.
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operators as op;

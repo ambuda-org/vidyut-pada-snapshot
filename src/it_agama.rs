@@ -96,7 +96,7 @@ fn try_general_anit(p: &mut Prakriya, i: usize) -> bool {
 
 /// Runs iT rules specific to liT. Returns whether the iT-Agama procedure is complete.
 fn try_lit_it(p: &mut Prakriya, i: usize) -> bool {
-    let n = match p.view(i) {
+    let n = match p.view(i + 1) {
         Some(x) => x,
         None => return false,
     };
@@ -152,7 +152,7 @@ fn try_lit_it(p: &mut Prakriya, i: usize) -> bool {
             // The effect of 7.2.13 is that all other roots are considerd `sew` by
             // default.
             p.step("7.2.13");
-            let n = p.view(i).unwrap();
+            let n = p.view(i + 1).unwrap();
             if VAL.contains_opt(n.adi()) {
                 add_it("7.2.35", p, i);
             }

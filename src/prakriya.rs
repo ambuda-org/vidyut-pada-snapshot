@@ -1,6 +1,6 @@
 use crate::constants::Tag;
 use crate::term::{Term, TermView};
-use fnv::FnvHashSet;
+use std::collections::HashSet;
 
 pub type Rule = &'static str;
 
@@ -24,7 +24,7 @@ pub enum RuleChoice {
 #[derive(Default)]
 pub struct Prakriya {
     terms: Vec<Term>,
-    tags: FnvHashSet<Tag>,
+    tags: HashSet<Tag>,
     history: Vec<Step>,
     options_config: Vec<RuleChoice>,
     rule_decisions: Vec<RuleChoice>,
@@ -36,7 +36,7 @@ impl Prakriya {
     pub fn new() -> Self {
         Prakriya {
             terms: Vec::new(),
-            tags: FnvHashSet::default(),
+            tags: HashSet::new(),
             history: Vec::new(),
             options_config: Vec::new(),
             rule_decisions: Vec::new(),

@@ -226,6 +226,7 @@ fn add_lun_vikarana(p: &mut Prakriya) {
 fn add_kr_after_am_pratyaya(p: &mut Prakriya) {
     let mut kf = Term::make_dhatu("qukf\\Y", 8, 10);
     kf.text = "kf".to_string();
+    kf.add_tag(T::Dhatu);
 
     let i_tin = p.terms().len() - 1;
     p.insert_before(i_tin, kf);
@@ -238,7 +239,7 @@ fn maybe_add_am_pratyaya_for_lit(p: &mut Prakriya) {
         None => return,
     };
 
-    if p.has(i, |t| t.text == "kAs" && t.has_tag(T::Pratyaya)) {
+    if p.has(i, |t| t.text == "kAs" || t.has_tag(T::Pratyaya)) {
         p.op("3.1.35", add_aam);
     } else if p.has(i, |t| !f::is_eka_ac(t) && !t.has_text_in(&["jAgf", "UrRu"])) {
         // jAgf is handled separately below.
