@@ -163,7 +163,7 @@ fn sup_sandhi_after_angasya(p: &mut Prakriya) {
 /// Runs vowel sandhi rules that apply between terms (as opposed to between sounds).
 fn apply_ac_sandhi_at_term_boundary(p: &mut Prakriya, i: usize) {
     let n = match p.find_next_where(i, |t| !t.text.is_empty()) {
-        Some(n) => &p.terms()[n],
+        Some(n) => n,
         None => return,
     };
 
@@ -187,12 +187,18 @@ fn apply_ac_sandhi_at_term_boundary(p: &mut Prakriya, i: usize) {
     }
     */
 
-    if p.has(i, |t| t.antya() == Some('a') || t.antya() == Some('A')) && n.text == "us" {
+    if p.has(i, |t| t.antya() == Some('a') || t.antya() == Some('A')) && p.has(n, f::text("us")) {
         p.op_term("6.1.96", i, op::antya(""));
 
     // ekaH pUrvapara (6.1.84)
-    } else if p.has(i, f::u("Aw")) && n.has_adi(&*IK) {
-        p.op_term("6.1.90", i, op::text(""));
+    } else if p.has(i, f::u("Aw")) && p.has(n, |t| t.has_adi(&*IK)) {
+        p.op("6.1.90", |p| {
+            let next = &p.terms()[n];
+            let sub = al::to_vrddhi(next.adi().unwrap()).unwrap();
+
+            p.set(i, op::text(""));
+            p.set(n, op::adi(sub));
+        });
     }
 }
 
