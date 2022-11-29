@@ -1,6 +1,6 @@
 use crate::constants::Tag;
 use crate::term::{Term, TermView};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 pub type Rule = &'static str;
 
@@ -13,20 +13,12 @@ pub struct Step {
     pub state: String,
 }
 
-#[derive(Eq, PartialEq)]
-pub enum RuleOption {
-    /// Allow use of the given rule.
-    Allow,
-    /// Ignore the given rule and treat it as if it was never defined.
-    Ignore,
-}
-
-#[derive(Debug)]
-pub enum RuleDecision {
+#[derive(Clone, Copy, Debug)]
+pub enum RuleChoice {
     /// Whether a rule was used during the derivation.
-    Accepted,
+    Accept(Rule),
     /// Whether a rule was declined during the derivation.
-    Declined,
+    Decline(Rule),
 }
 
 #[derive(Default)]
@@ -34,8 +26,8 @@ pub struct Prakriya {
     terms: Vec<Term>,
     tags: HashSet<Tag>,
     history: Vec<Step>,
-    options_config: HashMap<Rule, RuleOption>,
-    rule_decisions: Vec<(Rule, RuleDecision)>,
+    options_config: Vec<RuleChoice>,
+    rule_decisions: Vec<RuleChoice>,
 }
 
 impl Prakriya {
@@ -46,7 +38,7 @@ impl Prakriya {
             terms: Vec::new(),
             tags: HashSet::new(),
             history: Vec::new(),
-            options_config: HashMap::new(),
+            options_config: Vec::new(),
             rule_decisions: Vec::new(),
         }
     }
@@ -57,9 +49,13 @@ impl Prakriya {
         p
     }
 
+    pub fn set_options(&mut self, options: Vec<RuleChoice>) {
+        self.options_config = options;
+    }
+
     // Term accessors
 
-    pub fn rule_decisions(&self) -> &Vec<(Rule, RuleDecision)> {
+    pub fn rule_choices(&self) -> &Vec<RuleChoice> {
         &self.rule_decisions
     }
 
@@ -293,23 +289,33 @@ impl Prakriya {
     // Optional rules
 
     pub fn is_allowed(&mut self, r: Rule) -> bool {
-        let status = *self.options_config.get(r).unwrap_or(&RuleOption::Allow) == RuleOption::Allow;
-        if status {
-            self.accept(r);
+        for option in &self.options_config {
+            match option {
+                RuleChoice::Accept(code) => {
+                    if r == *code {
+                        self.accept(r);
+                        return true;
+                    }
+                }
+                RuleChoice::Decline(code) => {
+                    if r == *code {
+                        return false;
+                    }
+                }
+            }
         }
-        status
+
+        // If not in options, allow this rule by default.
+        self.accept(r);
+        true
     }
 
-    pub fn accept(&mut self, r: Rule) {
-        self.rule_decisions.push((r, RuleDecision::Accepted));
+    pub fn accept(&mut self, rule: Rule) {
+        self.rule_decisions.push(RuleChoice::Accept(rule));
     }
 
-    pub fn decline(&mut self, r: Rule) {
-        self.rule_decisions.push((r, RuleDecision::Declined));
-    }
-
-    pub fn set_options_config(&mut self, o: HashMap<Rule, RuleOption>) {
-        self.options_config = o;
+    pub fn decline(&mut self, rule: Rule) {
+        self.rule_decisions.push(RuleChoice::Decline(rule));
     }
 
     // Final output

@@ -21,8 +21,8 @@ fn pretty_print_prakriya(p: &Prakriya) {
         println!("{:<10} | {}", step.rule, step.state);
     }
     println!("------------------------------");
-    for (rule, decision) in p.rule_decisions() {
-        println!("{rule}: {decision:?}");
+    for choice in p.rule_choices() {
+        println!("{choice:?}");
     }
     println!("------------------------------");
 }
@@ -62,19 +62,20 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         }
         for la in LAKARA {
             for (purusha, vacana) in PURUSHA_VACANA {
-                let p = A::tinanta(
+                let ps = A::derive_tinantas(
                     &dhatu.upadesha,
                     &dhatu.code(),
                     *la,
                     Prayoga::Kartari,
                     *purusha,
                     *vacana,
-                )?;
-                if p.text() == args.pada {
-                    println!("{:?} {:?} {:?}", la, purusha, vacana);
-                    pretty_print_prakriya(&p);
-                } else {
+                );
+                for p in ps {
                     words.push(p.text());
+                    if p.text() == args.pada {
+                        println!("{:?} {:?} {:?}", la, purusha, vacana);
+                        pretty_print_prakriya(&p);
+                    }
                 }
             }
         }

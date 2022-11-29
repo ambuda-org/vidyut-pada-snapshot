@@ -8,7 +8,7 @@ use crate::dhatu_karya;
 use crate::dvitva;
 use crate::it_agama;
 use crate::la_karya;
-use crate::prakriya::Prakriya;
+use crate::prakriya::{Prakriya, RuleChoice};
 use crate::samjna;
 use crate::sanadi;
 use crate::tin_pratyaya;
@@ -38,59 +38,100 @@ fn dhatu_samprasarana_tasks(p: &mut Prakriya) {
     atidesha::run_after_attva(p);
 }
 
-pub fn tinanta(
+pub fn derive_tinanta(
+    p: &mut Prakriya,
     dhatu: &str,
     code: &str,
     la: La,
     prayoga: Prayoga,
     purusha: Purusha,
     vacana: Vacana,
-) -> Result<Prakriya, Box<dyn Error>> {
-    let mut p = Prakriya::new();
+) -> Result<(), Box<dyn Error>> {
     p.add_tags(&[prayoga.as_tag(), purusha.as_tag(), vacana.as_tag()]);
 
     // Create the dhatu.
-    dhatu_karya::run(&mut p, dhatu, code)?;
-    sanadi::run(&mut p, la)?;
+    dhatu_karya::run(p, dhatu, code)?;
+    sanadi::run(p, la)?;
 
     // Add the lakAra and convert it to a basic tin ending.
-    la_karya::run(&mut p, la)?;
-    ardhadhatuka::dhatu_adesha_before_pada(&mut p, la);
-    atmanepada::run(&mut p);
-    tin_pratyaya::adesha(&mut p, purusha, vacana);
-    samjna::run(&mut p);
+    la_karya::run(p, la)?;
+    ardhadhatuka::dhatu_adesha_before_pada(p, la);
+    atmanepada::run(p);
+    tin_pratyaya::adesha(p, purusha, vacana);
+    samjna::run(p);
 
-    // Do lit-siddhi and AzIrlin-siddhi first to support the valAdi vArttika for aj>vi.
+    // Do lit-siddhi and AzIrlin-siddhi first to support the valAdi vArttika for aj -> vi.
     let is_lit_or_ashirlin = matches!(la, La::Lit | La::AshirLin);
     if is_lit_or_ashirlin {
-        tin_pratyaya::siddhi(&mut p, la)?;
+        tin_pratyaya::siddhi(p, la)?;
     }
 
     // Add necessary vikaranas.
-    ardhadhatuka::dhatu_adesha_before_vikarana(&mut p, la);
-    vikarana::run(&mut p)?;
-    samjna::run(&mut p);
+    ardhadhatuka::dhatu_adesha_before_vikarana(p, la);
+    vikarana::run(p)?;
+    samjna::run(p);
 
     // --- Code below this line needs to be cleaned up. ---
-    //
+
     if !la.is_sarvadhatuka() {
-        dhatu_samprasarana_tasks(&mut p)
+        dhatu_samprasarana_tasks(p)
     }
 
-    dvitva::run(&mut p);
+    dvitva::run(p);
 
     if !is_lit_or_ashirlin {
-        tin_pratyaya::siddhi(&mut p, la)?;
+        tin_pratyaya::siddhi(p, la)?;
     }
 
     if la.is_sarvadhatuka() {
-        dhatu_samprasarana_tasks(&mut p)
+        dhatu_samprasarana_tasks(p)
     }
 
-    angasya::run_remainder(&mut p);
-    ac_sandhi::run(&mut p);
+    angasya::run_remainder(p);
 
-    tripadi::run(&mut p);
+    // Apply sandhi rules and return.
+    ac_sandhi::run(p);
+    tripadi::run(p);
 
-    Ok(p)
+    Ok(())
+}
+
+pub fn derive_tinantas(
+    dhatu: &str,
+    code: &str,
+    la: La,
+    prayoga: Prayoga,
+    purusha: Purusha,
+    vacana: Vacana,
+) -> Vec<Prakriya> {
+    let mut p_init = Prakriya::new();
+    derive_tinanta(&mut p_init, dhatu, code, la, prayoga, purusha, vacana).unwrap();
+
+    if p_init.rule_choices().is_empty() {
+        return vec![p_init];
+    }
+
+    // Expand stack with unexpelored paths.
+    let mut stack = vec![];
+    let decisions = p_init.rule_choices();
+    for i in 0..decisions.len() {
+        let mut path = decisions[..=i].to_vec();
+        let i = path.len() - 1;
+        path[i] = match path[i] {
+            RuleChoice::Accept(code) => RuleChoice::Decline(code),
+            RuleChoice::Decline(code) => RuleChoice::Accept(code),
+        };
+        stack.push(path);
+    }
+
+    // Explore paths. TODO: then, expand again.
+    let mut res = vec![p_init];
+    while let Some(path) = stack.pop() {
+        let mut p = Prakriya::new();
+        p.set_options(path);
+        derive_tinanta(&mut p, dhatu, code, la, prayoga, purusha, vacana).unwrap();
+        res.push(p);
+    }
+
+    res
 }

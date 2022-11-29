@@ -215,31 +215,31 @@ pub fn run(p: &mut Prakriya) {
         // Matched above already
     } else if p.has(i, |t| t.text == "nAT") {
         // vArttika
-        p.optional("1.3.27.v7", |_| true, op_parasmaipada);
+        p.op_optional("1.3.27.v7", op_parasmaipada);
     } else if p.has(i, |t| t.text == "sasj") {
         // Kaumudi
-        p.optional("sasj-k", |_| true, op_atmanepada);
+        p.op_optional("sasj-k", op_atmanepada);
     } else if p.has(i, |t| t.text == "Sad" && is_sarvadhatuka) {
         // Technically the condition here is "Siti", but sArvadhAtuka is close
         // enough.
-        p.rule("1.3.60", |_| true, op_atmanepada);
+        p.op("1.3.60", op_atmanepada);
     } else if p.has(i, |t| t.has_u("mf\\N")) {
         if !(is_sarvadhatuka || is_lun_lin) {
-            p.optional("1.3.61", |_| true, op_parasmaipada);
+            p.op_optional("1.3.61", op_parasmaipada);
         }
     } else if p.has(i, |t| {
         t.has_u_in(DYUT_ADI) && t.gana == Some(1) && la == "lu~N"
     }) {
-        p.optional("1.3.91", |_| true, op_parasmaipada);
+        p.op_optional("1.3.91", op_parasmaipada);
     // TODO: san
     } else if p.has(i, |t| {
         t.has_u_in(VRDBHYAH) && t.gana == Some(1) && ["lf~w", "lf~N"].contains(&la.as_str())
     }) {
-        p.optional("1.3.92", |_| true, op_parasmaipada);
+        p.op_optional("1.3.92", op_parasmaipada);
     } else if p.has(i, |t| {
         t.has_u("kfpU~\\") && ["lf~w", "lf~N", "lu~w"].contains(&la.as_str())
     }) {
-        p.optional("1.3.93", |_| true, op_parasmaipada);
+        p.op_optional("1.3.93", op_parasmaipada);
     }
 
     // General rules
@@ -247,19 +247,19 @@ pub fn run(p: &mut Prakriya) {
     if p.any(&[T::Parasmaipada, T::Atmanepada]) {
         // Matched above already
     } else if p.has(i, |t| t.any(&[T::Nit, T::anudattet])) {
-        p.rule("1.3.12", |_| true, op_atmanepada);
+        p.op("1.3.12", op_atmanepada);
     } else if p.has(i, |t| t.any(&[T::Yit, T::svaritet])) {
-        p.optional("1.3.72", |_| true, op_atmanepada);
+        p.op_optional("1.3.72", op_atmanepada);
     } else if p.terms().len() == 3 && p.get(1).unwrap().has_u("Ric") {
-        p.optional("1.3.74", |_| true, op_atmanepada);
+        p.op_optional("1.3.74", op_atmanepada);
     } else if p.has(i, |t| t.text == "jYA" && upasargas.is_empty()) {
-        p.optional("1.3.76", |_| true, op_atmanepada);
+        p.op_optional("1.3.76", op_atmanepada);
     }
 
     // Otherwise, use parasmaipada by default.
 
     if p.has_tag(T::Kartari) && !p.has_tag(T::Atmanepada) {
-        p.rule("1.3.78", |_| true, op_parasmaipada);
+        p.op("1.3.78", op_parasmaipada);
     }
 
     assert!(p.any(&[T::Parasmaipada, T::Atmanepada]));

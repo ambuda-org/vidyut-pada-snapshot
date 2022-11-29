@@ -40,15 +40,16 @@ fn run() -> Result<(), Box<dyn Error>> {
     for dhatu in dhatus?.iter() {
         for la in LAKARA {
             for (purusha, vacana) in TIN_SEMANTICS {
-                let p = A::tinanta(
+                for p in A::derive_tinantas(
                     &dhatu.upadesha,
                     &dhatu.code(),
                     *la,
                     Prayoga::Kartari,
                     *purusha,
                     *vacana,
-                )?;
-                println!("{la:?}: {}", p.text());
+                ) {
+                    println!("{la:?}: {}", p.text());
+                }
             }
         }
     }
