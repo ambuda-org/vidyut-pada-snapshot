@@ -170,7 +170,7 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
                 p.op_optional("3.4.88", op::t(i, op::add_tag(T::Pit)));
             }
         } else if p.has(i, f::ends_with("mi")) {
-            p.op_term("3.4.89", i, op::text("ni"));
+            op::upadesha_v2("3.4.89", p, i, "ni");
         } else if p.has(i, f::ends_with("i")) {
             p.op_term("3.4.86", i, op::antya("u"));
         } else if p.has(i, f::ends_with("e")) {
@@ -295,10 +295,10 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
     // Matching for "w" will cause errors because the ending 'iw' has 'w' as an
     // anubandha. So, match the wit-lakAras by name so we can exclude 'iw':
     let wits = &["la~w", "li~w", "lu~w", "lf~w", "le~w", "lo~w"];
-    if tin.has_tag(T::Atmanepada) && tin.has_any_lakshana(wits) {
+    if tin.has_tag(T::Atmanepada) && tin.has_lakshana_in(wits) {
         let ta_jha = &["ta", "Ja"];
         let es_irec = &["eS", "irec"];
-        if p.has(i, |t| t.has_lakshana("li~w") && t.has_text(ta_jha)) {
+        if p.has(i, |t| t.has_lakshana("li~w") && t.has_text_in(ta_jha)) {
             p.op("3.4.81", |p| op::upadesha_yatha(p, i, ta_jha, es_irec));
         } else if p.has(i, |t| t.text == "TAs") {
             op::adesha("3.4.80", p, i, "se");

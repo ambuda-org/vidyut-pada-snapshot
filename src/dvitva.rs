@@ -113,7 +113,7 @@ pub fn run(p: &mut Prakriya) {
     let i_n = n.start();
 
     let jaksh_adi = &["jakz", "jAgf", "daridrA", "cakAs", "SAs", "dIDI", "vevI"];
-    if p.has(i, |t| t.has_text(jaksh_adi)) {
+    if p.has(i, |t| t.has_text_in(jaksh_adi)) {
         // These are termed abhyasta, but they can still undergo dvitva because
         // the rules below inherit "anabhyAsasya" from 6.1.8.
         p.op_term("6.1.6", i, op::add_tag(T::Abhyasta));

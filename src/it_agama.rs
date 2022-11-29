@@ -68,7 +68,7 @@ fn try_general_anit(p: &mut Prakriya, i: usize) -> bool {
         it = It::Anit("7.2.8");
     } else if is_hacky_eka_ac(d) && sri_uk && n.has_tag(T::Kit) {
         it = It::Anit("7.2.11");
-    } else if n.has_u("san") && d.has_text(&["Sri", "grah", "guh"]) {
+    } else if n.has_u("san") && d.has_text_in(&["Sri", "grah", "guh"]) {
         it = It::Anit("7.2.12");
     } else if n.has_tag(T::Nistha) {
         if d.text == "Svi" || d.has_tag(T::Idit) {
@@ -111,7 +111,7 @@ fn try_lit_it(p: &mut Prakriya, i: usize) -> bool {
 
     let anga = &p.terms()[i];
     // These rules are always aniT.
-    if anga.has_text(&["kf", "sf", "Bf", "vf", "stu", "dru", "sru", "Sru"]) {
+    if anga.has_text_in(&["kf", "sf", "Bf", "vf", "stu", "dru", "sru", "Sru"]) {
         it = It::Anit("7.2.13");
     } else if anga.has_antya(&*AC) && n.has_u("Tal") && rule_7_2_10 {
         // Concise summary of rules:
@@ -137,7 +137,7 @@ fn try_lit_it(p: &mut Prakriya, i: usize) -> bool {
         } else {
             it = It::Anit("7.2.61");
         }
-    } else if anga.has_text(&["sfj", "dfS"]) && n.has_u("Tal") {
+    } else if anga.has_text_in(&["sfj", "dfS"]) && n.has_u("Tal") {
         // By default, these will be seT. So the option allows aniT.
         let code = "7.2.65";
         if p.is_allowed(code) {
@@ -213,7 +213,7 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
         } else if n.has_tag(T::Parasmaipada) {
             if anga.has_u_in(&["zwu\\Y", "zu\\Y", "DUY"]) {
                 it = It::Set("7.2.72");
-            } else if anga.has_text(&["yam", "ram", "nam"]) {
+            } else if anga.has_text_in(&["yam", "ram", "nam"]) {
                 add_sak = true;
                 it = It::Set("7.2.73");
             } else if anga.has_antya('A') {
@@ -224,7 +224,7 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
     } else if anga.text == "IS" && n.adi() == Some('s') {
         add_it("7.2.77", p, i);
         return false;
-    } else if anga.has_text(&["Is", "Iq", "jan"])
+    } else if anga.has_text_in(&["Is", "Iq", "jan"])
         && (n.adi() == Some('s') || n.last().unwrap().has_u("Dvam"))
     {
         // See kAshika on 7.2.78 for inclusion of IS here.

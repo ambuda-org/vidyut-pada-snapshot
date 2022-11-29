@@ -510,34 +510,42 @@ fn run_aci(p: Prakriya, index: int):
                 op.antya("6.4.77", p, c, iyuv[c.antya])
         } else if  c.all(T.ABHYASA) and n.adi not in sounds.savarna(c.antya):
             op.antya("6.4.78", p, c, iyuv[c.antya])
+*/
 
+/// Runs asiddhavat rules conditioned on a following Ri suffix.
+pub fn run_before_ni(p: &mut Prakriya) {
+    let i = 0;
+    let c = match p.get(i) {
+        Some(t) => t,
+        None => return,
+    };
+    let n = match p.view(i + 1) {
+        Some(n) => n,
+        None => return,
+    };
 
-fn run_nau(p: Prakriya, index: int):
-    """Asiddhavat rules conditioned on a following Ri suffix."""
+    // if c.has_u_in(&["Ric", "RiN"]) &&
+    /*
+        if (
+            c.u in ("Ric", "RiN")
+            and not f.is_it_agama(n.terms[0])
+            and n.all(T.ARDHADHATUKA)
+        ):
+            n_text = n.terms[0].text
+            if n_text in {"Am", "anta", "Alu", "Ayya", "itnu", "iznu"}:
+                op.antya("6.4.55", p, c, "ay")
+            else:
+                // Apply ac_sandhi before lopa, since later rules depend on this
+                // being done (e.g. cayyAt)
+                ac_sandhi.general_vowel_sandhi(p, p.terms[index - 1 : index + 1])
+                op.antya("6.4.51", p, c, "")
 
-    c = p.terms[index]
-    n = TermView.make(p, index)
-    if not n:
-        return
+        if c.all("m") and n.terms[0].u == "Ric" and c.upadha in s("ac"):
+            op.upadha("6.4.92", p, c, sounds.hrasva(c.upadha))
+    */
+}
 
-    if (
-        c.u in ("Ric", "RiN")
-        and not f.is_it_agama(n.terms[0])
-        and n.all(T.ARDHADHATUKA)
-    ):
-        n_text = n.terms[0].text
-        if n_text in {"Am", "anta", "Alu", "Ayya", "itnu", "iznu"}:
-            op.antya("6.4.55", p, c, "ay")
-        else:
-            // Apply ac_sandhi before lopa, since later rules depend on this
-            // being done (e.g. cayyAt)
-            ac_sandhi.general_vowel_sandhi(p, p.terms[index - 1 : index + 1])
-            op.antya("6.4.51", p, c, "")
-
-    if c.all("m") and n.terms[0].u == "Ric" and c.upadha in s("ac"):
-        op.upadha("6.4.92", p, c, sounds.hrasva(c.upadha))
-
-
+/*
 fn run_after_guna(p: Prakriya, index: int):
     c = p.terms[index]
     n = TermView.make(p, index)

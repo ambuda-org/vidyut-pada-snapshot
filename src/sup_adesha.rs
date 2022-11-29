@@ -50,7 +50,9 @@ fn try_adanta_adesha(p: &mut Prakriya, i_anga: usize, i: usize) {
         }
     }
 
-    if p.has(i, |t| t.has_u_in(ta_nasi_nas) && t.has_text(&["A", "as"])) {
+    if p.has(i, |t| {
+        t.has_u_in(ta_nasi_nas) && t.has_text_in(&["A", "as"])
+    }) {
         if let Some(sub) = yatha(&sup_u, ta_nasi_nas, ina_at_sya) {
             p.op_term("7.1.12", i, op::text(sub));
         }
@@ -129,7 +131,7 @@ pub fn run(p: &mut Prakriya) {
         p.op_term("7.1.22", i, op::luk);
     } else if is_napumsaka && p.has(i, f::u_in(&["su~", "am"])) {
         if p.has(i_anga, |t| t.has_antya(&s("a"))) {
-            if p.has(i_anga, |t| t.has_text(gana::DATARA_ADI)) {
+            if p.has(i_anga, |t| t.has_text_in(gana::DATARA_ADI)) {
                 p.op_term("7.1.25", i, op::text("adq"));
             } else {
                 p.op_term("7.1.24", i, op::text("am"));

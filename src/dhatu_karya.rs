@@ -28,7 +28,7 @@ fn add_samjnas(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
     p.term_rule(
         "1.1.20",
         i,
-        |t| t.has_text(&["dA", "de", "do", "DA", "De"]) && t.u != Some("dA\\p".to_string()),
+        |t| t.has_text_in(&["dA", "de", "do", "DA", "De"]) && t.u != Some("dA\\p".to_string()),
         |t| op::samjna(t, T::Ghu),
     );
     Ok(())
@@ -70,12 +70,17 @@ fn satva_and_natva(p: &mut Prakriya, i: usize) {
         // Satva
         // Varttika -- no change for zWiv or zvask
         // Vartika -- also change next sound
-        let ok = p.term_rule("6.1.64.v1", i, |t| t.has_text(&["zWiv", "zvazk"]), op::none);
+        let ok = p.term_rule(
+            "6.1.64.v1",
+            i,
+            |t| t.has_text_in(&["zWiv", "zvazk"]),
+            op::none,
+        );
         if !ok {
             let ok = p.term_rule(
                 "6.1.64.v2",
                 i,
-                |t| t.starts_with_any(&["zw", "zW", "zR"]),
+                |t| t.has_prefix_in(&["zw", "zW", "zR"]),
                 |t| {
                     t.text = t.text.replace("zw", "st");
                     t.text = t.text.replace("zW", "sT");

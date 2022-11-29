@@ -69,7 +69,7 @@ pub fn try_pratyaya_adesha(p: &mut Prakriya) {
     let i = p.terms().len() - 1;
     let t = &p.terms()[i];
 
-    if t.has_text(&["yu~", "vu~"]) {
+    if t.has_text_in(&["yu~", "vu~"]) {
         if t.text == "yu~" {
             p.op("7.1.1", op::t(i, op::text("ana")));
         } else {
@@ -88,7 +88,7 @@ pub fn try_pratyaya_adesha(p: &mut Prakriya) {
     } else if t.has_adi('J') {
         maybe_do_jha_adesha(p, i);
     // -tAt substitution needs to occur early because it conditions samprasarana.
-    } else if p.has(i, |t| t.has_tag(T::Tin) && t.has_text(&["tu", "hi"])) {
+    } else if p.has(i, |t| t.has_tag(T::Tin) && t.has_text_in(&["tu", "hi"])) {
         // N is to block pit-guNa, not for replacement of the last letter.
         p.op_optional("7.1.35", |p| op::upadesha(p, i, "tAta~N"));
     }
@@ -1114,13 +1114,10 @@ pub fn run_remainder(p: &mut Prakriya) {
     // Rules for various lun-vikaranas.
     ani(p);
 
-    /*
     // Asiddhavat must run before cani for "Ner aniTi"
-    for index, _ in enumerate(p.terms):
-        c = p.terms[index]
-        if c.text:
-            asiddhavat.run_nau(p, index)
+    asiddhavat::run_before_ni(p);
 
+    /*
     cani_after_guna(p)
     abhyasasya.run_sani_cani(p)
     */

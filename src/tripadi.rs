@@ -242,7 +242,7 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) {
 
     // TODO: bha
     let dhatu = &p.terms()[i];
-    if dhatu.has_text(&["kur", "Cur"]) {
+    if dhatu.has_text_in(&["kur", "Cur"]) {
         p.step("8.2.79");
     } else if is_ik(dhatu.upadha()) && is_rv(dhatu.antya()) {
         let upadha = dhatu.upadha().expect("");
@@ -269,13 +269,9 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) {
 }
 
 fn per_term_1b(p: &mut Prakriya, i: usize) {
-    let is_padanta = |n: &Option<TermView>| match n {
-        Some(n) => n.is_empty() && n.ends_word(),
-        None => true,
-    };
-
     let n = p.view(i + 1);
-    if p.has(i, |t| t.has_antya('s')) && is_padanta(&n) {
+    let is_padanta = n.map(|x| x.is_padanta()).unwrap_or(true);
+    if p.has(i, |t| t.has_antya('s')) && is_padanta {
         p.op_term("8.2.66", i, op::antya("ru~"));
     }
 
@@ -285,7 +281,7 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
     // TODO: next pada
     let n = p.view(i + 1);
     let has_ru = p.has(i, |t| t.text.ends_with("ru~") || t.has_antya('r'));
-    if has_ru && is_padanta(&n) {
+    if has_ru && is_padanta {
         p.op_term("8.3.15", i, |t| {
             if let Some(p) = t.text.strip_suffix("ru~") {
                 t.text = p.to_owned() + "H";
@@ -296,93 +292,100 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
     }
 
     /*
-        c = p.terms[index]
-        try:
-            n = [u for u in p.terms[index + 1 :] if u.text][0]
-        except IndexError:
-            n = None
+    c = p.terms[index]
+    try:
+        n = [u for u in p.terms[index + 1 :] if u.text][0]
+    except IndexError:
+        n = None
 
-        vrascha = {
-        "o~vrascU~",
-            "Bra\\sja~^",
-            "sf\\ja~\\",
-            "sf\\ja~",
-            "mfjU~",
-            "ya\\ja~^",
-            "rAj",
-            "BrAjf~\\",
-        }
+    vrascha = {
+    "o~vrascU~",
+        "Bra\\sja~^",
+        "sf\\ja~\\",
+        "sf\\ja~",
+        "mfjU~",
+        "ya\\ja~^",
+        "rAj",
+        "BrAjf~\\",
+    }
 
-        jhali_ante = not n or n.adi in s("Jal")
-        if (c.u in vrascha or c.antya in s("C S")) and jhali_ante:
-            if c.text.endswith("tC"):
-                // TODO: seems implied, not sure.
-                c.text = c.text[:-2] + "z"
-                p.step("8.2.36")
-            else:
-                op.antya("8.2.36", p, c, "z")
+    jhali_ante = not n or n.adi in s("Jal")
+    if (c.u in vrascha or c.antya in s("C S")) and jhali_ante:
+        if c.text.endswith("tC"):
+            // TODO: seems implied, not sure.
+            c.text = c.text[:-2] + "z"
+            p.step("8.2.36")
+        else:
+            op.antya("8.2.36", p, c, "z")
 
-        if c.antya in s("cu~") and (not n or n.adi in s("Jal")):
-            mapping = sounds.map_sounds(s("cu~"), s("ku~"))
-            op.antya("8.2.30", p, c, mapping[c.antya])
+    if c.antya in s("cu~") and (not n or n.adi in s("Jal")):
+        mapping = sounds.map_sounds(s("cu~"), s("ku~"))
+        op.antya("8.2.30", p, c, mapping[c.antya])
 
-        sdhvoh = n and (n.adi == "s" or n.all(T.PRATYAYA) and n.u.startswith("Dv"))
-        basho_bhash = sounds.map_sounds_s("baS", "Baz")
-        if c.adi in basho_bhash and c.antya in s("JaS") and sdhvoh:
-            op.adi("8.2.37", p, c, basho_bhash[c.adi])
+    sdhvoh = n and (n.adi == "s" or n.all(T.PRATYAYA) and n.u.startswith("Dv"))
+    basho_bhash = sounds.map_sounds_s("baS", "Baz")
+    if c.adi in basho_bhash and c.antya in s("JaS") and sdhvoh:
+        op.adi("8.2.37", p, c, basho_bhash[c.adi])
+    */
 
-        // Exclude the following from 8.2.39 so that the corresponding rules aren't
-        // vyartha:
-        // - c for 8.2.30 (coH kuH)
-        // - S for 8.2.36 (vraSca-Brasja-...-Ca-SAM zaH)
-        // - s for 8.2.66 (sasajuSo ruH)
-        // - h for 8.2.31 (ho QaH)
-        if c.antya in s("Jal") and c.antya not in s("c S s h") and not n:
-            mapping = sounds.map_sounds(s("Jal"), s("jaS"))
-            op.antya("8.2.39", p, c, mapping[c.antya])
+    // Exclude the following from 8.2.39 so that the corresponding rules aren't
+    // vyartha:
+    // - c for 8.2.30 (coH kuH)
+    // - S for 8.2.36 (vraSca-Brasja-...-Ca-SAM zaH)
+    // - s for 8.2.66 (sasajuSo ruH)
+    // - h for 8.2.31 (ho QaH)
+    let c = &p.terms()[i];
+    let n = p.view(i + 1);
+    let is_padanta = n.map(|x| x.is_padanta()).unwrap_or(true);
+    if c.has_antya(&*JHAL) && !c.has_antya(&s("c S s h")) && is_padanta {
+        let key = c.antya().unwrap();
+        let sub = JHAL_TO_JASH.get(&key).unwrap();
+        p.op_term("8.2.39", i, op::antya(&sub.to_string()));
+    }
 
-        if c.all(T.DHATU) and c.u != "quDA\\Y":
-            // TODO: abhyasa
-            if c.antya in s("Jaz") and n and n.adi in s("t T"):
-                op.adi("8.2.40", p, n, "D")
+    /*
+    if c.all(T.DHATU) and c.u != "quDA\\Y":
+        // TODO: abhyasa
+        if c.antya in s("Jaz") and n and n.adi in s("t T"):
+            op.adi("8.2.40", p, n, "D")
 
-        if c.antya in s("z Q") and n.adi == "s":
-            op.antya("8.2.41", p, c, "k")
+    if c.antya in s("z Q") and n.adi == "s":
+        op.antya("8.2.41", p, c, "k")
 
-        if c.any(T.DHATU) and c.antya == "m" and n.adi in {"m", "v"}:
-            op.antya("8.2.65", p, c, "n")
+    if c.any(T.DHATU) and c.antya == "m" and n.adi in {"m", "v"}:
+        op.antya("8.2.65", p, c, "n")
 
-        // TODO: sajuS
+    // TODO: sajuS
 
-        try:
-            rn = p.terms[index + 1]
-        except IndexError:
-            rn = None
-        next_is_last = index + 1 == len(p.terms) - 1
-        if c.antya == "s" and next_is_last and rn.text == "" and rn.u == "tip":
-            // Exception to general rule 8.2.66 below
-            op.antya("8.2.73", p, c, "d")
+    try:
+        rn = p.terms[index + 1]
+    except IndexError:
+        rn = None
+    next_is_last = index + 1 == len(p.terms) - 1
+    if c.antya == "s" and next_is_last and rn.text == "" and rn.u == "tip":
+        // Exception to general rule 8.2.66 below
+        op.antya("8.2.73", p, c, "d")
 
-        } else if c.antya == "s" and (not n or (next_is_last and rn.text == "")):
-            op.antya("8.2.66", p, c, "ru~")
+    } else if c.antya == "s" and (not n or (next_is_last and rn.text == "")):
+        op.antya("8.2.66", p, c, "ru~")
 
-        if c.antya in s("s d") and rn and rn.text == "" and rn.u == "sip":
-            if c.antya == "s":
-                op.optional(op.antya, "8.2.74", p, c, "ru~")
-            else:
-                op.optional(op.antya, "8.2.75", p, c, "ru~")
+    if c.antya in s("s d") and rn and rn.text == "" and rn.u == "sip":
+        if c.antya == "s":
+            op.optional(op.antya, "8.2.74", p, c, "ru~")
+        else:
+            op.optional(op.antya, "8.2.75", p, c, "ru~")
 
-        // 8.2.77
-        // TODO: sajuS
+    // 8.2.77
+    // TODO: sajuS
 
-        // 8.3.15
-        // TODO: next pada
-        has_ru = c.text.endswith("ru~") or c.text.endswith("r")
-        if has_ru and not n:
-            c.text = c.text.replace("ru~", "H")
-            if c.text.endswith("r"):
-                c.text = c.text[:-1] + "H"
-            p.step("8.3.15")
+    // 8.3.15
+    // TODO: next pada
+    has_ru = c.text.endswith("ru~") or c.text.endswith("r")
+    if has_ru and not n:
+        c.text = c.text.replace("ru~", "H")
+        if c.text.endswith("r"):
+            c.text = c.text[:-1] + "H"
+        p.step("8.3.15")
     */
 }
 
@@ -717,7 +720,30 @@ fn try_jhal_adesha(p: &mut Prakriya) {
         },
     );
 
-    // TODO: 8.4.56
+    char_rule(
+        p,
+        |_, text, i| {
+            let x = text.as_bytes()[i] as char;
+            JHAL.contains_char(x) && i == text.len() - 1
+        },
+        |p, text, i| {
+            let code = "8.4.56";
+            let x = text.as_bytes()[i] as char;
+            let sub = JHAL_TO_CAR.get(&x).unwrap();
+            if x != *sub {
+                if p.is_allowed(code) {
+                    set_at(p, i, &sub.to_string());
+                    p.step("8.4.56");
+                    true
+                } else {
+                    p.decline("8.4.56");
+                    false
+                }
+            } else {
+                false
+            }
+        },
+    );
 }
 
 pub fn run(p: &mut Prakriya) {

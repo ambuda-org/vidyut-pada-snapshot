@@ -189,13 +189,12 @@ fn apply_ac_sandhi_at_term_boundary(p: &mut Prakriya, i: usize) {
 
     if p.has(i, |t| t.antya() == Some('a') || t.antya() == Some('A')) && p.has(n, f::text("us")) {
         p.op_term("6.1.96", i, op::antya(""));
-
-    // ekaH pUrvapara (6.1.84)
     } else if p.has(i, f::u("Aw")) && p.has(n, |t| t.has_adi(&*IK)) {
         p.op("6.1.90", |p| {
             let next = &p.terms()[n];
             let sub = al::to_vrddhi(next.adi().unwrap()).unwrap();
 
+            // ekaH pUrvapara (6.1.84)
             p.set(i, op::text(""));
             p.set(n, op::adi(sub));
         });

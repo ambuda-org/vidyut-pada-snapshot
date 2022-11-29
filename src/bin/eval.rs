@@ -85,7 +85,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
 
         n += 1;
         if padas.iter().any(|p| p == pada) {
-            println!("[  OK  ]  {code:<10} {dhatu:<10} {pada}");
+            // println!("[  OK  ]  {code:<10} {dhatu:<10} {pada}");
             num_matches += 1;
         } else {
             let actual = padas.join(" | ");

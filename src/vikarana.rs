@@ -75,7 +75,7 @@ fn maybe_replace_cli_with_ksa(p: &mut Prakriya, i: usize) {
     // imply that this holds only for parasmaipada.
     let sprs = &["spfS", "mfS", "kfz", "tfp", "dfp"];
     if xyz(p, i, |x, _, z| {
-        x.has_text(sprs) && z.has_tag(T::Parasmaipada)
+        x.has_text_in(sprs) && z.has_tag(T::Parasmaipada)
     }) {
         //
         if p.op_optional("3.1.44.v1", |p| op::upadesha_no_it(p, i + 1, "si~c")) {
@@ -127,14 +127,14 @@ fn maybe_replace_cli_with_can(p: &mut Prakriya, i: usize) {
     }
 
     let ni = |t: &Term| t.has_u_in(&["Ric", "RiN"]);
-    let shri_dru_sru = |t: &Term| t.has_text(&["Sri", "dru", "sru"]);
+    let shri_dru_sru = |t: &Term| t.has_text_in(&["Sri", "dru", "sru"]);
     let to_can = replace_with(i + 1, "caN");
 
     if p.has_tag(T::Kartari) && p.has(i, |t| ni(t) || shri_dru_sru(t)) {
         p.op("3.1.48", to_can);
     } else if p.has(i, |t| t.has_u("kamu~\\")) {
         p.op("3.1.48.v1", to_can);
-    } else if p.has(i, |t| t.has_text(&["De", "Svi"])) {
+    } else if p.has(i, |t| t.has_text_in(&["De", "Svi"])) {
         p.op_optional("3.1.49", to_can);
     }
     // TODO: 3.1.50 - 3.1.51
@@ -146,9 +146,9 @@ fn maybe_replace_cli_with_an(p: &mut Prakriya, i: usize) {
     }
 
     let to_an = replace_with(i + 1, "an");
-    if p.has(i, |t| t.has_u("asu~") || t.has_text(&["vac", "KyA"])) {
+    if p.has(i, |t| t.has_u("asu~") || t.has_text_in(&["vac", "KyA"])) {
         p.op("3.1.52", to_an);
-    } else if p.has(i, |t| t.has_text(&["lip", "sic", "hve"])) {
+    } else if p.has(i, |t| t.has_text_in(&["lip", "sic", "hve"])) {
         let mut skip = false;
         if p.has(i + 2, |t| t.has_tag(T::Atmanepada)) {
             if p.is_allowed("3.1.54") {
@@ -170,14 +170,14 @@ fn maybe_replace_cli_with_an(p: &mut Prakriya, i: usize) {
         "jF", "stanB", "mruc", "mluc", "gruc", "gluc", "glunc", "Svi",
     ];
     if p.has(i + 2, |t| t.has_tag(T::Parasmaipada) && has_cli(p, i)) {
-        if p.has(i, |t| t.has_text(&["sf", "SAs", "f"])) {
+        if p.has(i, |t| t.has_text_in(&["sf", "SAs", "f"])) {
             p.op("3.1.56", to_an);
         } else if p.has(i, |t| t.has_tag(T::irit)) {
             p.op_optional("3.1.57", to_an);
-        } else if p.has(i, |t| t.has_text(&jr_stambhu)) {
+        } else if p.has(i, |t| t.has_text_in(&jr_stambhu)) {
             p.op_optional("3.1.58", to_an);
         } else if p.has(i, |t| {
-            t.has_text(&["kf", "mf", "df", "ruh"]) && p.has_tag(T::Chandasi)
+            t.has_text_in(&["kf", "mf", "df", "ruh"]) && p.has_tag(T::Chandasi)
         }) {
             p.op("3.1.59", to_an);
         }
@@ -194,7 +194,7 @@ fn maybe_replace_cli_with_cin(p: &mut Prakriya, i: usize) {
         if p.has(i, |t| t.text == "pad") {
             p.op("3.1.60", to_cin);
         } else if p.has(i, |t| {
-            t.has_text(&["dIp", "jan", "buD", "pUr", "tAy", "pyAy"])
+            t.has_text_in(&["dIp", "jan", "buD", "pUr", "tAy", "pyAy"])
         }) {
             p.op_optional("3.1.61", to_cin);
         }
@@ -240,17 +240,17 @@ fn maybe_add_am_pratyaya_for_lit(p: &mut Prakriya) {
 
     if p.has(i, |t| t.text == "kAs" && t.has_tag(T::Pratyaya)) {
         p.op("3.1.35", add_aam);
-    } else if p.has(i, |t| !f::is_eka_ac(t) && !t.has_text(&["jAgf", "UrRu"])) {
+    } else if p.has(i, |t| !f::is_eka_ac(t) && !t.has_text_in(&["jAgf", "UrRu"])) {
         // jAgf is handled separately below.
         p.op("3.1.35.v1", add_aam);
     } else if p.has(i, |t| {
         t.has_adi(&s("ic")) && f::is_guru(t) && !t.has_u("fCa~")
     }) {
         p.op("3.1.36", add_aam);
-    } else if p.has(i, |t| t.has_text(&["day", "ay", "As"])) {
+    } else if p.has(i, |t| t.has_text_in(&["day", "ay", "As"])) {
         p.op("3.1.37", add_aam);
     } else if p.has(i, |t| {
-        t.has_text(&["uz", "jAgf"]) || (t.text == "vid" && t.gana == Some(2))
+        t.has_text_in(&["uz", "jAgf"]) || (t.text == "vid" && t.gana == Some(2))
     }) {
         let mut aam = Term::make_upadesha("Am");
         aam.add_tags(&[T::Pratyaya]);
@@ -267,7 +267,7 @@ fn maybe_add_am_pratyaya_for_lit(p: &mut Prakriya) {
             return;
         }
     } else if p.has(i, |t| {
-        t.has_text(&["BI", "hrI", "hu"]) || t.has_u("quBf\\Y")
+        t.has_text_in(&["BI", "hrI", "hu"]) || t.has_u("quBf\\Y")
     }) {
         let add_sluvat_am = |p: &mut Prakriya| {
             let mut aam = Term::make_upadesha("Am");
@@ -323,7 +323,7 @@ fn add_sarvadhatuka_vikarana(p: &mut Prakriya) {
     let stanbhu_stunbhu = ["sta\\nBu~", "stu\\nBu~", "ska\\nBu~", "sku\\nBu~", "sku\\Y"];
     let mut gana_4_declined = false;
     if p.has(i, |t| {
-        t.has_text(&[
+        t.has_text_in(&[
             "BrAS", "BlAS", "Bram", "kram", "klam", "tras", "truw", "laz",
         ])
     }) {
@@ -384,7 +384,7 @@ fn maybe_sic_lopa_before_parasmaipada(p: &mut Prakriya, i: usize, i_vikarana: us
     }
 
     let do_luk = |p: &mut Prakriya, code| p.op(code, op::t(i_vikarana, op::luk));
-    if p.has(i, |t| t.has_text(&["GrA", "De", "So", "Co", "so"])) {
+    if p.has(i, |t| t.has_text_in(&["GrA", "De", "So", "Co", "so"])) {
         let code = "2.4.78";
         // De takes luk by 2.4.77, so 2.4.78 allows aluk.
         if p.has(i, |t| t.text == "De") {
@@ -425,8 +425,8 @@ fn maybe_sic_lopa_for_tanadi_atmanepada(
     i_vikarana: usize,
     i_tin: usize,
 ) {
-    let tanadi = p.has(i, |t| t.has_text(TAN_ADI));
-    let tathasoh = p.has(i_tin, |t| t.has_text(&["ta", "TAs"]));
+    let tanadi = p.has(i, |t| t.has_text_in(TAN_ADI));
+    let tathasoh = p.has(i_tin, |t| t.has_text_in(&["ta", "TAs"]));
     if tanadi && tathasoh {
         p.op_optional("2.4.79", op::t(i_vikarana, op::luk));
     }
@@ -470,8 +470,8 @@ pub fn run(p: &mut Prakriya) -> Result<(), Box<dyn Error>> {
         None => return Ok(()),
     };
 
-    if tin.has_any_lakshana(&["lf~w", "lf~N", "lu~w"]) {
-        if tin.has_any_lakshana(&["lf~w", "lf~N"]) {
+    if tin.has_lakshana_in(&["lf~w", "lf~N", "lu~w"]) {
+        if tin.has_lakshana_in(&["lf~w", "lf~N"]) {
             p.op("3.1.33", add_vikarana("sya"));
         } else {
             p.op("3.1.33", add_vikarana("tAsi~"));

@@ -136,7 +136,7 @@ pub fn text(x: &'static str) -> impl Fn(&Term) -> bool {
 
 /// Returns whether the term's text is contained in `xs`.
 pub fn text_in(xs: &'static [&str]) -> impl Fn(&Term) -> bool {
-    move |t| t.has_text(xs)
+    move |t| t.has_text_in(xs)
 }
 
 pub fn lakshana(text: &'static str) -> impl Fn(&Term) -> bool {
@@ -144,7 +144,7 @@ pub fn lakshana(text: &'static str) -> impl Fn(&Term) -> bool {
 }
 
 pub fn lakshana_in(xs: &'static [&str]) -> impl Fn(&Term) -> bool {
-    move |t| t.has_any_lakshana(xs)
+    move |t| t.has_lakshana_in(xs)
 }
 
 /// Returns whether the term's upadesha is exactly `x`.

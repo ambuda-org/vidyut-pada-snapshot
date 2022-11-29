@@ -110,15 +110,15 @@ impl Term {
         self.lakshana.iter().any(|s| s == u)
     }
 
-    pub fn has_any_lakshana(&self, u: &[&str]) -> bool {
+    pub fn has_lakshana_in(&self, u: &[&str]) -> bool {
         self.lakshana.iter().any(|s| u.contains(&s.as_str()))
     }
 
-    pub fn has_text(&self, items: &[&str]) -> bool {
+    pub fn has_text_in(&self, items: &[&str]) -> bool {
         items.contains(&self.text.as_str())
     }
 
-    pub fn starts_with_any(&self, terms: &[&str]) -> bool {
+    pub fn has_prefix_in(&self, terms: &[&str]) -> bool {
         terms.iter().any(|t| self.text.starts_with(t))
     }
 
@@ -207,6 +207,10 @@ impl<'a> TermView<'a> {
         self.end
     }
 
+    pub fn is_padanta(&self) -> bool {
+        self.is_empty() && self.ends_word()
+    }
+
     pub fn is_empty(&self) -> bool {
         self.slice().iter().all(|t| t.text.is_empty())
     }
@@ -269,7 +273,7 @@ impl<'a> TermView<'a> {
     }
 
     pub fn has_lakshana_in(&self, items: &[&str]) -> bool {
-        self.slice().iter().any(|t| t.has_any_lakshana(items))
+        self.slice().iter().any(|t| t.has_lakshana_in(items))
     }
 
     pub fn all(&self, tags: &[Tag]) -> bool {

@@ -135,6 +135,18 @@ pub fn upadesha(p: &mut Prakriya, i: usize, sub: &str) {
     }
 }
 
+pub fn upadesha_v2(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
+    if let Some(t) = p.get_mut(i) {
+        if let Some(u) = &t.u {
+            t.lakshana.push(u.to_string());
+        }
+        t.u = Some(sub.to_string());
+        t.text = sub.to_string();
+        p.step(rule);
+        it_samjna::run(p, i).unwrap();
+    }
+}
+
 /// Complex op
 pub fn append_agama(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
     let agama = Term::make_agama(sub);
