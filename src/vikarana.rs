@@ -48,7 +48,7 @@ fn add_aam(p: &mut Prakriya) {
 
 fn replace_with(i: usize, sub: &'static str) -> impl Fn(&mut Prakriya) {
     move |p| {
-        op::upadesha_no_it(p, i + 1, sub);
+        op::upadesha_no_it(p, i, sub);
     }
 }
 

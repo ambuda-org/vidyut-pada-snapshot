@@ -11,13 +11,13 @@ rest of the text selects rules based on their priority and allows a rule to appl
 the tripādi applies rules in order and will never "go back" to apply an earlier rule.
 */
 
-use crate::char_view::{char_rule, set_at, xy, xyz};
+use crate::char_view::{char_rule, set_at, xy};
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
-use crate::sounds::{s, SoundSet, SoundMap, map_sounds};
+use crate::sounds::{map_sounds, s, SoundMap, SoundSet};
 use crate::term::Term;
 use crate::term::TermView;
 use lazy_static::lazy_static;
@@ -78,8 +78,8 @@ fn try_ra_to_la(p: &mut Prakriya) {
     }
 }
 
-/*
-fn samyoganta_and_salopa(p: &mut Prakriya):
+fn try_samyoganta_and_sa_lopa(p: &mut Prakriya) {
+    /*
     """Final samyoga. (8.2.23 - 8.2.29)"""
 
     // Exception to 8.2.23.
@@ -138,37 +138,48 @@ fn samyoganta_and_salopa(p: &mut Prakriya):
         } else if c.antya == "s" and n.adi == "D":
             op.antya("8.2.25", p, c, "")
 
-    // hrasvAd aGgAt
-    for i, c in enumerate(p.terms):
-        try:
-            n = p.terms[i + 1]
-            n2 = p.terms[i + 2]
-        except IndexError:
-            break
-        if (
-            c.antya in sounds.HRASVA
-            and n.text == "s"
-            and n2.adi in s("Jal")
-            and not c.any(T.AGAMA)
-        ):
-            op.lopa("8.2.27", p, n)
+    */
 
-    for i, _ in enumerate(p.terms[:-2]):
-        x, y, z = p.terms[i : i + 3]
-        if x.u == "iw" and y.u == "si~c" and z.u == "Iw":
-            op.lopa("8.2.28", p, y)
+    for i in 0..p.terms().len() {
+        if p.has(i, |t| t.has_antya('s')) && p.has(i + 1, |t| t.has_adi('D')) {
+            p.op_term("8.2.25", i, op::antya(""));
+        }
+    }
 
-            // sic-lopa is siddha with respect to prior rules (8.2.3 vArttika)
-            z.text = ""
-            // HACK: x should always have text at this point. Temp workaround.
-            if x.text:
-                op.antya("6.1.101", p, x, "I")
+    /*
 
-    while f.samyoganta(view):
-        last = len(view.text) - 1
-        view[last] = ""
-        p.step("8.2.23")
-*/
+        // hrasvAd aGgAt
+        for i, c in enumerate(p.terms):
+            try:
+                n = p.terms[i + 1]
+                n2 = p.terms[i + 2]
+            except IndexError:
+                break
+            if (
+                c.antya in sounds.HRASVA
+                and n.text == "s"
+                and n2.adi in s("Jal")
+                and not c.any(T.AGAMA)
+            ):
+                op.lopa("8.2.27", p, n)
+
+        for i, _ in enumerate(p.terms[:-2]):
+            x, y, z = p.terms[i : i + 3]
+            if x.u == "iw" and y.u == "si~c" and z.u == "Iw":
+                op.lopa("8.2.28", p, y)
+
+                // sic-lopa is siddha with respect to prior rules (8.2.3 vArttika)
+                z.text = ""
+                // HACK: x should always have text at this point. Temp workaround.
+                if x.text:
+                    op.antya("6.1.101", p, x, "I")
+
+        while f.samyoganta(view):
+            last = len(view.text) - 1
+            view[last] = ""
+            p.step("8.2.23")
+    */
+}
 
 /// Runs rules that change the final "h" of a dhatu.
 /// Example: muh + ta -> mugdha.
@@ -672,7 +683,10 @@ fn try_jhal_adesha(p: &mut Prakriya) {
     if let Some(i) = p.find_first(T::Abhyasa) {
         let abhyasa = p.get(i).unwrap();
         if JHAL.contains_opt(abhyasa.adi()) {
-            let sub = JHAL_TO_JASH_CAR.get(&abhyasa.adi().unwrap()).unwrap().to_string();
+            let sub = JHAL_TO_JASH_CAR
+                .get(&abhyasa.adi().unwrap())
+                .unwrap()
+                .to_string();
             p.op_term("8.4.54", i, op::adi(&sub));
         }
     }
@@ -702,14 +716,14 @@ fn try_jhal_adesha(p: &mut Prakriya) {
             }
         },
     );
-    
+
     // TODO: 8.4.56
 }
 
 pub fn run(p: &mut Prakriya) {
     try_na_lopa(p);
     try_ra_to_la(p);
-    // samyoganta_and_salopa(p)
+    try_samyoganta_and_sa_lopa(p);
     try_ha_adesha(p);
 
     for i in 0..p.terms().len() {

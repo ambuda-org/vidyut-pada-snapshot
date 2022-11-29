@@ -104,6 +104,11 @@ pub fn text(sub: &'static str) -> impl Fn(&mut Term) {
     |t| t.text = sub.to_string()
 }
 
+/// Replaces all of the text in the given term.
+pub fn text2(rule: Rule, p: &mut Prakriya, i: usize, sub: &'static str) {
+    p.op_term(rule, i, text(sub));
+}
+
 pub fn upadesha_no_it(p: &mut Prakriya, i: usize, sub: &str) {
     if let Some(t) = p.get_mut(i) {
         if let Some(u) = &t.u {
@@ -112,6 +117,11 @@ pub fn upadesha_no_it(p: &mut Prakriya, i: usize, sub: &str) {
         t.u = Some(sub.to_string());
         t.text = sub.to_string();
     }
+}
+
+pub fn insert_agama(p: &mut Prakriya, i: usize, u: &str) {
+    let agama = Term::make_agama(u);
+    p.insert_after(i, agama);
 }
 
 pub fn upadesha(p: &mut Prakriya, i: usize, sub: &str) {

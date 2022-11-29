@@ -11,17 +11,17 @@ use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
 use lazy_static::lazy_static;
 
+lazy_static! {
+    static ref A: SoundSet = s("a");
+    static ref AK: SoundSet = s("ak");
+    static ref IK: SoundSet = s("ik");
+    static ref AC: SoundSet = s("ac");
+    static ref EC: SoundSet = s("ec");
+    static ref VAL: SoundSet = s("val");
+}
+
 /// Runs various general rules of vowel sandhi.
 fn apply_general_ac_sandhi(p: &mut Prakriya) {
-    lazy_static! {
-        static ref A: SoundSet = s("a");
-        static ref AK: SoundSet = s("ak");
-        static ref IK: SoundSet = s("ik");
-        static ref AC: SoundSet = s("ac");
-        static ref EC: SoundSet = s("ec");
-        static ref VAL: SoundSet = s("val");
-    }
-
     char_rule_legacy(
         p,
         |p, x, y, i, _| {
@@ -162,6 +162,11 @@ fn sup_sandhi_after_angasya(p: &mut Prakriya) {
 
 /// Runs vowel sandhi rules that apply between terms (as opposed to between sounds).
 fn apply_ac_sandhi_at_term_boundary(p: &mut Prakriya, i: usize) {
+    let n = match p.find_next_where(i, |t| !t.text.is_empty()) {
+        Some(n) => &p.terms()[n],
+        None => return,
+    };
+
     /*
     // TODO: NI, Ap
     // Check for Agama to avoid lopa on yAs + t.
@@ -180,17 +185,15 @@ fn apply_ac_sandhi_at_term_boundary(p: &mut Prakriya, i: usize) {
     ) {
         op.lopa("6.1.69", p, p.terms[-1])
     }
+    */
 
-    if c.antya in s("a") && n.text == "us" {
-        op.antya("6.1.96", p, c, "")
+    if p.has(i, |t| t.antya() == Some('a') || t.antya() == Some('A')) && n.text == "us" {
+        p.op_term("6.1.96", i, op::antya(""));
 
     // ekaH pUrvapara (6.1.84)
-
-    } else if c.u == "Aw" && n.adi in s("ik") {
-        c.text = ""
-        op.adi("6.1.90", p, n, sounds.vrddhi(n.adi))
+    } else if p.has(i, f::u("Aw")) && n.has_adi(&*IK) {
+        p.op_term("6.1.90", i, op::text(""));
     }
-    */
 }
 
 fn run_common(p: &mut Prakriya) {

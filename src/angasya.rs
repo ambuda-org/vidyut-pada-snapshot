@@ -8,15 +8,21 @@
 
 use crate::abhyasasya;
 use crate::asiddhavat;
+use crate::char_view::{char_rule, get_at, set_at, xy};
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
-use crate::sounds::s;
+use crate::sounds::{s, SoundSet};
 use crate::sup_adesha;
 use crate::term::{Term, TermView};
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref I_U: SoundSet = s("i u");
+}
 
 /// Applies rules that replace an initial "J" in a pratyaya with the appropriate sounds.
 /// (7.1.3 - 7.1.7)
@@ -165,7 +171,7 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) {
         return;
     }
 
-    let n = match TermView::new(p.terms(), i + 1) {
+    let n = match p.view(i + 1) {
         Some(n) => n,
         None => return,
     };
@@ -564,15 +570,8 @@ fn try_tas_asti_lopa(p: &mut Prakriya, i: usize) {
     }
 }
 
-fn run_for_each_2(p: &mut Prakriya, index: usize) {
+fn run_for_each_2(p: &mut Prakriya, i: usize) {
     /*
-    terms = p.terms
-
-    c = terms[index]
-    if not c.text:
-        return
-    n = TermView.make_pratyaya(p, index)
-
     nittva(p, index)
 
     if n:
@@ -595,20 +594,21 @@ fn run_for_each_2(p: &mut Prakriya, index: usize) {
         op.antya("7.4.49", p, c, "t")
     */
 
-    try_tas_asti_lopa(p, index);
+    try_tas_asti_lopa(p, i);
 
-    /*
-    if c.u in ("dIDIN", "vevIN") and n.adi in s("i u"):
-        op.antya("7.4.53", p, c, "")
+    if let Some(n) = p.view(i + 1) {
+        if p.has(i, f::u_in(&["dIDIN", "vevIN"])) && n.has_adi(&*I_U) {
+            p.op_term("7.4.53", i, op::antya(""));
+        }
+    };
 
     // Must occur before guna and after 7.3.77 (gam -> gacC).
-    samhitayam_tuk(p)
+    samhitayam_tuk(p);
 
     // Vrddhi takes priority over guna. For example, Nic is Ardhadhatuka (guna)
     // and Nit (vrddhi), but it will cause vrddhi if possible.
-    */
-    try_vrddhi_adesha(p, index);
-    try_guna_adesha(p, index);
+    try_vrddhi_adesha(p, i);
+    try_guna_adesha(p, i);
 
     /*
     // TODO: 7.4.23-4
@@ -617,29 +617,30 @@ fn run_for_each_2(p: &mut Prakriya, index: usize) {
     */
 }
 
+fn samhitayam_tuk(p: &mut Prakriya) {
+    char_rule(p, xy(|x, y| al::is_hrasva(x) && y == 'C'), |p, _, i| {
+        // tena cicchidatuḥ, cicchiduḥ ityatra tukabhyāsasya grahaṇena na
+        // gṛhyate iti halādiḥśeṣeṇa na nivartyate
+        // -- kAzikA
+        if let Some(t) = get_at(p, i) {
+            if t.has_tag(T::Abhyasa) {
+                return false;
+            }
+        }
+
+        set_at(p, i + 1, "tC");
+        p.step("6.1.73");
+        true
+    });
+
+    char_rule(p, xy(|x, y| al::is_dirgha(x) && y == 'C'), |p, _, i| {
+        set_at(p, i + 1, "tC");
+        p.step("6.1.73");
+        true
+    });
+}
+
 /*
-fn samhitayam_tuk(p: Prakriya):
-    view = StringView(p.terms)
-    vtext = view.text
-
-    for match in re.finditer("[aiufx](C)", vtext):
-        index = match.span(1)[0]
-        term = view.term_for_index(index)
-        if term.any(T.ABHYASA):
-            // tena cicchadatuḥ, cicchiduḥ ityatra tukabhyāsasya grahaṇena na
-            // gṛhyate iti halādiḥśeṣeṇa na nivartyate
-            // -- kAzikA
-            pass
-        else:
-            view[match.span(1)[0]] = "tC"
-            p.step("6.1.73")
-
-    match = re.search("[AIUFXeEoO](C)", vtext)
-    if match:
-        view[match.span(1)[0]] = "tC"
-        p.step("6.1.75")
-
-
 fn cajoh_kuh(p: Prakriya, index: int):
     """Conversion of cu~ to ku~ in various contexts.
 
@@ -1125,13 +1126,7 @@ pub fn run_remainder(p: &mut Prakriya) {
     */
 
     for index in 0..p.terms().len() {
-        /*
-        c = p.terms[index]
-        if not c.text:
-            continue
-
-        asiddhavat.run_after_guna(p, index)
-        */
+        asiddhavat::run_after_guna(p, index);
         dhatu_rt_adesha(p, index);
         try_ato_dirgha(p, index);
     }

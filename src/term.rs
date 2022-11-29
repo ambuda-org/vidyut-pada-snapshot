@@ -215,6 +215,13 @@ impl<'a> TermView<'a> {
         self.end == self.terms.len() - 1
     }
 
+    fn matches_sound_pattern(&self, c: Option<char>, pattern: impl Pattern) -> bool {
+        match c {
+            Some(c) => pattern.matches(c),
+            None => false,
+        }
+    }
+
     pub fn adi(&self) -> Option<char> {
         for t in self.slice() {
             match t.adi() {
@@ -223,6 +230,10 @@ impl<'a> TermView<'a> {
             }
         }
         None
+    }
+
+    pub fn has_adi(&self, p: impl Pattern) -> bool {
+        self.matches_sound_pattern(self.adi(), p)
     }
 
     pub fn antya(&self) -> Option<char> {

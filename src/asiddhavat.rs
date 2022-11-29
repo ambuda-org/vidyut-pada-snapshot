@@ -1,6 +1,7 @@
 /*!
-asiddhavat (6.4.22 - 6.4.175 [end])
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+asiddhavat
+==========
+(6.4.22 - 6.4.175 [end])
 
 Rules in the *asiddhavat* rules do not interfere with each other. That is, if
 a rule A would ordinary block a rule B, both are allowed to apply if they are
@@ -563,3 +564,14 @@ fn run_after_guna(p: Prakriya, index: int):
     if n.terms[0].all("q"):
         op.ti("6.4.143", p, c, "")
 */
+
+pub fn run_after_guna(p: &mut Prakriya, i: usize) {
+    let n = match p.view(i + 1) {
+        Some(n) => n,
+        None => return,
+    };
+
+    if n.has_tag(T::qit) {
+        p.op_term("6.4.143", i, op::ti(""));
+    }
+}
