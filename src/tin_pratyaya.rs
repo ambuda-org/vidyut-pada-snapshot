@@ -253,10 +253,10 @@ fn maybe_do_lot_and_nit_siddhi(p: &mut Prakriya, la: La) {
     };
 
     if la == La::Lot || la.is_nit() {
-        let tas_thas = &["tas", "Tas", "Ta", "mi"];
+        let tas_thas = &["tas", "Tas", "Ta", "mip"];
         let taam_tam = &["tAm", "tam", "ta", "am"];
-        if p.has(i, |t| t.has_text(tas_thas)) {
-            p.op("3.4.101", |p| op::text_yatha(p, i, tas_thas, taam_tam));
+        if p.has(i, |t| t.has_u_in(tas_thas)) {
+            p.op("3.4.101", |p| op::upadesha_yatha(p, i, tas_thas, taam_tam));
         }
 
         if p.has(i, |t| t.has_tag(T::Parasmaipada)) {

@@ -180,42 +180,42 @@ pub fn run(p: &mut Prakriya) {
     }
 
     /*
-       if dhatu.u == "i\\R" and la.any("k"):
-           op.adi("7.4.69", p, c, "I")
+   if dhatu.u == "i\\R" and la.any("k"):
+       op.adi("7.4.69", p, c, "I")
 
-       # liT changes (7.4.70 - 7.4.74)
-       if la.all("li~w"):
-           if c.text == "a":
-               op.text("7.4.70", p, c, "A")
-               # From the Kashika-vrtti:
-               #
-               #     ṛkāraikadeśo repho halgrahaṇena gṛhyate, tena iha api dvihalo
-               #     'ṅgasya nuḍāgamo bhavati. ānṛdhatuḥ, ānṛdhuḥ.
-               #
-               #
-               if dhatu.antya in s("hal") and dhatu.upadha in s("f hal"):
-                   # 'A' acepted only by some grammarians
-                   if dhatu.adi == "A":
-                       op.optional(op.insert_agama_after_by_term, "7.4.71", p, c, "nu~w")
-                   else:
-                       op.insert_agama_after_by_term("7.4.71", p, c, "nu~w")
-               # For aSnoti only, not aSnAti
-               } else if  dhatu.text == "aS" and dhatu.gana == 5:
-                   op.insert_agama_after_by_term("7.4.72", p, c, "nu~w")
-           # 2 is for as -> bhU
-           } else if  dhatu.text == "BU" and dhatu.gana in (1, 2):
-               op.text("7.4.73", p, c, "ba")
-           # TODO: 7.4.74
+   # liT changes (7.4.70 - 7.4.74)
+   if la.all("li~w"):
+       if c.text == "a":
+           op.text("7.4.70", p, c, "A")
+           # From the Kashika-vrtti:
+           #
+           #     ṛkāraikadeśo repho halgrahaṇena gṛhyate, tena iha api dvihalo
+           #     'ṅgasya nuḍāgamo bhavati. ānṛdhatuḥ, ānṛdhuḥ.
+           #
+           #
+           if dhatu.antya in s("hal") and dhatu.upadha in s("f hal"):
+               # 'A' acepted only by some grammarians
+               if dhatu.adi == "A":
+                   op.optional(op.insert_agama_after_by_term, "7.4.71", p, c, "nu~w")
+               else:
+                   op.insert_agama_after_by_term("7.4.71", p, c, "nu~w")
+           # For aSnoti only, not aSnAti
+           } else if  dhatu.text == "aS" and dhatu.gana == 5:
+               op.insert_agama_after_by_term("7.4.72", p, c, "nu~w")
+       # 2 is for as -> bhU
+       } else if  dhatu.text == "BU" and dhatu.gana in (1, 2):
+           op.text("7.4.73", p, c, "ba")
+       # TODO: 7.4.74
 
-       # Slu changes
-       if p.find(lambda x: x.all(T.SLU)):
-           if dhatu.text in ("nij", "vij", "viz"):
-               op.antya("7.4.75", p, c, sounds.guna(c.antya))
-           } else if  dhatu.u in ("quBf\\Y", "mA\\N", "o~hA\\N"):
-               op.antya("7.4.76", p, c, "i")
-           } else if  dhatu.text in ("f", "pf", "pF"):
-               op.antya("7.4.77", p, c, "i")
-           # TODO: 7.4.78
+   # Slu changes
+   if p.find(lambda x: x.all(T.SLU)):
+       if dhatu.text in ("nij", "vij", "viz"):
+           op.antya("7.4.75", p, c, sounds.guna(c.antya))
+       } else if  dhatu.u in ("quBf\\Y", "mA\\N", "o~hA\\N"):
+           op.antya("7.4.76", p, c, "i")
+       } else if  dhatu.text in ("f", "pf", "pF"):
+           op.antya("7.4.77", p, c, "i")
+       # TODO: 7.4.78
 
 
     */

@@ -11,13 +11,13 @@ rest of the text selects rules based on their priority and allows a rule to appl
 the tripādi applies rules in order and will never "go back" to apply an earlier rule.
 */
 
-use crate::char_view::{char_rule, set_at, xy};
+use crate::char_view::{char_rule, set_at, xy, xyz};
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
-use crate::sounds::{s, SoundSet};
+use crate::sounds::{s, SoundSet, SoundMap, map_sounds};
 use crate::term::Term;
 use crate::term::TermView;
 use lazy_static::lazy_static;
@@ -25,6 +25,11 @@ use lazy_static::lazy_static;
 lazy_static! {
     static ref INKU: SoundSet = s("iR2 ku~");
     static ref JHAL: SoundSet = s("Jal");
+    static ref JHASH: SoundSet = s("JaS");
+    static ref KHAR: SoundSet = s("Kar");
+    static ref JHAL_TO_CAR: SoundMap = map_sounds("Jal", "car");
+    static ref JHAL_TO_JASH: SoundMap = map_sounds("Jal", "jaS");
+    static ref JHAL_TO_JASH_CAR: SoundMap = map_sounds("Jal", "jaS car");
     static ref IK: SoundSet = s("ik");
     static ref YAY: SoundSet = s("yay");
     static ref HAL: SoundSet = s("hal");
@@ -647,19 +652,32 @@ fn try_to_savarna(p: &mut Prakriya) {
     */
 }
 
-/*
-fn per_term_2(p: &mut Prakriya, i: usize):
-    try:
-        n = [u for u in p.terms[index + 1 :] if u.text][0]
-    except IndexError:
-        n = None
+fn try_jhal_adesha(p: &mut Prakriya) {
+    char_rule(
+        p,
+        xy(|x, y| JHAL.contains_char(x) && JHASH.contains_char(y)),
+        |p, text, i| {
+            let x = text.as_bytes()[i] as char;
+            let sub = JHAL_TO_JASH.get(&x).unwrap();
+            if x != *sub {
+                set_at(p, i, &sub.to_string());
+                p.step("8.4.53");
+                true
+            } else {
+                false
+            }
+        },
+    );
 
-    c = p.terms[index]
+    if let Some(i) = p.find_first(T::Abhyasa) {
+        let abhyasa = p.get(i).unwrap();
+        if JHAL.contains_opt(abhyasa.adi()) {
+            let sub = JHAL_TO_JASH_CAR.get(&abhyasa.adi().unwrap()).unwrap().to_string();
+            p.op_term("8.4.54", i, op::adi(&sub));
+        }
+    }
 
-    al_adesha("8.4.53", p, index, None, "Jal", "JaS", "jaS")
-    if c.all(T.ABHYASA):
-        al_adesha("8.4.54", p, index, None, "Jal", None, "jaS car")
-
+    /*
     // 8.2.38, but indicated here by use of "dadhas" in the rule.
     sdhvoh = n and (n.adi == "s" or n.all(T.PRATYAYA) and n.u.startswith("Dv"))
     if c.u == "quDA\\Y" and c.text == "D" and (n.adi in s("t T") or sdhvoh):
@@ -667,13 +685,26 @@ fn per_term_2(p: &mut Prakriya, i: usize):
         prev.text = "Da"
         c.text = "d"
         p.step("8.2.38")
+    */
 
-    al_adesha("8.4.55", p, index, None, "Jal", "Kar", "car")
-
-    if c.antya in s("Jal") and not n:
-        mapping = sounds.map_sounds(s("Jal"), s("car"))
-        op.optional(op.antya, "8.4.56", p, c, mapping[c.antya])
-*/
+    char_rule(
+        p,
+        xy(|x, y| JHAL.contains_char(x) && KHAR.contains_char(y)),
+        |p, text, i| {
+            let x = text.as_bytes()[i] as char;
+            let sub = JHAL_TO_CAR.get(&x).unwrap();
+            if x != *sub {
+                set_at(p, i, &sub.to_string());
+                p.step("8.4.55");
+                true
+            } else {
+                false
+            }
+        },
+    );
+    
+    // TODO: 8.4.56
+}
 
 pub fn run(p: &mut Prakriya) {
     try_na_lopa(p);
@@ -693,10 +724,6 @@ pub fn run(p: &mut Prakriya) {
     try_change_stu_to_parasavarna(p);
     // dha(p);
 
-    /*
-    for i, _ in enumerate(p.terms):
-        per_term_2(p, i)
-    */
-
+    try_jhal_adesha(p);
     try_to_savarna(p);
 }

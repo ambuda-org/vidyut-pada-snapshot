@@ -5,6 +5,7 @@ use std::collections::{HashMap, HashSet};
 pub type Rule = &'static str;
 
 /// Represents a step of the derivation.
+#[derive(Debug)]
 pub struct Step {
     /// The rule that produced the current step.
     pub rule: Rule,

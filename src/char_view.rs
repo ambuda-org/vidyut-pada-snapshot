@@ -36,6 +36,7 @@ pub fn char_rule(
     filter: impl Fn(&mut Prakriya, &str, usize) -> bool,
     operator: impl Fn(&mut Prakriya, &str, usize) -> bool,
 ) {
+    let mut counter = 0;
     loop {
         let text = p.text();
         let mut changed_text = false;
@@ -54,6 +55,11 @@ pub fn char_rule(
         if !changed_text {
             break;
         }
+
+        counter += 1;
+        if counter > 10 {
+            panic!("Possible infinite loop: {:?}", p.history());
+        }
     }
 }
 
@@ -66,6 +72,17 @@ pub fn xy(inner: impl Fn(char, char) -> bool) -> impl Fn(&mut Prakriya, &str, us
             _ => return false,
         };
         inner(x, y)
+    }
+}
+
+pub fn xyz(p: &Prakriya, text: &str, i: usize) -> Option<(char, char, char)> {
+    let x = text.as_bytes().get(i);
+    let y = text.as_bytes().get(i + 1);
+    let z = text.as_bytes().get(i + 2);
+
+    match (x, y, z) {
+        (Some(a), Some(b), Some(c)) => Some((*a as char, *b as char, *c as char)),
+        _ => None,
     }
 }
 
