@@ -10,6 +10,7 @@ use crate::abhyasasya;
 use crate::asiddhavat;
 use crate::char_view::{char_rule, get_at, set_at, xy};
 use crate::constants::Tag as T;
+use crate::dhatu_gana as gana;
 use crate::filters as f;
 use crate::it_samjna;
 use crate::operators as op;
@@ -21,6 +22,8 @@ use crate::term::{Term, TermView};
 use lazy_static::lazy_static;
 
 lazy_static! {
+    static ref AC: SoundSet = s("ac");
+    static ref JHAL: SoundSet = s("Jal");
     static ref I_U: SoundSet = s("i u");
 }
 
@@ -349,21 +352,24 @@ fn shiti(p: Prakriya, index: int):
         op.text("7.3.76", p, c, "krAm")
     } else if c.u in ("izu~", "ga\\mx~", "ya\\ma~"):
         op.antya("7.3.77", p, c, "C")
+*/
 
+/// Runs rules that add nu~m to the base.
+///
+/// Example: jaBate -> jamBate
+///
+/// (7.1.58 - 7.1.83)
+fn try_add_num_agama(p: &mut Prakriya) {
+    let i = match p.find_last(T::Dhatu) {
+        Some(i) => i,
+        None => return,
+    };
+    let n = match p.view(i + 1) {
+        Some(n) => n,
+        None => return,
+    };
 
-fn num_agama(p: Prakriya, index: int):
-    """Rules that add nu~m to the base.
-
-    (7.1.58 - 7.1.83)
-
-    :param p:
-    :param index:
-    """
-    c = p.terms[index]
-    n = TermView.make_pratyaya(p, index)
-    if not n:
-        return
-
+    /*
     last = p.terms[-1]
     if last.text == "Am":
         prev = p.terms[-2]
@@ -376,29 +382,38 @@ fn num_agama(p: Prakriya, index: int):
             op.insert_agama_before("7.1.54", p, last, "nu~w")
         } else if prev.any(T.SAT) or prev.text == "catur":
             op.insert_agama_before("7.1.55", p, last, "nu~w")
+    */
 
-    // 7.1.58 (idito nuM dhAtoH) is in `dhatu_karya`
+    // 7.1.58 (idito nuM dhAtoH) is in `dhatu_karya`, so we skip it here.
 
-    if c.u in MUC_ADI and n.terms[0].u == "Sa":
-        op.mit("7.1.59", p, c, "n")
-    } else if c.u in TRMPH_ADI and n.terms[0].u == "Sa":
-        op.mit("7.1.59.v1", p, c, "n")
-    } else if c.text in ("masj", "naS") and n.adi in s("Jal"):
-        op.mit("7.1.60", p, c, "n")
+    let anga = &p.terms()[i];
+    if anga.has_u_in(gana::MUC_ADI) && n.has_u("Sa") {
+        p.op_term("7.1.59", i, op::mit("n"));
+    } else if anga.has_u_in(gana::TRMPH_ADI) && n.has_u("Sa") {
+        p.op_term("7.1.59.v1", i, op::mit("n"));
+    } else if anga.has_text_in(&["masj", "naS"]) && n.has_adi(&*JHAL) {
+        p.op_term("7.1.60", i, op::mit("n"));
+    }
 
-    liti = n.any("li~w")
-    if n.adi in s("ac"):
-        if c.u in ("ra\\Da~", "jaBI~\\"):
-            if c.u == "ra\\Da~" and f.is_it_agama(n.terms[0]) and not liti:
-                p.step("7.1.62")
-            else:
-                op.mit("7.1.61", p, c, "n")
-        } else if c.u == "ra\\Ba~\\" and n.terms[0].u != "Sap" and not liti:
-            op.mit("7.1.63", p, c, "n")
-        } else if c.u == "qula\\Ba~\\z" and n.terms[0].u != "Sap" and not liti:
+    let anga = &p.terms()[i];
+    let n = p.view(i + 1).unwrap();
+    let liti = n.has_lakshana("li~w");
+    if n.has_adi(&*AC) {
+        if anga.has_u_in(&["ra\\Da~", "jaBI~\\"]) {
+            if anga.has_u("ra\\Da~") && f::is_it_agama(n.first().unwrap()) && !liti {
+                p.step("7.1.62");
+            } else {
+                p.op_term("7.1.61", i, op::mit("n"));
+            }
+        } else if anga.has_u("ra\\Ba~\\") && !n.has_u("Sap") && !liti {
+            p.op_term("7.1.63", i, op::mit("n"));
+        } else if anga.has_u("qula\\Ba~\\z") && !n.has_u("Sap") && !liti {
             // TODO: 7.1.65 - 7.1.69
-            op.mit("7.1.64", p, c, "n")
+            p.op_term("7.1.64", i, op::mit("n"));
+        }
+    }
 
+    /*
     if n.any(T.SARVANAMASTHANA):
         // TODO: aYc
         if c.any("u", "f") and not c.any(T.DHATU):
@@ -407,8 +422,10 @@ fn num_agama(p: Prakriya, index: int):
             op.mit("7.1.72", p, c, "n")
         if c.any in s("ik") and n.adi in s("ac") and n.any(T.VIBHAKTI):
             op.mit("7.1.73", p, c, "n")
+    */
+}
 
-
+/*
 fn iit_agama(p: Prakriya):
     for index, _ in enumerate(p.terms):
         c = p.terms[index]
@@ -1095,11 +1112,8 @@ pub fn run_remainder(p: &mut Prakriya) {
         asiddhavat::run_before_guna(p, i);
     }
 
-    /*
-        // num-Agama must come after asiddhavat rule 6.2.24, which causes na-lopa.
-        num_agama(p, index)
-        index += 1
-    */
+    // num-Agama must come after asiddhavat rule 6.2.24, which causes na-lopa.
+    try_add_num_agama(p);
 
     try_sic_vrddhi(p);
 

@@ -163,3 +163,7 @@ pub fn is_asti(t: &Term) -> bool {
         None => false,
     }
 }
+
+pub fn is_it_agama(t: &Term) -> bool {
+    t.has_u("iw") && t.has_tag(T::Agama)
+}
