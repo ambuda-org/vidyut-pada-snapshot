@@ -273,7 +273,7 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) {
 }
 
 /*
-fn shiti(p: Prakriya, index: int):
+fn shiti(p: &mut Prakriya, index: int):
     c = p.terms[index]
     ns = [u for u in p.terms[index + 1 :] if u.text]
     if not ns:
@@ -352,6 +352,8 @@ fn shiti(p: Prakriya, index: int):
         op.text("7.3.76", p, c, "krAm")
     } else if c.u in ("izu~", "ga\\mx~", "ya\\ma~"):
         op.antya("7.3.77", p, c, "C")
+    }
+}
 */
 
 /// Runs rules that add nu~m to the base.
@@ -1092,7 +1094,7 @@ fn try_anga_adesha_before_vibhakti(p: &mut Prakriya) {
 
 pub fn run_remainder(p: &mut Prakriya) {
     sup_adesha::run(p);
-    try_pratyaya_adesha(p);
+
     try_anga_adesha_before_vibhakti(p);
 
     // `try_ksa_lopa` must run before `try_sarvadhatuke` so that at-lopa (since `ksa` ends in `a`)

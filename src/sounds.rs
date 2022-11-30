@@ -7,6 +7,7 @@ pub type SoundMap = HashMap<Sound, Sound>;
 lazy_static! {
     static ref SUTRAS: Vec<Sutra> = create_shiva_sutras();
     static ref SOUND_PROPS: HashMap<Sound, Uccarana> = create_sound_props();
+    static ref HAL: SoundSet = s("hal");
 }
 
 pub trait Pattern {
@@ -158,10 +159,17 @@ pub fn is_ac(c: Sound) -> bool {
 }
 
 pub fn is_hal(c: Sound) -> bool {
-    lazy_static! {
-        static ref AC: SoundSet = s("hal");
-    }
-    AC.contains_char(c)
+    HAL.contains_char(c)
+}
+
+pub fn is_samyogadi(text: &str) -> bool {
+    let mut chars = text.chars();
+    HAL.contains_opt(chars.next()) && HAL.contains_opt(chars.next())
+}
+
+pub fn is_samyoganta(text: &str) -> bool {
+    let mut chars = text.chars().rev();
+    HAL.contains_opt(chars.next()) && HAL.contains_opt(chars.next())
 }
 
 pub fn to_guna(s: Sound) -> Option<&'static str> {

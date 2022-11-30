@@ -127,58 +127,61 @@ fn try_samyoganta_and_sa_lopa(p: &mut Prakriya) {
             view.delete_span(start - lopa_offset, end - lopa_offset)
             p.step("8.2.29")
             lopa_offset += 1
-
-    for c, n in per_term(p):
-        if not n:
-            continue
-        if c.antya == "r" and n.text == "s" and n is p.terms[-1]:
-            op.adi("8.2.24", p, n, "")
-        // Per kAzikA, applies only to s of si~c. But this seems to cause
-        // problems e.g. for tAs + Dve.
-        } else if c.antya == "s" and n.adi == "D":
-            op.antya("8.2.25", p, c, "")
-
     */
 
     for i in 0..p.terms().len() {
-        if p.has(i, |t| t.has_antya('s')) && p.has(i + 1, |t| t.has_adi('D')) {
+        let n = i + 1;
+        if p.terms().get(n).is_none() {
+            break;
+        }
+
+        if p.has(i, |t| t.has_antya('r')) && p.has(n, |t| t.text == "s") && n == p.terms().len() - 1 {
+            p.op_term("8.2.24", i, op::adi(""));
+        } else if p.has(i, |t| t.has_antya('s')) && p.has(i + 1, |t| t.has_adi('D')) {
+            // Per kAzikA, applies only to s of si~c. But this seems to cause
+            // problems e.g. for tAs + Dve.
             p.op_term("8.2.25", i, op::antya(""));
         }
     }
 
     /*
 
-        // hrasvAd aGgAt
-        for i, c in enumerate(p.terms):
-            try:
-                n = p.terms[i + 1]
-                n2 = p.terms[i + 2]
-            except IndexError:
-                break
-            if (
-                c.antya in sounds.HRASVA
-                and n.text == "s"
-                and n2.adi in s("Jal")
-                and not c.any(T.AGAMA)
-            ):
-                op.lopa("8.2.27", p, n)
+    // hrasvAd aGgAt
+    for i, c in enumerate(p.terms):
+        try:
+            n = p.terms[i + 1]
+            n2 = p.terms[i + 2]
+        except IndexError:
+            break
+        if (
+            c.antya in sounds.HRASVA
+            and n.text == "s"
+            and n2.adi in s("Jal")
+            and not c.any(T.AGAMA)
+        ):
+            op.lopa("8.2.27", p, n)
 
-        for i, _ in enumerate(p.terms[:-2]):
-            x, y, z = p.terms[i : i + 3]
-            if x.u == "iw" and y.u == "si~c" and z.u == "Iw":
-                op.lopa("8.2.28", p, y)
+    for i, _ in enumerate(p.terms[:-2]):
+        x, y, z = p.terms[i : i + 3]
+        if x.u == "iw" and y.u == "si~c" and z.u == "Iw":
+            op.lopa("8.2.28", p, y)
 
-                // sic-lopa is siddha with respect to prior rules (8.2.3 vArttika)
-                z.text = ""
-                // HACK: x should always have text at this point. Temp workaround.
-                if x.text:
-                    op.antya("6.1.101", p, x, "I")
-
-        while f.samyoganta(view):
-            last = len(view.text) - 1
-            view[last] = ""
-            p.step("8.2.23")
+            // sic-lopa is siddha with respect to prior rules (8.2.3 vArttika)
+            z.text = ""
+            // HACK: x should always have text at this point. Temp workaround.
+            if x.text:
+                op.antya("6.1.101", p, x, "I")
     */
+
+    char_rule(
+        p,
+        |p, text, i| al::is_samyoganta(text) && i == text.len() - 1,
+        |p, _, i| {
+            set_at(p, i, "");
+            p.step("8.3.24");
+            true
+        },
+    );
 }
 
 /// Runs rules that change the final "h" of a dhatu.
@@ -390,14 +393,11 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
 }
 
 /// Runs rules that change `n` to `R`.
-/// Example: muh + ta -> mugdha.
+/// Example: krInAti -> krIRAti.
 ///
 /// (8.2.31 - 8.2.35)
-/*
 fn try_natva(p: &mut Prakriya) {
-
-    :param p: the prakriya
-    """
+/*
     i, u = p.find_first(T.DHATU)
     if u and (
         (u.u == "kzuBa~" and p.terms[i + 1].u in {"SnA", "SAnac"})
@@ -427,6 +427,7 @@ fn try_natva(p: &mut Prakriya) {
                     p.step("8.4.1-v")
 }
 */
+}
 
 /// Converts "m" and "n" to the anusvara when a consonant follows.
 ///
@@ -758,9 +759,7 @@ pub fn run(p: &mut Prakriya) {
 
     try_murdhanya(p);
     try_mn_to_anusvara(p);
-    /*
-    try_natva(p)
-    */
+    try_natva(p);
     try_change_stu_to_parasavarna(p);
     // dha(p);
 

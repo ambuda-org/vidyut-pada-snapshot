@@ -49,8 +49,9 @@ impl Prakriya {
         p
     }
 
-    pub fn set_options(&mut self, options: Vec<RuleChoice>) {
-        self.options_config = options;
+    pub fn set_options(&mut self, options: &[RuleChoice]) {
+        self.options_config.clear();
+        self.options_config.extend(options);
     }
 
     // Term accessors

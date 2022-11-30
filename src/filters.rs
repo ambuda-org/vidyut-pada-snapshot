@@ -33,14 +33,12 @@ pub fn is_eka_ac(t: &Term) -> bool {
 
 /// Returns whether the term begins with a conjunct consonant.
 pub fn is_samyogadi(t: &Term) -> bool {
-    let mut chars = t.text.chars();
-    HAL.contains_opt(chars.next()) && HAL.contains_opt(chars.next())
+    al::is_samyogadi(&t.text)
 }
 
 /// Returns whether the term ends in a conjunct consonant.
 pub fn is_samyoganta(t: &Term) -> bool {
-    let mut chars = t.text.chars().rev();
-    HAL.contains_opt(chars.next()) && HAL.contains_opt(chars.next())
+    al::is_samyoganta(&t.text)
 }
 
 /// Returns whether the term is a pratyaya with exactly one sound.
