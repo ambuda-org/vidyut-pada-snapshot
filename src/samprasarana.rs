@@ -1,124 +1,137 @@
-# Must follow atidesha for kit-Nit of suffixes
+use crate::constants::Tag as T;
+use crate::dhatu_gana as gana;
+use crate::filters as f;
+use crate::operators as op;
+/// Applies samprasarana changes as needed.
+///
+/// Order of operations:
+/// - Must follow atidesha so that suffixes have the kit/Nit annotations necessary to cause
+///   samprasanara.
+use crate::prakriya::{Prakriya, Rule};
+use crate::term::Term;
 
-from padmini import filters as f
-from padmini import operations as op
-from padmini.prakriya import Prakriya, Term
-from padmini.constants import Tag as T
-from padmini.term_views import TermView
-from padmini.dhatu_gana import YAJ_ADI
+fn is_vaci_svapi(t: &Term) -> bool {
+    t.has_tag(T::Dhatu)
+        && (t.has_u_in(&["va\\ca~", "Yizva\\pa~"])
+            || t.has_u_in(gana::YAJ_ADI)
+            || t.has_u("va\\ci~"))
+}
 
+fn is_grahi_jya(t: &Term) -> bool {
+    t.has_tag(T::Dhatu)
+        && t.has_u_in(&[
+            "graha~^",
+            "jyA\\",
+            // vayi~ replaces ve\\Y in 2.4.41
+            "vayi~",
+            "vya\\Da~",
+            "vaSa~",
+            "vyaca~",
+            "o~vrascU~",
+            "pra\\Ca~",
+            "Bra\\sja~^",
+            // not sure how to handle "vay" root
+            "vaya~\\",
+        ])
+}
 
-fn is_vaci_svapi(dhatu: Term):
-    return (
-        dhatu.u in ("va\\ca~", "Yizva\\pa~")
-        or dhatu.u in YAJ_ADI
-        # adesha for brUY
-        or (dhatu.u == "va\\ci~")
-    )
+/// Runs a hacky version of samprasarana that runs 6.1.108 (samprasAraNAcca) immediately.
+///
+/// TODO: properly annotade 6.1.108 and related rules here.
+fn try_vaci_svapi_samprasarana(rule: Rule, p: &mut Prakriya, i: usize) {
+    let before = &[
+        "vac", "svap", "yaj", "vap", "vah", "vas", "ve", "vye", "hve", "vad", "Svi",
+    ];
+    let after = &[
+        "uc", "sup", "ij", "up", "uh", "us", "u", "vI", "hU", "ud", "SU",
+    ];
+    let text = &p.terms()[i].text;
+    if let Some(j) = before.iter().position(|x| x == text) {
+        p.op_term(rule, i, op::text(after[j]));
+    }
+}
 
+fn try_grahi_jya_samprasarana(rule: Rule, p: &mut Prakriya, i: usize) {
+    let before = &[
+        "grah", "jyA", "vay", "vyaD", "vaS", "vyac", "vrasc", "praC", "Brasj",
+    ];
+    let after = &["gfh", "ji", "uy", "viD", "uS", "vic", "vfSc", "pfC", "Bfsj"];
 
-fn vaci_svapi_samprasarana(rule, p: Prakriya, t: Term):
-    # HACK: hacky samprasarana
-    before = (
-        "vac",
-        "svap",
-        "yaj",
-        "vap",
-        "vah",
-        "vas",
-        "ve",
-        "vye",
-        "hve",
-        "vad",
-        "Svi",
-    )
-    after = ("uc", "sup", "ij", "up", "uh", "us", "u", "vI", "hU", "ud", "SU")
-    assert len(before) == len(after)
-    mapping = dict(zip(before, after))
-    # HACK: hacky samprasarana
-    if t.text in mapping:
-        op.text(rule, p, t, mapping[t.text])
+    let text = &p.terms()[i].text;
+    if let Some(j) = before.iter().position(|x| x == text) {
+        p.op_term(rule, i, op::text(after[j]));
+    }
+}
 
+pub fn run_for_dhatu(p: &mut Prakriya) {
+    p.step("for dhatu");
+    let i = match p.find_first(T::Dhatu) {
+        Some(i) => i,
+        None => return,
+    };
+    let n = match p.view(i + 1) {
+        Some(n) => n,
+        None => return,
+    };
 
-fn is_grahi_jya(dhatu: Term):
-    # vayi~ replaces ve\\Y in 2.4.41
-    return dhatu.u in {
-        "graha~^",
-        "jyA\\",
-        "vayi~",
-        "vya\\Da~",
-        "vaSa~",
-        "vyaca~",
-        "o~vrascU~",
-        "pra\\Ca~",
-        "Bra\\sja~^",
-        # not sure how to handle "vay" root
-        "vaya~\\",
+    let dhatu = &p.terms()[i];
+    if is_vaci_svapi(dhatu) && n.has_tag(T::kit) {
+        if dhatu.has_u("ve\\Y") && n.has_lakshana("li~w") {
+            p.step("6.1.40");
+        } else {
+            try_vaci_svapi_samprasarana("6.1.15", p, i);
+        }
+    } else if is_grahi_jya(dhatu) && n.any(&[T::kit, T::Nit]) {
+        try_grahi_jya_samprasarana("6.1.16", p, i);
+        if p.has(i, |t| t.text == "uy" && t.has_u("vayi~")) {
+            p.op_optional("6.1.39", op::t(i, op::text("uv")));
+        }
     }
 
+    let dhatu = &p.terms()[i];
+    let n = p.view(i + 1).unwrap();
+    let next_is_lit = n.has_lakshana("li~w");
+    let next_is_lit_or_yan = next_is_lit || n.has_u("yaN");
+    let next_will_be_abhyasta = next_is_lit || n.has_u_in(&["san", "yaN", "Slu", "caN"]);
 
-fn grahi_jya_samprasarana(rule, p, t: Term):
-    before = ("grah", "jyA", "vay", "vyaD", "vaS", "vyac", "vrasc", "praC", "Brasj")
-    after = ("gfh", "ji", "uy", "viD", "uS", "vic", "vfSc", "pfC", "Bfsj")
-    assert len(before) == len(after)
-    mapping = dict(zip(before, after))
-    # HACK: hacky samprasarana
-    if t.text in mapping:
-        op.text(rule, p, t, mapping[t.text])
+    if dhatu.text == "pyAy" && next_is_lit_or_yan {
+        p.op_term("6.1.29", i, op::text("pI"));
+    } else if dhatu.text == "Svi" && next_is_lit_or_yan {
+        p.op_optional("6.1.30", op::t(i, op::text("Su")));
+    } else if dhatu.text == "hve" && next_will_be_abhyasta {
+        p.op_term("6.1.33", i, op::text("hu"));
+    }
+}
 
+pub fn run_for_abhyasa(p: &mut Prakriya) {
+    let i = match p.find_first(T::Abhyasa) {
+        Some(i) => i,
+        None => return,
+    };
+    let dhatu = match p.get(i + 1) {
+        Some(t) => {
+            if t.has_tag(T::Dhatu) {
+                t
+            } else {
+                return;
+            }
+        }
+        None => return,
+    };
 
-fn run_for_dhatu(p: Prakriya):
-    i, dhatu = p.find_first(T.DHATU)
-    if not dhatu:
-        return
+    let last = p.terms().last().unwrap();
 
-    n = TermView.make(p, i)
-    assert n
-
-    if n.all("k") and is_vaci_svapi(dhatu):
-        if n.any("li~w") and dhatu.u == "ve\\Y":
-            p.step("6.1.40")
-        else:
-            vaci_svapi_samprasarana("6.1.15", p, dhatu)
-
-    } else if  f.is_knit(n) and is_grahi_jya(dhatu):
-        grahi_jya_samprasarana("6.1.16", p, dhatu)
-        if dhatu.text == "uy" and dhatu.u == "vayi~":
-            op.optional(op.text, "6.1.39", p, dhatu, "uv")
-
-    lit_yanoh = n.all("li~w") or n.terms[0].u == "yaN"
-
-    # True iff n can cause dvitva.
-    abhyasta_karana = n.any("li~w") or n.terms[0].u in {"san", "yaN", "Slu", "caN"}
-
-    if lit_yanoh and dhatu.text == "pyAy":
-        op.text("6.1.29", p, dhatu, "pI")
-    } else if  lit_yanoh and dhatu.text == "Svi":
-        op.optional(op.text, "6.1.30", p, dhatu, "Su")
-    } else if  dhatu.text == "hve" and abhyasta_karana:
-        op.text("6.1.33", p, dhatu, "hu")
-
-
-fn run_for_abhyasa(p: Prakriya):
-    i, dhatu = p.find_first(T.DHATU)
-    if not dhatu:
-        return
-
-    n = TermView.make(p, i)
-    if f.is_knit(n):
-        return
-
-    tin = p.terms[-1]
-    if tin.all("li~w"):
-        _, abhyasa = p.find_first(T.ABHYASA)
-        if not abhyasa:
-            return
-        # yadā ca dhātorna bhavati tadā "liṭyabhyāsasya ubhayeṣām"
-        # ityabhyāsasya api na bhavati -- kāśikā.
-        if is_vaci_svapi(dhatu) and dhatu.text != "Svi":
-            if n.any("li~w") and dhatu.u == "ve\\Y":
+    if last.has_lakshana("li~w") {
+        // yadā ca dhātorna bhavati tadā "liṭyabhyāsasya ubhayeṣām"
+        // ityabhyāsasya api na bhavati -- kāśikā.
+        if is_vaci_svapi(dhatu) && dhatu.text != "Svi" {
+            if dhatu.has_u("ve\\Y") {
                 p.step("6.1.40")
-            else:
-                vaci_svapi_samprasarana("6.1.17", p, abhyasa)
-        } else if  is_grahi_jya(dhatu):
-            grahi_jya_samprasarana("6.1.17", p, abhyasa)
+            } else {
+                try_vaci_svapi_samprasarana("6.1.17", p, i)
+            }
+        } else if is_grahi_jya(dhatu) {
+            try_grahi_jya_samprasarana("6.1.17", p, i)
+        }
+    }
+}

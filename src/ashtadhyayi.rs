@@ -10,6 +10,7 @@ use crate::it_agama;
 use crate::la_karya;
 use crate::prakriya::{Prakriya, PrakriyaStack};
 use crate::samjna;
+use crate::samprasarana;
 use crate::sanadi;
 use crate::tin_pratyaya;
 use crate::tripadi;
@@ -29,7 +30,7 @@ fn dhatu_samprasarana_tasks(p: &mut Prakriya) {
     atidesha::run_before_attva(p);
 
     // Depends on atidesha (for kit-Nit).
-    // samprasarana::run_for_dhatu(p)
+    samprasarana::run_for_dhatu(p);
     // Ad-Adeza and other special tasks for Ardhadhatuka
     // ardhadhatuka::run_before_dvitva(p)
 
@@ -78,6 +79,7 @@ pub fn derive_tinanta(
     }
 
     dvitva::run(p);
+    samprasarana::run_for_abhyasa(p);
 
     if !is_lit_or_ashirlin {
         tin_pratyaya::siddhi(p, la)?;

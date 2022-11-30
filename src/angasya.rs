@@ -74,9 +74,13 @@ fn maybe_do_jha_adesha(p: &mut Prakriya, i: usize) {
 ///
 /// (7.1.1 - 7.1.35)
 pub fn try_pratyaya_adesha(p: &mut Prakriya) {
-    let i = p.terms().len() - 1;
-    let t = &p.terms()[i];
+    let len = p.terms().len();
+    if len <= 2 {
+        return;
+    }
 
+    let i = len - 1;
+    let t = &p.terms()[i];
     if t.has_text_in(&["yu~", "vu~"]) {
         if t.text == "yu~" {
             p.op("7.1.1", op::t(i, op::text("ana")));
@@ -105,9 +109,11 @@ pub fn try_pratyaya_adesha(p: &mut Prakriya) {
 
     // Run 3.1.83 here because it has no clear place otherwise.
     // TODO: is there a better place for this?
-    let t = &p.terms()[i];
-    if p.has(i - 2, |t| t.has_antya(&*HAL)) && p.has(i - 1, f::u("SnA")) && t.text == "hi" {
-        op::upadesha_v2("3.1.83", p, i - 1, "SAnac");
+    if i > 2 {
+        let t = &p.terms()[i];
+        if p.has(i - 2, |t| t.has_antya(&*HAL)) && p.has(i - 1, f::u("SnA")) && t.text == "hi" {
+            op::upadesha_v2("3.1.83", p, i - 1, "SAnac");
+        }
     }
 }
 

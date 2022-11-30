@@ -8,13 +8,21 @@ use crate::dhatupatha::is_kutadi;
 use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
+use crate::sounds::{s, SoundSet};
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref F: SoundSet = s("f");
+    static ref IK: SoundSet = s("ik");
+    static ref JHAL: SoundSet = s("Jal");
+    static ref HAL: SoundSet = s("hal");
+}
 
 fn run_before_attva_at_index(p: &mut Prakriya, i: usize) {
     let n = match p.view(i + 1) {
         Some(x) => x,
         None => return,
     };
-    let n = p.view(i + 1).unwrap();
     let add_nit = op::add_tag(T::Nit);
     let add_kit = op::add_tag(T::kit);
 
@@ -42,24 +50,30 @@ fn run_before_attva_at_index(p: &mut Prakriya, i: usize) {
         p.op_optional("1.2.6.v1", op::t(n.end(), add_kit));
     }
 
-    /*
-    tin = p.terms[-1]
-    if (
-        tin.all(T.ATMANEPADA) && (tin.all("li~N") or n.terms[0].u == "si~c")
-    ) && n.adi in s("Jal") {
-        is_dhatu = c.all(T.DHATU)
-        ik_halantat = c.upadha in s("ik") && c.antya in s("hal")
-
-        if is_dhatu && ik_halantat:
-            op.tag("1.2.11", p, n.terms[-1], "k")
-        } else if is_dhatu && c.antya in s("f"):
-            op.tag("1.2.12", p, n.terms[-1], "k")
+    let n = p.view(i + 1).unwrap();
+    let last = p.terms().last().unwrap();
+    let lin_or_sic = last.has_lakshana("li~N") || n.has_u("si~c");
+    if last.has_tag(T::Atmanepada) && lin_or_sic && n.has_adi(&*JHAL) {
+        let t = &p.terms()[i];
+        let is_dhatu = t.has_tag(T::Dhatu);
+        let i_n = n.end();
+        let is_ik_halanta = t.has_upadha(&*IK) && t.has_antya(&*HAL);
+        if is_dhatu && is_ik_halanta {
+            p.op_term("1.2.11", i_n, op::add_tag(T::kit));
+        } else if is_dhatu && t.has_antya(&*F) {
+            p.op_term("1.2.12", i_n, op::add_tag(T::kit));
         }
     }
-    */
 }
 
-/// Runs rules that apply only if the root ends in long A.
+/// Runs most atidesha rules.
+pub fn run_before_attva(p: &mut Prakriya) {
+    for i in 0..p.terms().len() {
+        run_before_attva_at_index(p, i);
+    }
+}
+
+/// Runs atidesha rules that must follow rule 6.1.45 (Adeca upadeze 'ziti).
 ///
 /// If we don't use a separate function for these rules, we have a dependency loop:
 ///
@@ -73,36 +87,23 @@ fn run_before_attva_at_index(p: &mut Prakriya, i: usize) {
 /// 2. atidesha & samprasarana (non-A) -> Ad-Adesha
 /// 3. Ad-Adesha --> iT-Agama (A)
 /// 4. iT-Agama (A) --> atidesha and samprasarana (A)
-fn run_after_attva_at_index(p: &mut Prakriya, i: usize) {
-    /*
-    c = p.terms[index]
-    n = TermView.make_pratyaya(p, index)
-    if not n {
-        return
-    }
-
-    tin = p.terms[-1]
-    if (
-        tin.all(T.ATMANEPADA)
-        and n.terms[-1].u == "si~c"
-        and (c.text == "sTA" or c.all(T.GHU))
-    ) {
-        n.terms[-1].add_tags("k")
-        op.antya("1.2.17", p, c, "i")
-    }
-    */
-}
-
-/// Runs most atidesha rules.
-pub fn run_before_attva(p: &mut Prakriya) {
-    for i in 0..p.terms().len() {
-        run_before_attva_at_index(p, i);
-    }
-}
-
-/// Runs atidesha rules that must follow rule 6.1.45 (Adeca upadeze 'ziti).
 pub fn run_after_attva(p: &mut Prakriya) {
-    for i in 0..p.terms().len() {
-        run_after_attva_at_index(p, i);
+    let i = match p.find_first(T::Dhatu) {
+        Some(i) => i,
+        None => return,
+    };
+    let n = match p.view(i + 1) {
+        Some(n) => n,
+        None => return,
+    };
+    let i_tin = p.terms().len() - 1;
+
+    let stha_ghu = p.has(i, |t| t.text == "sTA" || t.has_tag(T::Ghu));
+    if stha_ghu || p.has(i_tin, f::atmanepada) && n.has_u("si~c") {
+        let i_n_end = n.end();
+        p.op("1.2.17", |p| {
+            p.set(i, op::antya("i"));
+            p.set(i_n_end, op::add_tag(T::kit));
+        });
     }
 }

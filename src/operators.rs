@@ -186,18 +186,12 @@ pub fn upadesha_yatha(p: &mut Prakriya, i: usize, old: &[&str], new: &[&str]) {
     }
 }
 
-pub fn text_yatha(p: &mut Prakriya, i: usize, old: &[&str], new: &[&str]) {
+pub fn text_yatha(term: &mut Term, old: &[&str], new: &[&str]) {
     assert_eq!(old.len(), new.len());
-    if let Some(t) = p.get_mut(i) {
-        if let Some(u) = &t.u {
-            t.lakshana.push(u.to_string());
-
-            for (i, x) in old.iter().enumerate() {
-                if u == x {
-                    t.text = new[i].to_string();
-                    break;
-                }
-            }
+    for (i, o) in old.iter().enumerate() {
+        if term.text == *o {
+            term.text = new[i].to_string();
+            return;
         }
     }
 }
