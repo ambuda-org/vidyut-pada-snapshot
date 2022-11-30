@@ -109,9 +109,9 @@ fn maybe_replace_cli_with_ksa(p: &mut Prakriya, i: usize) {
         } else if p.has(i, |t| t.text == "Sliz" && t.gana == Some(4)) {
             p.op_optional("3.1.46", to_ksa);
         } else if p.has(i, |t| t.has_tag(T::Udit)) {
-            // Needed if we use "ksa" with a veT root.
             p.op_optional("3.1.45", |p| {
                 to_ksa(p);
+                // Needed if we use "ksa" with a veT root.
                 p.add_tag(T::FlagAnitKsa);
             });
         } else {

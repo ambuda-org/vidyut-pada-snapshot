@@ -23,6 +23,7 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     static ref AC: SoundSet = s("ac");
+    static ref HAL: SoundSet = s("hal");
     static ref JHAL: SoundSet = s("Jal");
     static ref I_U: SoundSet = s("i u");
 }
@@ -66,8 +67,12 @@ fn maybe_do_jha_adesha(p: &mut Prakriya, i: usize) {
     }
 }
 
-/// Applies rules that replace the jha-pratyaya with the appropriate sounds.
-/// (7.1.1 - 7.1.7)
+/// Applies rules that replace one or more sounds in a pratyaya.
+///
+/// Usually, these sounds are it letters ("J") or otherwise aupadeshika (e.g. "yu").
+/// Examples: Bava + Ji -> Bavanti, kar + yu -> karaNa.
+///
+/// (7.1.1 - 7.1.35)
 pub fn try_pratyaya_adesha(p: &mut Prakriya) {
     let i = p.terms().len() - 1;
     let t = &p.terms()[i];
@@ -91,32 +96,20 @@ pub fn try_pratyaya_adesha(p: &mut Prakriya) {
     } else if t.has_adi('J') {
         maybe_do_jha_adesha(p, i);
     // -tAt substitution needs to occur early because it conditions samprasarana.
+    } else if p.has(i - 1, |t| t.has_antya('A')) && t.has_u("Ral") {
+        op::upadesha_v2("7.1.34", p, i, "O");
     } else if p.has(i, |t| t.has_tag(T::Tin) && t.has_text_in(&["tu", "hi"])) {
         // N is to block pit-guNa, not for replacement of the last letter.
         p.op_optional("7.1.35", |p| op::upadesha(p, i, "tAta~N"));
     }
-}
-
-/*
-fn pratyaya_adesha(p: Prakriya):
-    """Rules that substitute the pratyaya.
-
-    (7.1.1 - 7.1.35)
-    """
-    tin = p.terms[-1]
-    if not tin.all(T.TIN):
-        return
-
-    ps = [t for t in p.terms[:-1] if t.text]
-    prev = ps[-1]
-
-    if prev.antya == "A" and tin.u == "Ral":
-        op.upadesha("7.1.34", p, tin, "O")
 
     // Run 3.1.83 here because it has no clear place otherwise.
-    if prev.u == "SnA" and tin.text == "hi" and ps[-2].antya in s("hal"):
-        op.upadesha("3.1.83", p, prev, "SAnac")
-*/
+    // TODO: is there a better place for this?
+    let t = &p.terms()[i];
+    if p.has(i - 2, |t| t.has_antya(&*HAL)) && p.has(i - 1, f::u("SnA")) && t.text == "hi" {
+        op::upadesha_v2("3.1.83", p, i - 1, "SAnac");
+    }
+}
 
 fn try_vrddhi_adesha(p: &mut Prakriya, i: usize) {
     if p.has(i, f::tag(T::FlagGunaApavada)) {

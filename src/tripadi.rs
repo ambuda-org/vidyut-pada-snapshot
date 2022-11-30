@@ -135,7 +135,8 @@ fn try_samyoganta_and_sa_lopa(p: &mut Prakriya) {
             break;
         }
 
-        if p.has(i, |t| t.has_antya('r')) && p.has(n, |t| t.text == "s") && n == p.terms().len() - 1 {
+        if p.has(i, |t| t.has_antya('r')) && p.has(n, |t| t.text == "s") && n == p.terms().len() - 1
+        {
             p.op_term("8.2.24", i, op::adi(""));
         } else if p.has(i, |t| t.has_antya('s')) && p.has(i + 1, |t| t.has_adi('D')) {
             // Per kAzikA, applies only to s of si~c. But this seems to cause
@@ -397,36 +398,36 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
 ///
 /// (8.2.31 - 8.2.35)
 fn try_natva(p: &mut Prakriya) {
-/*
-    i, u = p.find_first(T.DHATU)
-    if u and (
-        (u.u == "kzuBa~" and p.terms[i + 1].u in {"SnA", "SAnac"})
-        or (u.u == "tfpa~" and p.terms[i + 1].u == "Snu")
-    ):
-        p.step("8.4.39")
-        return
+    /*
+        i, u = p.find_first(T.DHATU)
+        if u and (
+            (u.u == "kzuBa~" and p.terms[i + 1].u in {"SnA", "SAnac"})
+            or (u.u == "tfpa~" and p.terms[i + 1].u == "Snu")
+        ):
+            p.step("8.4.39")
+            return
 
-    // TODO: AG and num
-    view = StringView(p.terms)
-    between = s("aw ku~ pu~ M").regex
-    match = re.search(f"[rzfF]({between}*)n", view.text)
+        // TODO: AG and num
+        view = StringView(p.terms)
+        between = s("aw ku~ pu~ M").regex
+        match = re.search(f"[rzfF]({between}*)n", view.text)
 
-    if match:
-        // End of pada
-        if match.span(0)[1] == len(view.text):
-            p.step("8.4.37")
-        else:
-            view[match.span(0)[1] - 1] = "R"
-            if match.group(1):
-                p.step("8.4.2")
+        if match:
+            // End of pada
+            if match.span(0)[1] == len(view.text):
+                p.step("8.4.37")
             else:
-                trigger = view[match.span(0)[0]]
-                if trigger in "rz":
-                    p.step("8.4.1")
+                view[match.span(0)[1] - 1] = "R"
+                if match.group(1):
+                    p.step("8.4.2")
                 else:
-                    p.step("8.4.1-v")
-}
-*/
+                    trigger = view[match.span(0)[0]]
+                    if trigger in "rz":
+                        p.step("8.4.1")
+                    else:
+                        p.step("8.4.1-v")
+    }
+    */
 }
 
 /// Converts "m" and "n" to the anusvara when a consonant follows.

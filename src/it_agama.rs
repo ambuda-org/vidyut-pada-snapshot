@@ -232,11 +232,11 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
         return false;
     }
 
+    let anga = &p.terms()[i];
     let antya_para = n.has_tag(T::Parasmaipada);
     let se = n.adi() == Some('s');
     let krta_crta = &["kft", "cft", "Cfd", "tfd", "nft"];
     let ishu_saha = &["izu~", "zaha~\\", "luBa~", "ruza~", "riza~"];
-
     if matches!(it, It::Set(_) | It::Anit(_)) {
         // Do nothing
     } else if anga.has_u_in(gana::RADH_ADI) && VAL.contains_opt(n.adi()) {
@@ -252,11 +252,47 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
         it = It::Anit("7.2.59");
     } else if anga.has_u("kfpU~\\") && antya_para && (se || n.has_u("tAsi~")) {
         it = It::Anit("7.2.60");
+    } else if anga.has_text_in(&["snu", "kram"]) && n.has_adi(&*VAL) {
+        // TODO: not sure I undesrtand the scope of this rule.
+        if n.has_tag(T::Atmanepada) && n.has_u("sIyu~w") {
+            it = It::Anit("7.2.36");
+        }
     }
 
-    // TODO: not sure ...
-    //
-    // General cases
+    // Optional rules (Udit and others)
+    let anga = &p.terms()[i];
+    let n = p.view(i + 1).unwrap();
+    let last = p.terms().last().unwrap();
+    if matches!(it, It::Set(_) | It::Anit(_)) {
+        // Do nothing
+    } else if n.has_adi(&*VAL) {
+        if anga.has_u_in(&["svf", "zUN", "DUY"]) || anga.has_tag(T::Udit) {
+            // Synchronize choice of "it" with the choice of lun-vikarana.
+            if p.has_tag(T::FlagAnitKsa) {
+                it = It::Anit("7.2.44");
+            } else if p.has_tag(T::FlagSetSic) {
+                // do nothing
+            } else {
+                it = optional_anit("7.2.44", p)
+            }
+        } else if (n.has_lakshana("li~N") || n.has_u("si~c")) && last.has_tag(T::Atmanepada) {
+            let vft = anga.text == "vf" || anga.has_antya('F');
+            if vft && n.has_tag(T::Ardhadhatuka) {
+                // By default, all of these roots are seT.
+                // So, the option allows anit.
+                it = optional_anit("7.2.42", p);
+            } else if anga.has_antya('f') && f::is_samyogadi(anga) {
+                if anga.has_tag(T::Anudatta) {
+                    // For anit roots, optional seT.
+                    it = optional_set("7.2.43", p);
+                } else {
+                    // For seT roots, optional aniT.
+                    it = optional_anit("7.2.43", p);
+                }
+            }
+            // TODO
+        }
+    }
 
     let anga = &p.terms()[i];
     let n = p.view(i + 1).expect("");
@@ -284,42 +320,6 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
         It::None => false,
     }
 }
-/*
-    // TODO: not sure I undesrtand the scope of this rule.
-    } else if c.text in {"snu", "kram"} and n.adi in s("val"):
-        if p.terms[-1].all(T.ATMANEPADA) and n.terms[0].u == "sIyu~w":
-            anit_rule = "7.2.36"
-
-    // Optional rules (Udit and others)
-
-    if anit_rule or set_rule:
-        pass
-    } else if n.adi in s("val"):
-        if c.u in ("svf", "zUN", "DUY") or c.any("U"):
-            // Synchronize choice of "it" with the choice of lun-vikarana.
-            if p.all(T.F_ANIT_KSA):
-                anit_rule = "7.2.44"
-            } else if p.all(T.F_SET_SIC):
-                pass
-            else:
-                anit_rule = optional_rule("7.2.44", p)
-        } else if (n.any("li~N") or n.u == "si~c") and p.terms[-1].any(T.ATMANEPADA):
-            vrt = c.text == "vf" or c.antya == "F"
-            if vrt and n.any(T.ARDHADHATUKA):
-                // By default, all of these roots are seT.
-                // So, the option allows anit.
-                anit_rule = optional_rule("7.2.42", p)
-            } else if c.antya == "f" and f.samyogadi(c):
-                if c.all(T.ANUDATTA):
-                    // For anit roots, optional seT.
-                    set_rule = optional_rule("7.2.43", p)
-                else:
-                    // For seT roots, optional aniT.
-                    anit_rule = optional_rule("7.2.43", p)
-
-    // General cases
-
-*/
 
 fn try_sarvadhatuke(p: &mut Prakriya, i: usize) -> bool {
     let n = match p.view(i) {

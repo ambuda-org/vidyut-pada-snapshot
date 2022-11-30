@@ -8,7 +8,7 @@ use crate::dhatu_karya;
 use crate::dvitva;
 use crate::it_agama;
 use crate::la_karya;
-use crate::prakriya::{Prakriya, RuleChoice};
+use crate::prakriya::{Prakriya, PrakriyaStack};
 use crate::samjna;
 use crate::sanadi;
 use crate::tin_pratyaya;
@@ -94,91 +94,6 @@ pub fn derive_tinanta(
     tripadi::run(p);
 
     Ok(())
-}
-
-/// Explores all optional derivations for some input.
-///
-/// Many of the rules in the Ashtadhyayi are optional, and by accepting or declining these optional
-/// rules, we create different final results. `PrakriyaStack` manages the work required in finding
-/// and exploring the various combinations of optional rules.
-#[derive(Default)]
-struct PrakriyaStack {
-    /// Completed prakriyas.
-    prakriyas: Vec<Prakriya>,
-    /// Combinations of optional rules that we have yet to try.
-    paths: Vec<Vec<RuleChoice>>,
-}
-
-impl PrakriyaStack {
-    /// Creates an empty `PrakriyaStack`.
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Finds all variants of the given derivation function.
-    ///
-    /// `derive` should accept an empty `Prakriya` and mutate it in-place.
-    pub fn find_all(&mut self, derive: impl Fn(&mut Prakriya)) {
-        let mut p_init = Prakriya::new();
-        derive(&mut p_init);
-        self.add_prakriya(p_init, &[]);
-
-        while let Some(path) = self.pop_path() {
-            let mut p = Prakriya::new();
-            p.set_options(&path);
-            derive(&mut p);
-            self.add_prakriya(p, &path);
-        }
-    }
-
-    /// Adds a prakriya to the result set and adds new paths to the stack.
-    ///
-    /// We find new paths as follows. Suppose our initial prakriya followed the following path:
-    ///
-    ///     Accept(A), Accept(B), Accept(C)
-    ///
-    /// We then add one candidate path for each alternate choice we could have made:
-    ///
-    ///     Decline(A)
-    ///     Accept(A), Decline(B)
-    ///     Accept(A), Accept(B), Decline(C)
-    ///
-    /// Suppose we then try `Decline(A)` and make the following choices:
-    ///
-    ///     Decline(A), Accept(B), Accept(D)
-    ///
-    /// After this, adding an `Accept(A) path to the stack would be a mistake, as it would cause an
-    /// infinite loop. Instead, we freeze our initial decision to use `Decline(A)` and add only the
-    /// following paths:
-    ///
-    ///     Decline(A), Decline(B)
-    ///     Decline(A), Accept(B), Decline(D)
-    fn add_prakriya(&mut self, p: Prakriya, initial_choices: &[RuleChoice]) {
-        let choices = p.rule_choices();
-        let offset = initial_choices.len();
-        for i in offset..choices.len() {
-            let mut path = choices[..=i].to_vec();
-
-            // Swap the last choice.
-            let i = path.len() - 1;
-            path[i] = match path[i] {
-                RuleChoice::Accept(code) => RuleChoice::Decline(code),
-                RuleChoice::Decline(code) => RuleChoice::Accept(code),
-            };
-
-            self.paths.push(path);
-        }
-        self.prakriyas.push(p);
-    }
-
-    fn pop_path(&mut self) -> Option<Vec<RuleChoice>> {
-        self.paths.pop()
-    }
-
-    /// Retuns all of the prakriyas this stack has found. This consumes the stack.
-    fn prakriyas(self) -> Vec<Prakriya> {
-        self.prakriyas
-    }
 }
 
 pub fn derive_tinantas(
