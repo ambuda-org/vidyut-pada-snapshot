@@ -19,10 +19,10 @@ use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{map_sounds, s, SoundMap, SoundSet};
 use crate::term::Term;
-use crate::term::TermView;
 use lazy_static::lazy_static;
 
 lazy_static! {
+    static ref CU: SoundSet = s("cu~");
     static ref INKU: SoundSet = s("iR2 ku~");
     static ref JHAL: SoundSet = s("Jal");
     static ref JHASH: SoundSet = s("JaS");
@@ -30,6 +30,7 @@ lazy_static! {
     static ref JHAL_TO_CAR: SoundMap = map_sounds("Jal", "car");
     static ref JHAL_TO_JASH: SoundMap = map_sounds("Jal", "jaS");
     static ref JHAL_TO_JASH_CAR: SoundMap = map_sounds("Jal", "jaS car");
+    static ref CU_TO_KU: SoundMap = map_sounds("cu~", "ku~");
     static ref IK: SoundSet = s("ik");
     static ref YAY: SoundSet = s("yay");
     static ref HAL: SoundSet = s("hal");
@@ -296,14 +297,8 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
     }
 
     /*
-    c = p.terms[index]
-    try:
-        n = [u for u in p.terms[index + 1 :] if u.text][0]
-    except IndexError:
-        n = None
-
-    vrascha = {
-    "o~vrascU~",
+    let vrascha = &[
+        "o~vrascU~",
         "Bra\\sja~^",
         "sf\\ja~\\",
         "sf\\ja~",
@@ -311,7 +306,7 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
         "ya\\ja~^",
         "rAj",
         "BrAjf~\\",
-    }
+    ];
 
     jhali_ante = not n or n.adi in s("Jal")
     if (c.u in vrascha or c.antya in s("C S")) and jhali_ante:
@@ -321,11 +316,15 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
             p.step("8.2.36")
         else:
             op.antya("8.2.36", p, c, "z")
+    */
 
-    if c.antya in s("cu~") and (not n or n.adi in s("Jal")):
-        mapping = sounds.map_sounds(s("cu~"), s("ku~"))
-        op.antya("8.2.30", p, c, mapping[c.antya])
+    if p.has(i, |t| t.has_antya(&*CU)) && p.has(i + 1, |t| t.has_adi(&*JHAL)) {
+        let c = p.terms()[i].antya().unwrap();
+        let sub = CU_TO_KU.get(&c).unwrap();
+        p.op_term("8.2.30", i, op::antya(&sub.to_string()));
+    }
 
+    /*
     sdhvoh = n and (n.adi == "s" or n.all(T.PRATYAYA) and n.u.startswith("Dv"))
     basho_bhash = sounds.map_sounds_s("baS", "Baz")
     if c.adi in basho_bhash and c.antya in s("JaS") and sdhvoh:

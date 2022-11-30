@@ -2,7 +2,7 @@
 //! =========
 //! (6.1.66 - 6.1.101)
 
-use crate::char_view::{char_rule_legacy, get_at, set_at, xy2};
+use crate::char_view::{char_rule, get_at, set_at, xy};
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operators as op;
@@ -22,9 +22,11 @@ lazy_static! {
 
 /// Runs various general rules of vowel sandhi.
 fn apply_general_ac_sandhi(p: &mut Prakriya) {
-    char_rule_legacy(
+    char_rule(
         p,
-        |p, x, y, i, _| {
+        |p, text, i| {
+            let x = text.as_bytes()[i] as char;
+            let y = text.as_bytes()[i + 1] as char;
             let vyor_vali = (x == 'v' || x == 'y') && VAL.contains_char(y);
             let t = get_at(p, i).expect("should be present");
             // Ignore if it starts an upadesha, otherwise roots like "vraj" would by vyartha.
@@ -33,25 +35,24 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
             let is_upadesha = t.has_tag(T::Dhatu);
             vyor_vali && !is_upadesha
         },
-        |p, _, _, i, _| {
+        |p, _, i| {
             set_at(p, i, "");
             p.step("6.1.66");
+            true
         },
     );
 
-    char_rule_legacy(
-        p,
-        xy2(|x, y| x == 'a' && al::is_guna(y)),
-        |p, _, _, i, _| {
-            set_at(p, i, "");
-            p.step("6.1.97");
-        },
-    );
+    char_rule(p, xy(|x, y| x == 'a' && al::is_guna(y)), |p, _, i| {
+        set_at(p, i, "");
+        p.step("6.1.97");
+        true
+    });
 
-    char_rule_legacy(
+    char_rule(
         p,
-        xy2(|x, y| EC.contains_char(x) && AC.contains_char(y)),
-        |p, x, _, i, _| {
+        xy(|x, y| EC.contains_char(x) && AC.contains_char(y)),
+        |p, text, i| {
+            let x = text.as_bytes()[i] as char;
             let sub = match x {
                 'e' => "ay",
                 'E' => "Ay",
@@ -61,23 +62,27 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
             };
             set_at(p, i, sub);
             p.step("6.1.78");
+            true
         },
     );
 
-    char_rule_legacy(
+    char_rule(
         p,
-        xy2(|x, y| AK.contains_char(x) && AK.contains_char(y) && al::savarna(x).contains_char(y)),
-        |p, x, _, i, j| {
-            set_at(p, j, "");
+        xy(|x, y| AK.contains_char(x) && AK.contains_char(y) && al::savarna(x).contains_char(y)),
+        |p, text, i| {
+            let x = text.as_bytes()[i] as char;
             set_at(p, i, &al::to_dirgha(x).expect("should be ac").to_string());
+            set_at(p, i + 1, "");
             p.step("6.1.101");
+            true
         },
     );
 
-    char_rule_legacy(
+    char_rule(
         p,
-        xy2(|x, y| IK.contains_char(x) && AC.contains_char(y)),
-        |p, x, _, i, _| {
+        xy(|x, y| IK.contains_char(x) && AC.contains_char(y)),
+        |p, text, i| {
+            let x = text.as_bytes()[i] as char;
             let res = match x {
                 'i' | 'I' => "y",
                 'u' | 'U' => "v",
@@ -87,13 +92,16 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
             };
             set_at(p, i, res);
             p.step("6.1.77");
+            true
         },
     );
 
-    char_rule_legacy(
+    char_rule(
         p,
-        xy2(|x, y| A.contains_char(x) && AC.contains_char(y)),
-        |p, _, y, i, j| {
+        xy(|x, y| A.contains_char(x) && AC.contains_char(y)),
+        |p, text, i| {
+            let j = i + 1;
+            let y = text.as_bytes()[i + 1] as char;
             if EC.contains_char(y) {
                 set_at(p, j, al::to_vrddhi(y).expect("should be set"));
                 set_at(p, i, "");
@@ -103,6 +111,7 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
                 set_at(p, i, "");
                 p.step("6.1.87");
             }
+            true
         },
     );
 }
