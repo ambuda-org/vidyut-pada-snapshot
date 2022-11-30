@@ -11,7 +11,7 @@ rest of the text selects rules based on their priority and allows a rule to appl
 the tripādi applies rules in order and will never "go back" to apply an earlier rule.
 */
 
-use crate::char_view::{char_rule, set_at, xy};
+use crate::char_view::{char_rule, set_at, xy, xyz};
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operators as op;
@@ -91,15 +91,19 @@ fn try_samyoganta_and_sa_lopa(p: &mut Prakriya) {
     // TODO: jhal case
     pattern = f"({sk}+){hal}+"
     jhal = f"{jhal}"
+    */
 
-    // jhalo jhali
-    view = StringView(p.terms)
-    lopa_offset = 0
-    for match in re.finditer(f"{jhal}(s){jhal}", view.text):
-        start, end = match.span(1)
-        view.delete_span(start - lopa_offset, end - lopa_offset)
-        p.step("8.2.26")
+    char_rule(
+        p,
+        xyz(|x, y, z| JHAL.contains_char(x) && y == 's' && JHAL.contains_char(z)),
+        |p, _, i| {
+            set_at(p, i + 1, "");
+            p.step("8.2.26");
+            true
+        },
+    );
 
+    /*
     // saMst can be handled only with difficulty. For details, see the
     // commentary in the mAdhavIya-dhAtuvRtti:
     //

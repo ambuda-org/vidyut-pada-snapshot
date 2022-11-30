@@ -16,7 +16,13 @@ use crate::filters as f;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
+use crate::sounds::{s, SoundSet};
 use crate::term::Term;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref HAL: SoundSet = s("hal");
+}
 
 /*
 
@@ -227,20 +233,22 @@ fn lit_et(p: Prakriya, index: int):
         op.upadha(code, p, c, "e")
 
 
-fn ardhadhatuke(p: Prakriya, index: int):
-    """Rules conditioned on a following ardhadhatuka suffix.
-
-    (6.4.46 - 6.4.70)
-    """
+/// Runs rules conditioned on a following ardhadhatuka suffix.
+///
+/// (6.4.46 - 6.4.70)
+fn ardhadhatuke(p: &mut Prakriya, i: usize) {
     c = p.terms[index]
     n = TermView.make(p, index)
-    if not n or not n.any(T.ARDHADHATUKA):
+    if not n or not n.any(T.ARDHADHATUKA) {
         return
-    // HACK to avoid abhyasa-at-lopa
-    if c.all(T.ABHYASA):
-        return
+    }
 
-    if c.text == "Brasj":
+    // HACK to avoid abhyasa-at-lopa
+    if c.all(T.ABHYASA) {
+        return
+    }
+
+    if c.text == "Brasj" {
         op.optional(op.text, "6.4.47", p, c, "Barj")
 
     } else if  c.antya == "a":
@@ -248,6 +256,8 @@ fn ardhadhatuke(p: Prakriya, index: int):
         c.add_tags(T.F_AT_LOPA)
         // TODO: remove P F_AT_LOPA
         p.add_tags(T.F_AT_LOPA)
+    }
+}
 
 
 fn run_dirgha(p: Prakriya):
@@ -362,19 +372,43 @@ pub fn run_before_guna(p: &mut Prakriya, i: usize) {
         return;
     }
 
-    let anga = p.get(i).unwrap();
-    if anga.has_tag(T::Snam) && anga.upadha().unwrap() == 'n' {
+    let n = match p.view(i + 1) {
+        Some(n) => n,
+        None => return,
+    };
+
+    let dhatu = p.get(i).unwrap();
+    if dhatu.has_tag(T::Snam) && dhatu.upadha().unwrap() == 'n' {
         p.op_term("6.4.23", i, op::upadha(""));
     }
+
+    let dhatu = p.get(i).unwrap();
+    let n = p.view(i + 1).unwrap();
+    let anidit_hal = !dhatu.has_tag(T::idit) && dhatu.has_antya(&*HAL);
+    let is_kniti = n.any(&[T::kit, T::Nit]);
+
+    if anidit_hal && is_kniti && dhatu.has_upadha('n') {
+        // ancu gati-pUjanayoH
+        if dhatu.has_u("ancu~") {
+            let code = "6.4.30";
+            if p.is_allowed(code) {
+                p.step(code);
+                p.op_term("6.4.24", i, op::upadha(""));
+            } else {
+                p.decline(code)
+            }
+        } else {
+            p.op_term("6.4.24", i, op::upadha(""));
+        }
+    } else if dhatu.has_text_in(&["danS", "sanj", "svanj"]) && n.has_u("Sap") {
+        p.op_term("6.4.25", i, op::upadha(""));
+    } else if dhatu.text == "ranj" && n.has_u("Sap") {
+        p.op_term("6.4.26", i, op::upadha(""));
+    } else if dhatu.text == "SAs" && is_kniti && (n.has_u("aN") || n.has_adi(&*HAL)) {
+        p.op_term("6.4.34", i, op::upadha("i"));
+    }
+
     /*
-    c = p.terms[index]
-    n = TermView.make(p, index)
-    if not n:
-        return
-
-    n.u = n.terms[0].u
-
-
     anidit_hal = (not c.any("i")) and c.antya in s("hal")
     kniti = f.is_knit(n)
 

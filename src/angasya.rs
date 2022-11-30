@@ -72,7 +72,7 @@ fn maybe_do_jha_adesha(p: &mut Prakriya, i: usize) {
 /// Usually, these sounds are it letters ("J") or otherwise aupadeshika (e.g. "yu").
 /// Examples: Bava + Ji -> Bavanti, kar + yu -> karaNa.
 ///
-/// (7.1.1 - 7.1.35)
+/// (7.1.1 - 7.1.35 + 3.1.83)
 pub fn try_pratyaya_adesha(p: &mut Prakriya) {
     let len = p.terms().len();
     if len <= 2 {

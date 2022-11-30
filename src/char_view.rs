@@ -74,3 +74,19 @@ pub fn xy(inner: impl Fn(char, char) -> bool) -> impl Fn(&mut Prakriya, &str, us
         inner(x, y)
     }
 }
+
+pub fn xyz(
+    inner: impl Fn(char, char, char) -> bool,
+) -> impl Fn(&mut Prakriya, &str, usize) -> bool {
+    move |_, text, i| {
+        let bytes = text.as_bytes();
+        let x = bytes.get(i);
+        let y = bytes.get(i + 1);
+        let z = bytes.get(i + 2);
+        let (x, y, z) = match (x, y, z) {
+            (Some(a), Some(b), Some(c)) => (*a as char, *b as char, *c as char),
+            _ => return false,
+        };
+        inner(x, y, z)
+    }
+}

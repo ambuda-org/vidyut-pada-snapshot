@@ -26,7 +26,10 @@ fn apply_general_ac_sandhi(p: &mut Prakriya) {
         p,
         |p, text, i| {
             let x = text.as_bytes()[i] as char;
-            let y = text.as_bytes()[i + 1] as char;
+            let y = match text.as_bytes().get(i + 1) {
+                Some(c) => *c as char,
+                None => return false,
+            };
             let vyor_vali = (x == 'v' || x == 'y') && VAL.contains_char(y);
             let t = get_at(p, i).expect("should be present");
             // Ignore if it starts an upadesha, otherwise roots like "vraj" would by vyartha.

@@ -250,6 +250,10 @@ impl<'a> TermView<'a> {
         None
     }
 
+    pub fn has_antya(&self, pattern: impl Pattern) -> bool {
+        self.matches_sound_pattern(self.antya(), pattern)
+    }
+
     pub fn has_u(&self, u: &str) -> bool {
         match self.slice().first() {
             Some(t) => t.has_u(u),

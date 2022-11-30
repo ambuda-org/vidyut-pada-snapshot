@@ -6,27 +6,25 @@ use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::s;
+use crate::term::TermView;
 
-/*
-fn _causes_guna(n: TermView):
-    """Lookahead function for the following rules:
-
-    6.1.50 minātiminotidīṅāṃ lyapi ca
-    6.1.51 vibhāṣā līyateḥ
-    """
-    // Parasmaipada Ashir-liN will use yAsuT-Agama, which is kit.
-    if n.all("li~N", T::ARDHADHATUKA, T::PARASMAIPADA):
-        return False
-    // sArvadhAtukam apit will be Nit.
-    if n.all(T::SARVADHATUKA) and not n.all("p"):
-        return False
-    // apit liT when not after samyoga will be kit.
-    // TODO: check for samyoga? But it's not needed for current usage
-    if n.all("li~w") and not n.all("p"):
-        return False
+/// Lookahead function for the following rules:
+///
+/// > 6.1.50 minātiminotidīṅāṃ lyapi ca
+/// > 6.1.51 vibhāṣā līyateḥ
+fn will_cause_guna(n: TermView) -> bool {
+    let is_apit = !n.has_tag(T::pit);
+    !(
+        // Parasmaipada Ashir-liN will use yAsuT-Agama, which is kit.
+        (n.has_lakshana("li~N") && n.all(&[T::Ardhadhatuka, T::Parasmaipada]))
+        // sArvadhAtukam apit will be Nit.
+        || (n.has_tag(T::Sarvadhatuka) && is_apit)
+        // apit liT when not after samyoga will be kit.
+        // TODO: check for samyoga? But it's not needed for current usage
+        || (n.has_lakshana("li~w") && is_apit)
+    )
     // ArdhadhAtuka and other sArvadhAtuka suffixes will cause guna.
-    return True
-    */
+}
 
 /// Replaces the dhAtu based on the suffix that follows it.
 ///
@@ -58,9 +56,9 @@ pub fn dhatu_adesha_before_pada(p: &mut Prakriya, la: La) {
                 // Remove tags set by `ca\kzi~\N`
                 p.set(i, |t| {
                     t.remove_tags(&[T::anudattet, T::Nit]);
+                    // For anit on `KyAY`.
                     t.add_tag(T::Anudatta);
                 });
-                // For anit on `KyAY`.
             });
         }
     }
@@ -237,11 +235,11 @@ fn aa_adesha(p: Prakriya, index: int):
     // - guNa affects the application of 6.1.50
     //
     // So, "look ahead" and use this rule only if the suffix will potentially
-    // cause guNa. See `_causes_guna` for details.
+    // cause guNa. See `will_cause_guna` for details.
     ashiti_lyapi = not n.any("S") or n.u == "lyap"
-    if c.u in {"mI\\Y", "qu\\mi\\Y", "dI\\N"} && ashiti_lyapi && _causes_guna(n):
+    if c.u in {"mI\\Y", "qu\\mi\\Y", "dI\\N"} && ashiti_lyapi && will_cause_guna(n):
         op.antya("6.1.50", p, c, "A")
-    } else if  c.text == "lI" && ashiti_lyapi && _causes_guna(n) && c.gana != 10:
+    } else if  c.text == "lI" && ashiti_lyapi && will_cause_guna(n) && c.gana != 10:
         // līyateriti yakā nirdeśo na tu śyanā. līlīṅorātvaṃ vā syādejviṣaye
         // lyapi ca. (SK)
         op.optional(op.antya, "6.1.51", p, c, "A")

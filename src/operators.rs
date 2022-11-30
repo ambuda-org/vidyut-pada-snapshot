@@ -217,12 +217,12 @@ pub fn slu(t: &mut Term) {
 }
 
 /// Deletes all of the text in the given term through *lup*.
-/*
+#[allow(unused)]
 fn lup(t: &mut Term) {
     lopa(t);
     t.add_tag(T::Lup);
 }
-*/
+
 // Tags
 // ====
 
@@ -300,7 +300,6 @@ mod tests {
         assert!(t.has_tag(T::Slu));
     }
 
-    /*
     #[test]
     fn test_lup() {
         let mut t = Term::make_text("ti");
@@ -308,5 +307,4 @@ mod tests {
         assert_eq!(t.text, "");
         assert!(t.has_tag(T::Lup));
     }
-    */
 }
