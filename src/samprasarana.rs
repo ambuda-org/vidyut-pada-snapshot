@@ -1,6 +1,5 @@
 use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
-use crate::filters as f;
 use crate::operators as op;
 /// Applies samprasarana changes as needed.
 ///
@@ -64,7 +63,6 @@ fn try_grahi_jya_samprasarana(rule: Rule, p: &mut Prakriya, i: usize) {
 }
 
 pub fn run_for_dhatu(p: &mut Prakriya) {
-    p.step("for dhatu");
     let i = match p.find_first(T::Dhatu) {
         Some(i) => i,
         None => return,

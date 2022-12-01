@@ -11,7 +11,7 @@ rest of the text selects rules based on their priority and allows a rule to appl
 the tripādi applies rules in order and will never "go back" to apply an earlier rule.
 */
 
-use crate::char_view::{char_rule, set_at, xy, xyz};
+use crate::char_view::{char_at, char_rule, set_at, xy, xyz};
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operators as op;
@@ -22,6 +22,7 @@ use crate::term::Term;
 use lazy_static::lazy_static;
 
 lazy_static! {
+    static ref AT_KU_PU_M: SoundSet = s("aw ku~ pu~ M");
     static ref CU: SoundSet = s("cu~");
     static ref INKU: SoundSet = s("iR2 ku~");
     static ref JHAL: SoundSet = s("Jal");
@@ -65,8 +66,11 @@ fn try_ra_to_la(p: &mut Prakriya) {
 
     for i in 0..p.terms().len() {
         let n = i + 1;
-        // HACK to exclude kfpa (cur-gana root).
-        if p.has(i, |t| t.text.starts_with("kfp") && !t.has_u("kfpa")) {
+        if p.has(i, |t| {
+            t.has_u_in(&["kfpU~\\", "kfpa~\\"]) && !t.has_gana(10)
+        }) {
+            // HACK to exclude kfpa (cur-gana root).
+            // TODO: why is this needed?
             p.op("8.2.18", op::t(i, do_ra_la));
         } else if p.has(i, f::u("gF")) && p.has(n, f::u("yaN")) {
             p.op("8.2.20", op::t(i, do_ra_la));
@@ -396,40 +400,70 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
     */
 }
 
+fn allows_natva(text: &str, i: usize) -> bool {
+    // Search backward from `n` so that the `i` in the operator points directly to `n`.
+    if char_at(text, i) == Some('n') {
+        for c in text[..i].chars().rev() {
+            if "rzfF".contains(c) {
+                return true;
+            } else if !AT_KU_PU_M.contains_char(c) {
+                return false;
+            }
+        }
+    }
+    false
+}
+
 /// Runs rules that change `n` to `R`.
 /// Example: krInAti -> krIRAti.
 ///
 /// (8.2.31 - 8.2.35)
 fn try_natva(p: &mut Prakriya) {
-    /*
-        i, u = p.find_first(T.DHATU)
-        if u and (
-            (u.u == "kzuBa~" and p.terms[i + 1].u in {"SnA", "SAnac"})
-            or (u.u == "tfpa~" and p.terms[i + 1].u == "Snu")
-        ):
-            p.step("8.4.39")
-            return
-
-        // TODO: AG and num
-        view = StringView(p.terms)
-        between = s("aw ku~ pu~ M").regex
-        match = re.search(f"[rzfF]({between}*)n", view.text)
-
-        if match:
-            // End of pada
-            if match.span(0)[1] == len(view.text):
-                p.step("8.4.37")
-            else:
-                view[match.span(0)[1] - 1] = "R"
-                if match.group(1):
-                    p.step("8.4.2")
-                else:
-                    trigger = view[match.span(0)[0]]
-                    if trigger in "rz":
-                        p.step("8.4.1")
-                    else:
-                        p.step("8.4.1-v")
+    if let Some(i) = p.find_first(T::Dhatu) {
+        let dhatu = &p.terms()[i];
+        if dhatu.has_u("kzuBa~") && p.has(i + 1, f::u_in(&["SnA", "SAnac"]))
+            || dhatu.has_u("tfpa~") && p.has(i + 1, f::u("Snu"))
+        {
+            return;
+        }
     }
+
+    // TODO: AG and num
+    char_rule(
+        p,
+        |_, text, i| allows_natva(text, i),
+        |p, text, i| {
+            if i == text.len() - 1 {
+                p.step("8.4.37");
+                false
+            } else {
+                // TODO: track loctaion of rzfF for better rule logging.
+                set_at(p, i, "R");
+                p.step("8.4.2");
+                true
+            }
+        },
+    );
+
+    /*
+    view = StringView(p.terms)
+    between = s("aw ku~ pu~ M").regex
+    match = re.search(f"[rzfF]({between}*)n", view.text)
+
+    if match:
+        // End of pada
+        if match.span(0)[1] == len(view.text):
+            p.step("8.4.37")
+        else:
+            view[match.span(0)[1] - 1] = "R"
+            if match.group(1):
+                p.step("8.4.2")
+            else:
+                trigger = view[match.span(0)[0]]
+                if trigger in "rz":
+                    p.step("8.4.1")
+                else:
+                    p.step("8.4.1-v")
     */
 }
 
@@ -769,4 +803,13 @@ pub fn run(p: &mut Prakriya) {
 
     try_jhal_adesha(p);
     try_to_savarna(p);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_allows_natva() {
+        assert!(allows_natva("krInAti", 3));
+    }
 }

@@ -322,6 +322,13 @@ impl Prakriya {
         self.rule_decisions.push(RuleChoice::Decline(rule));
     }
 
+    pub fn debug(&self) {
+        for t in &self.terms {
+            println!("- {t:?}");
+        }
+        println!("{:?}", self.tags);
+    }
+
     // Final output
 
     pub fn text(&self) -> String {

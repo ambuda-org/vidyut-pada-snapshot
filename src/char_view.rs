@@ -63,6 +63,10 @@ pub fn char_rule(
     }
 }
 
+pub fn char_at(text: &str, i: usize) -> Option<char> {
+    text.as_bytes().get(i).map(|x| *x as char)
+}
+
 pub fn xy(inner: impl Fn(char, char) -> bool) -> impl Fn(&mut Prakriya, &str, usize) -> bool {
     move |_, text, i| {
         let x = text.as_bytes().get(i);

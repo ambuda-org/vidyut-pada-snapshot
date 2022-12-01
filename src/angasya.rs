@@ -117,6 +117,21 @@ pub fn try_pratyaya_adesha(p: &mut Prakriya) {
     }
 }
 
+fn can_use_guna_or_vrddhi(anga: &Term, n: &TermView) -> bool {
+    // 1.1.6 dIdhI-vevI-iTAm
+    let didhi_vevi_itam =
+        anga.has_u_in(&["dIDIN", "vevIN"]) || (anga.has_u("iw") && anga.has_tag(T::Agama));
+    // 1.1.5 kNiti ca
+    let kniti = n.any(&[T::kit, T::Nit]);
+    // Other prohibitions
+    let blocked = anga.any(&[T::FlagAtLopa, T::FlagGunaApavada]);
+    !(didhi_vevi_itam || kniti || blocked)
+
+    // Otherwise, 1.1.3 iko guNavRddhI
+}
+
+/// Runs rules that replace an anga's vowel with its corresponding vrddhi.
+/// Example: kf + i + ta -> kArita
 fn try_vrddhi_adesha(p: &mut Prakriya, i: usize) {
     if p.has(i, f::tag(T::FlagGunaApavada)) {
         return;
@@ -137,39 +152,45 @@ fn try_vrddhi_adesha(p: &mut Prakriya, i: usize) {
 ///
 /// (7.2.115 - 7.3.35)
 fn try_nnit_vrddhi(p: &mut Prakriya, i: usize) {
-    /*
-    if not (n and n.any("Y", "R") and n.all(T.PRATYAYA)):
-        return
+    let anga = match p.get(i) {
+        Some(t) => t,
+        None => return,
+    };
+    let n = match p.view(i + 1) {
+        Some(v) => v,
+        None => return,
+    };
 
-    if c.any(T.F_AT_LOPA, T.F_GUNA_APAVADA):
-        // at-lopa prevents vrddhi
-        return
+    if !n.any(&[T::Yit, T::Rit]) || !can_use_guna_or_vrddhi(anga, &n) || !n.has_u("RiN") {
+        // Allow RiN even though it is Nit and will be excluded by `can_use_guna_or_vrddhi`.
+        if !n.has_u("RiN") {
+            return;
+        }
+    }
 
-    // HACK
-    n.u = n.terms[0].u
-
-    if not (f.can_use_guna(c, n) or n.u == "RiN"):
-        return
-
-    na = None
-    if c.text in {"jan", "vaD"} and (n.u == "ciR" or n.all(T.KRT)):
-        na = "7.3.35"
-
-    if na:
-        p.step(na)
-    // By "acaH" we should ignore iko guNavRddhI (vye -> vivyAya)
-    } else if c.antya in s("ac"):
-        op.antya("7.2.115", p, c, sounds.vrddhi(c.antya))
-    } else if c.upadha == "a":
-        op.upadha("7.2.116", p, c, "A")
-    */
+    if anga.has_text_in(&["jan", "vaD"]) && (anga.has_u("ciR") || n.has_tag(T::Krt)) {
+        // Declined for `ajani` etc.
+        p.step("7.3.35");
+    } else if anga.has_antya(&*AC) {
+        // The use of "acaH" in 7.2.115 indicates that we should ignore "iko guNavRddhI" which
+        // ordinarily restricts vrddhi to ik vowels only. By ignoring this restriction, we can
+        // correctly generate `vye -> vivyAya` etc.
+        let sub = al::to_vrddhi(anga.antya().unwrap()).unwrap();
+        p.op_term("7.2.115", i, op::antya(sub));
+    } else if anga.has_upadha('a') {
+        p.op_term("7.2.116", i, op::upadha("A"));
+    }
 }
 
+/// Runs rules that replace an anga's vowel with its corresponding guna.
+/// Example: buD + a + ti -> boDati
 fn try_guna_adesha(p: &mut Prakriya, i: usize) {
-    if p.has(i, f::tag(T::Agama)) {
-        return;
-    }
-    if p.has(i, |t| t.any(&[T::FlagAtLopa, T::FlagGunaApavada])) {
+    let anga = match p.get(i) {
+        Some(t) => t,
+        None => return,
+    };
+
+    if anga.has_tag(T::Agama) {
         return;
     }
 
@@ -177,7 +198,7 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) {
         Some(n) => n,
         None => return,
     };
-    if n.any(&[T::kit, T::Nit]) {
+    if !can_use_guna_or_vrddhi(anga, &n) {
         return;
     }
 
@@ -271,89 +292,82 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) {
     */
 }
 
-/*
-fn shiti(p: &mut Prakriya, index: int):
-    c = p.terms[index]
-    ns = [u for u in p.terms[index + 1 :] if u.text]
-    if not ns:
-        return
-    n = ns[0]
+/// Runs rules that are conditioned on a following Sit-pratyaya.
+fn try_shiti(p: &mut Prakriya) {
+    let i = match p.find_last(T::Dhatu) {
+        Some(i) => i,
+        None => return,
+    };
 
-    if not n.all("S"):
-        return
+    if !p.has(i, f::dhatu) {
+        return;
+    }
+    let i_n = match p.find_next_where(i, |t| !t.text.is_empty()) {
+        Some(i) => i,
+        None => return,
+    };
 
-    if c.antya == "o" and n.u == "Syan":
-        op.antya("7.3.71", p, c, "")
+    let sham_adi = &[
+        "Samu~", "tamu~", "damu~", "Sramu~", "Bramu~", "kzamU~", "klamu~", "madI~",
+    ];
 
-    sham_adi = (
-        "Samu~",
-        "tamu~",
-        "damu~",
-        "Sramu~",
-        "Bramu~",
-        "kzamU~",
-        "klamu~",
-        "madI~",
-    )
-    // Need gana check to avoid including Bramu~ from bhU-gaNa
-    if c.u in sham_adi and n.u == "Syan" and c.gana == 4:
-        c.text = c.text.replace("a", "A")
-        p.step("7.3.74")
-
-    pa_ghra = (
-        "pA\\",
-        "GrA\\",
-        "DmA\\",
-        "zWA\\",
-        "mnA\\",
-        "dA\\R",
-        "df\\Si~r",
-        "f\\",
-        "sf\\",
-        "Sa\\dx~",
+    let pa_ghra = &[
+        "pA\\", "GrA\\", "DmA\\", "zWA\\", "mnA\\", "dA\\R", "df\\Si~r", "f\\", "sf\\", "Sa\\dx~",
         "za\\dx~",
-    )
+    ];
 
-    // 7.3.78
-    if c.all(T.DHATU) and c.u in pa_ghra and c.gana not in {2, 3}:
-        piba_jighra = (
-            "piba",
-            "jiGra",
-            "Dama",
-            "tizWa",
-            "mana",
-            "yacCa",
-            "paSya",
-            "fcCa",
-            "DO",
-            "SIya",
-            "sIda",
-        )
-        mapping = dict(zip(pa_ghra, piba_jighra))
-        // sartervegitāyāṃ gatau dhāvādeśam icchanti। anyatra sarati, anusarati
-        // ityeva bhavati. (kAzikA)
-        if c.u == "sf\\":
-            p.op_optional(op.text, "7.3.78", p, c, mapping[c.u])
-        else:
-            op.text("7.3.78", p, c, mapping[c.u])
+    let piba_jighra = &[
+        "piba", "jiGra", "Dama", "tizWa", "mana", "yacCa", "paSya", "fcCa", "DO", "SIya", "sIda",
+    ];
 
-    } else if c.u in ("jYA\\", "janI~\\"):
-        op.text("7.3.79", p, c, "jA")
-    } else if c.u in PU_ADI and c.gana in {5, 9}:
-        c.text = c.text.replace("U", "u").replace("F", "f").replace("I", "i")
-        p.step("7.3.80")
+    let anga = &p.terms()[i];
+    let n = &p.terms()[i_n];
+    if !n.has_tag(T::Sit) {
+        return;
+    }
+    let last = p.terms().last().unwrap();
 
-    // TODO: A-cam
-    if c.text in ("zWiv", "klam"):
-        c.text = op.yatha(c.text, ("zWiv", "klam"), ("zWIv", "klAm"))
-        p.step("7.3.75")
-    } else if p.has(i, f::text("kram" and p.terms[-1].all("parasmaipada"):
-        op.text("7.3.76", p, c, "krAm")
-    } else if c.u in ("izu~", "ga\\mx~", "ya\\ma~"):
-        op.antya("7.3.77", p, c, "C")
+    if anga.has_antya('o') && n.has_u("Syan") {
+        p.op_term("7.3.71", i, op::antya(""));
+    } else if anga.has_u_in(sham_adi) && n.has_u("Syan") && anga.has_gana(4) {
+        // Check ganas to avoid `Bramu~ anavasTAne` (BrAmyati).
+        p.op_term("7.3.74", i, |t| t.text = t.text.replace('a', "A"));
+    } else if anga.has_text_in(&["zWiv", "klam"]) {
+        // TODO: A-cam
+        p.op_term("7.3.75", i, |t| {
+            t.text = t.text.replace("zWiv", "zWIv").replace("klam", "klAm");
+        });
+    } else if anga.has_text("kram") && last.has_tag(T::Parasmaipada) {
+        p.op_term("7.3.76", i, op::text("krAm"));
+    } else if anga.has_u_in(&["izu~", "ga\\mx~", "ya\\ma~"]) {
+        p.op_term("7.3.77", i, op::antya("C"));
+    } else if anga.has_u_in(pa_ghra) && !anga.has_gana(2) && !anga.has_gana(3) {
+        // Check ganas above to avoid `pA rakzaRe` (pAti), `f gatO` (iyarti)
+        let to_piba_jighra = |p: &mut Prakriya| {
+            let anga = &p.terms()[i];
+            if let Some(needle) = &anga.u {
+                if let Some(sub) = op::yatha(needle, pa_ghra, piba_jighra) {
+                    p.op_term("7.3.78", i, op::text(sub));
+                } else {
+                    panic!("No match found for `{}`", anga.text);
+                }
+            }
+        };
+        if anga.has_u("sf\\") {
+            // sartervegitāyāṃ gatau dhāvādeśam icchanti। anyatra sarati, anusarati
+            // ityeva bhavati. (kAzikA)
+            p.op_optional("7.3.78", to_piba_jighra);
+        } else {
+            p.op("7.3.78", to_piba_jighra);
+        }
+    } else if anga.has_u_in(&["jYA\\", "janI~\\"]) {
+        p.op_term("7.3.79", i, op::text("jA"));
+    } else if anga.has_u_in(gana::PU_ADI) && (anga.has_gana(5) || anga.has_gana(9)) {
+        p.op_term("7.3.80", i, |t| {
+            t.text = t.text.replace('U', "u").replace('F', "f").replace('I', "i");
+        });
     }
 }
-*/
 
 /// Runs rules that add nu~m to the base.
 ///
@@ -1100,13 +1114,9 @@ pub fn run_remainder(p: &mut Prakriya) {
     // has a chance to take effect and prevent "ato yeyaH" (7.2.80).
     try_ksa_lopa(p);
     try_sarvadhatuke(p);
-
-    /*
-    for index, _ in enumerate(p.terms):
-        shiti(p, index)
+    try_shiti(p);
 
     // Must come before asiddhavat rule 6.4.78 (e.g. "iyarti", ekahalmadhya)
-    */
     abhyasasya::run(p);
 
     for i in 0..p.terms().len() {

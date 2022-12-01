@@ -17,10 +17,12 @@ use crate::tripadi;
 use crate::vikarana;
 use std::error::Error;
 
-///  Samprasarana of the dhatu is conditioned on several other operations, which we must execute
-///  first:
+/// Samprasarana of the dhatu is conditioned on several other operations, which we must execute
+/// first:
 ///
-/// jha_adesha --> it_agama --> atidesha --> samprasarana
+/// 1. jha_adesha
+/// 2. it_agama
+/// 3. atidesha
 fn dhatu_samprasarana_tasks(p: &mut Prakriya) {
     // Needed transitively for dhatu-samprasarana.
     angasya::try_pratyaya_adesha(p);

@@ -114,12 +114,20 @@ impl Term {
         self.lakshana.iter().any(|s| u.contains(&s.as_str()))
     }
 
+    pub fn has_text(&self, text: &str) -> bool {
+        self.text == text
+    }
+
     pub fn has_text_in(&self, items: &[&str]) -> bool {
         items.contains(&self.text.as_str())
     }
 
     pub fn has_prefix_in(&self, terms: &[&str]) -> bool {
         terms.iter().any(|t| self.text.starts_with(t))
+    }
+
+    pub fn has_gana(&self, gana: i32) -> bool {
+        self.gana == Some(gana)
     }
 
     // Tags

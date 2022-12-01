@@ -168,6 +168,15 @@ pub fn adesha(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
     }
 }
 
+pub fn yatha<'a>(needle: &str, old: &[&'a str], new: &[&'a str]) -> Option<&'a str> {
+    for (i, o) in old.iter().enumerate() {
+        if needle == *o {
+            return Some(new[i]);
+        }
+    }
+    None
+}
+
 pub fn upadesha_yatha(p: &mut Prakriya, i: usize, old: &[&str], new: &[&str]) {
     assert_eq!(old.len(), new.len());
     if let Some(t) = p.get_mut(i) {
