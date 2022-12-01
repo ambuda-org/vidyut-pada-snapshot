@@ -2,6 +2,7 @@ use crate::constants::Tag;
 use crate::term::{Term, TermView};
 use std::collections::HashSet;
 
+/// A string code for some grammar rule. All rule codes are static strings.
 pub type Rule = &'static str;
 
 /// Represents a step of the derivation.
@@ -21,6 +22,7 @@ pub enum RuleChoice {
     Decline(Rule),
 }
 
+/// Models a derivation.
 #[derive(Default)]
 pub struct Prakriya {
     terms: Vec<Term>,
@@ -33,6 +35,7 @@ pub struct Prakriya {
 impl Prakriya {
     // Constructors
 
+    // Creates an empty prakriya.
     pub fn new() -> Self {
         Prakriya {
             terms: Vec::new(),
@@ -365,24 +368,24 @@ impl PrakriyaStack {
     ///
     /// We find new paths as follows. Suppose our initial prakriya followed the following path:
     ///
-    ///     Accept(A), Accept(B), Accept(C)
+    /// > Accept(A), Accept(B), Accept(C)
     ///
     /// We then add one candidate path for each alternate choice we could have made:
     ///
-    ///     Decline(A)
-    ///     Accept(A), Decline(B)
-    ///     Accept(A), Accept(B), Decline(C)
+    /// > Decline(A)
+    /// > Accept(A), Decline(B)
+    /// > Accept(A), Accept(B), Decline(C)
     ///
     /// Suppose we then try `Decline(A)` and make the following choices:
     ///
-    ///     Decline(A), Accept(B), Accept(D)
+    /// > Decline(A), Accept(B), Accept(D)
     ///
     /// After this, adding an `Accept(A) path to the stack would be a mistake, as it would cause an
     /// infinite loop. Instead, we freeze our initial decision to use `Decline(A)` and add only the
     /// following paths:
     ///
-    ///     Decline(A), Decline(B)
-    ///     Decline(A), Accept(B), Decline(D)
+    /// > Decline(A), Decline(B)
+    /// > Decline(A), Accept(B), Decline(D)
     fn add_prakriya(&mut self, p: Prakriya, initial_choices: &[RuleChoice]) {
         let choices = p.rule_choices();
         let offset = initial_choices.len();
@@ -401,11 +404,12 @@ impl PrakriyaStack {
         self.prakriyas.push(p);
     }
 
+    /// Pops an unexplored choice path from the stack.
     fn pop_path(&mut self) -> Option<Vec<RuleChoice>> {
         self.paths.pop()
     }
 
-    /// Retuns all of the prakriyas this stack has found. This consumes the stack.
+    /// Returns all of the prakriyas this stack has found. This consumes the stack.
     pub fn prakriyas(self) -> Vec<Prakriya> {
         self.prakriyas
     }
