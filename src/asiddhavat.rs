@@ -19,14 +19,56 @@ use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
-use crate::term::Term;
+use crate::term::{Term, TermView};
 use lazy_static::lazy_static;
 
 lazy_static! {
+    // The name has two Is for readability.
+    static ref II: SoundSet = s("i");
+    static ref UU: SoundSet = s("u");
+    static ref I_U: SoundSet = s("i u");
     static ref AC: SoundSet = s("ac");
     static ref HAL: SoundSet = s("hal");
     static ref JHAL: SoundSet = s("Jal");
     static ref MAHAPRANA: SoundSet = s("K G C J W Q T D P B");
+}
+
+fn is_knit(n: &TermView) -> bool {
+    n.any(&[T::kit, T::Nit])
+}
+
+/// Returns whether the given slice has multiple vowels.
+fn is_anekac(p: &Prakriya, i: usize) -> bool {
+    let mut num_ac = 0_u8;
+    for t in p.terms()[..i].iter().rev() {
+        for c in t.text.chars().rev() {
+            if AC.contains_char(c) {
+                num_ac += 1;
+                if num_ac >= 2 {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+/// Returns whether the given slice ends in a samyoga.
+fn is_samyogapurva(p: &Prakriya, i: usize) -> bool {
+    let mut num_hal = 0_u8;
+    for t in p.terms()[..i].iter().rev() {
+        for c in t.text.chars().rev() {
+            if HAL.contains_char(c) {
+                num_hal += 1;
+                if num_hal >= 2 {
+                    return true;
+                }
+            } else {
+                return false;
+            }
+        }
+    }
+    false
 }
 
 /// Runs rules conditioned on a following knit ArdhadhAtuka suffix.
@@ -74,24 +116,6 @@ fn run_kniti_ardhadhatuka(p: &mut Prakriya, i: usize) -> Option<()> {
     }
 
     Some(())
-}
-
-/// Returns whether the given slice ends in a samyoga.
-fn is_samyogapurva(p: &Prakriya, i: usize) -> bool {
-    let mut num_hal = 0_u8;
-    for t in p.terms()[..i].iter().rev() {
-        for c in t.text.chars().rev() {
-            if HAL.contains_char(c) {
-                num_hal += 1;
-                if num_hal >= 2 {
-                    return true;
-                }
-            } else {
-                return false;
-            }
-        }
-    }
-    false
 }
 
 /// Runs rules conditioned on a following `kit` or `Nit` suffix.
@@ -334,41 +358,105 @@ fn run_dirgha(p: Prakriya):
             anga.antya == "f" or anga.text.endswith("ar")
         ) and anga.text not in tr_exclude:
             op.upadha("6.4.11", p, anga, sounds.dirgha(anga.upadha))
-
-
-fn antya_nalopa(p: Prakriya, index):
-    """Rules that delete the final n of a term.
-
-    (6.4.37 - )
-    """
-
-    c = p.terms[index]
-    n = TermView.make(p, index)
-    if not n:
-        return
-
-    n.u = n.terms[0].u
-
-    anudatta_tanadi_van = c.all(T.ANUDATTA) or c.u in TAN_ADI or c.text == "van"
-    jhali = n.adi in s("Jal")
-    kniti = f.is_knit(n)
-
-    if c.text in {"jan", "san", "Kan"}:
-        // jan + Syan should always be jAyate.
-        if (n.adi == "y" and kniti) and not (c.text == "jan" and n.u == "Syan"):
-            op.optional(op.antya, "6.4.38", p, c, "A")
-        } else if  (jhali and kniti) or n.u == "san":
-            op.antya("6.4.37", p, c, "A")
-
-    } else if  c.text == "tan" and n.u == "yak":
-        op.optional(op.antya, "6.4.39", p, c, "A")
-
-    } else if  c.antya in s("Yam") and anudatta_tanadi_van and jhali and kniti:
-        if n.u == "lyap":
-            op.optional(op.antya, "6.4.37", p, c, "")
-        else:
-            op.antya("6.4.37", p, c, "")
 */
+
+fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
+    let anga = p.get(i)?;
+    if anga.has_tag(T::Snam) && anga.has_upadha('n') {
+        p.op_term("6.4.23", i, op::upadha(""));
+    }
+
+    let anga = p.get(i)?;
+    let n = p.view(i + 1)?;
+    let anidit_hal = !anga.has_tag(T::idit) && anga.has_antya(&*HAL);
+    let is_kniti = n.any(&[T::kit, T::Nit]);
+
+    if anidit_hal && is_kniti && anga.has_upadha('n') {
+        let mut can_run = true;
+        // ancu gati-pUjanayoH
+        if anga.has_u("ancu~") {
+            let code = "6.4.30";
+            if p.is_allowed(code) {
+                p.step(code);
+            } else {
+                p.decline(code);
+                can_run = false;
+            }
+        }
+        // TODO: 6.4.31 etc.
+        if can_run {
+            p.op_term("6.4.24", i, op::upadha(""));
+        }
+    } else if anga.has_text_in(&["danS", "sanj", "svanj"]) && n.has_u("Sap") {
+        p.op_term("6.4.25", i, op::upadha(""));
+    } else if anga.has_text("ranj") {
+        if n.has_u("Sap") {
+            p.op_term("6.4.26", i, op::upadha(""));
+        } else if n.has_u("GaY") {
+            p.op_optional("6.4.27", op::t(i, op::upadha("")));
+        }
+    } else if anga.has_text("syad") && n.has_u("GaY") {
+        p.op_optional("6.4.28", op::t(i, op::upadha("")));
+    } else if anga.has_text("SAs") && is_kniti && (n.has_u("aN") || n.has_adi(&*HAL)) {
+        p.op_term("6.4.34", i, op::upadha("i"));
+    } else if anga.has_text("SAs") && n.last()?.has_text("hi") {
+        p.op_term("6.4.35", i, op::text("SA"));
+    }
+
+    Some(())
+}
+
+/// Runs rules that delete the final n of a term.
+///
+/// (6.4.36 - 6.4.44)
+/// TODO: 6.4.41
+fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
+    let anga = p.get(i)?;
+    let n = p.view(i+1)?;
+
+    if !(anga.has_antya('n') || anga.has_antya('m')) {
+        return None;
+    }
+
+    let is_anudatta = anga.has_tag(T::Anudatta);
+    let is_tanadi = anga.has_u_in(gana::TAN_ADI);
+
+    let jhali_kniti = n.has_adi(&*JHAL) && is_knit(&n);
+
+    if anga.has_text("han") && n.last()?.has_text("hi") {
+        p.op_term("6.4.36", i, op::text("ja"));
+    } else if anga.has_text("gam") && n.has_u("kvip") {
+        // TODO: other kvi-pratyayas?
+        p.op_term("6.4.40", i, op::antya(""));
+    } else if anga.has_text_in(&["jan", "san", "Kan"]) && (jhali_kniti || n.has_u("san")) {
+        if n.has_adi('y') {
+            // Syan-pratyaya excluded by "jhali kniti".
+            p.op_optional("6.4.43", op::t(i, op::antya("A")));
+        } else {
+            p.op_term("6.4.42", i, op::antya("A"));
+        }
+    } else if anga.has_text("tan") && n.has_u("yak") {
+        p.op_optional("6.4.44", op::t(i, op::antya("A")));
+    } else if anga.has_text("san") && n.has_u("ktic") {
+        let used = p.op_optional("6.4.45.b", op::t(i, op::antya("")));
+        if !used {
+            p.op_optional("6.4.45.a", op::t(i, op::antya("A")));
+        }
+    } else if is_anudatta || is_tanadi || anga.has_text("van") && jhali_kniti {
+        // General case
+        //
+        if n.has_u("lyap") {
+            p.op_optional("6.4.38", op::t(i, op::antya("")));
+        } else if n.has_u("ktic") {
+            // TODO: also prevent 6.4.15;
+            p.step("6.4.39");
+        } else {
+            p.op_term("6.4.37", i, op::antya(""));
+        }
+    }
+
+    Some(())
+}
 
 fn try_add_a_agama(p: &mut Prakriya, i: usize) {
     if p.find_last(T::Dhatu).is_none() {
@@ -410,73 +498,12 @@ fn try_add_a_agama(p: &mut Prakriya, i: usize) {
 }
 
 pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {
-    let dhatu = p.get(i)?;
-    if dhatu.has_tag(T::Snam) && dhatu.upadha().unwrap() == 'n' {
-        p.op_term("6.4.23", i, op::upadha(""));
-    }
-
-    let dhatu = p.get(i)?;
-    let n = p.view(i + 1)?;
-    let anidit_hal = !dhatu.has_tag(T::idit) && dhatu.has_antya(&*HAL);
-    let is_kniti = n.any(&[T::kit, T::Nit]);
-
-    if anidit_hal && is_kniti && dhatu.has_upadha('n') {
-        // ancu gati-pUjanayoH
-        if dhatu.has_u("ancu~") {
-            let code = "6.4.30";
-            if p.is_allowed(code) {
-                p.step(code);
-                p.op_term("6.4.24", i, op::upadha(""));
-            } else {
-                p.decline(code)
-            }
-        } else {
-            p.op_term("6.4.24", i, op::upadha(""));
-        }
-    } else if dhatu.has_text_in(&["danS", "sanj", "svanj"]) && n.has_u("Sap") {
-        p.op_term("6.4.25", i, op::upadha(""));
-    } else if dhatu.text == "ranj" && n.has_u("Sap") {
-        p.op_term("6.4.26", i, op::upadha(""));
-    } else if dhatu.text == "SAs" && is_kniti && (n.has_u("aN") || n.has_adi(&*HAL)) {
-        p.op_term("6.4.34", i, op::upadha("i"));
-    }
-
-    /*
-    anidit_hal = (not c.any("i")) and c.antya in s("hal")
-    kniti = f.is_knit(n)
-
-    if anidit_hal and kniti and c.upadha == "n":
-        do = True
-        // ancu gati-pUjanayoH
-        if c.u == "ancu~":
-            if p.allow("6.4.30"):
-                p.step("6.4.30")
-                do = False
-            else:
-                p.decline("6.4.30")
-        if do:
-            op.upadha("6.4.24", p, c, "")
-
-    } else if  c.text in ("danS", "sanj", "svanj") and n.u == "Sap":
-        op.upadha("6.4.25", p, c, "")
-
-    } else if  c.text == "ranj" and n.u == "Sap":
-        op.upadha("6.4.26", p, c, "")
-
-    } else if  c.text == "SAs" and kniti and (n.u == "aN" or n.adi in s("hal")):
-        op.upadha("6.4.34", p, c, "i")
-
-    antya_nalopa(p, index)
-
-    // Blocked by 7.3.84
-    can_guna = n.any(T.SARVADHATUKA, T.ARDHADHATUKA) and not f.is_knit(n)
-    */
-
+    try_upadha_nalopa(p, i);
+    try_antya_nalopa(p, i);
     try_add_a_agama(p, i);
-
     try_ardhadhatuke(p, i);
 
-    // Must run before guNa
+    // Must run before guNa.
     let n = p.view(i + 1)?;
     if p.has(i, f::text("BU")) && n.has_lakshana_in(&["lu~N", "li~w"]) {
         op::append_agama("6.4.88", p, i, "vu~k");
@@ -487,7 +514,7 @@ pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {
         op.luk("6.4.104", p, n.terms[0])
 
     // 6.4.114 has a vArttika for ArdhadhAtuke:
-    } else if  c.u == "daridrA" and n.any(T.ARDHADHATUKA):
+    } else if c.u == "daridrA" and n.any(T.ARDHADHATUKA):
         if p.terms[-1].all("lu~N"):
             if p.allow("6.4.114.v2"):
                 p.step("6.4.114.v2")
@@ -507,64 +534,55 @@ pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {
 // Runs rules that are conditioned on an anga ending in an "i" or "v" sound.
 //
 // (6.4.77 - 6.4.100)
-fn run_for_final_i_or_v(p: &mut Prakriya, i: usize) -> Option<()> {
+fn run_for_final_i_or_u(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
     let n = p.view(i + 1)?;
 
-    if !n.has_adi(&*AC) {
+    if !anga.has_antya(&*I_U) || !n.has_adi(&*AC) {
         return None;
     }
 
-    let yv = ["i", "I", "u", "U"];
-    let iy_uv = ["iy", "iy", "uv", "uv"];
+    let to_iy_uv = |p: &mut Prakriya, i| {
+        if p.has(i, |t| t.has_antya(&*II)) {
+            p.set(i, op::antya("iy"));
+        } else {
+            p.set(i, op::antya("uv"));
+        }
+    };
 
-    if anga.has_u_in(&["hu\\", "Snu"]) && n.has_tag(T::Sarvadhatuka) && !is_samyogapurva(p, i) {
-        p.op_term("6.4.87", i, op::antya("v"));
+    let is_asamyogapurva = !is_samyogapurva(p, i);
+    if anga.has_text("strI") {
+        if n.last()?.has_u_in(&["am", "Sas"]) {
+            p.op_optional("6.4.80", op::t(i, op::antya("iy")));
+        } else {
+            p.op_term("6.4.79", i, op::antya("iy"));
+        }
     } else if anga.has_u("i\\R") {
         p.op_term("6.4.81", i, op::antya("y"));
+    } else if anga.has_antya(&*II) && is_anekac(p, i) && is_asamyogapurva {
+        if anga.has_text("suDI") {
+            p.step("6.4.85");
+        } else {
+            p.op_term("6.4.82", i, op::antya("y"));
+        }
+    } else if anga.has_antya(&*UU) && n.has_tag(T::Sup) && is_anekac(p, i) && is_asamyogapurva {
+        if anga.has_text("BU") {
+            p.step("6.4.85");
+        } else {
+            p.op_term("6.4.83", i, op::antya("v"));
+        }
+    } else if anga.has_text("varzABU") {
+        p.op_term("6.4.84", i, op::antya("v"));
+    } else if anga.has_u_in(&["hu\\", "Snu"]) && n.has_tag(T::Sarvadhatuka) && is_asamyogapurva {
+        p.op_term("6.4.87", i, op::antya("v"));
+    } else if anga.has_tag(T::Dhatu) || anga.has_u("Snu") || anga.has_text("BrU") {
+        p.op("6.4.77", |p| to_iy_uv(p, i));
+    } else {
+        // TODO 6.4.78
     }
 
     Some(())
 }
-
-/*
-    // General case
-    if c.antya in iyuv:
-        aneka_ac = sum(1 for L in c.text if L in s("ac")) > 1
-        samyogapurva = (
-            len(c.text) >= 3 and c.text[-3] in s("hal") and c.text[-2] in s("hal")
-        )
-
-        if (
-            c.all(T.DHATU)
-            and c.antya in s("i")
-            // HACK to infer "aneka-ac" from abhyasta
-            and (aneka_ac or c.all(T.ABHYASTA))
-            and not samyogapurva
-        ):
-            op.antya("6.4.82", p, c, "y")
-        } else if  c.text == "strI":
-            if n.terms[0].u in ("am", "Sas"):
-                if p.allow("6.4.80"):
-                    pass
-                else:
-                    p.decline("6.4.80")
-                    op.antya("6.4.79", p, c, iyuv[c.antya])
-            else:
-                op.antya("6.4.79", p, c, iyuv[c.antya])
-
-        } else if  c.all(T.DHATU) or c.u in ("Snu", "BrU"):
-            if c.u == "i\\R":
-                op.antya("6.4.81", p, c, "y")
-            // Some grammarians include ik in the scope of 6.4.81.
-            } else if  c.u == "i\\k":
-                op.optional(op.antya, "6.4.81", p, c, "y")
-
-            if c.antya != "y":
-                op.antya("6.4.77", p, c, iyuv[c.antya])
-        } else if  c.all(T.ABHYASA) and n.adi not in sounds.savarna(c.antya):
-            op.antya("6.4.78", p, c, iyuv[c.antya])
-*/
 
 /// Runs asiddhavat rules that alter a Ri suffix.
 pub fn run_for_ni(p: &mut Prakriya) -> Option<()> {
@@ -599,7 +617,7 @@ pub fn run_for_ni(p: &mut Prakriya) -> Option<()> {
 
 pub fn run_after_guna(p: &mut Prakriya, i: usize) -> Option<()> {
     run_kniti_ardhadhatuka(p, i);
-    run_for_final_i_or_v(p, i);
+    run_for_final_i_or_u(p, i);
     try_run_kniti(p, i);
 
     /*
