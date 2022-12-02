@@ -278,7 +278,7 @@ fn try_et_adesha_and_abhyasa_lopa_for_it(p: &mut Prakriya, i: usize) -> Option<(
 /// (6.4.46 - 6.4.70)
 fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
-    let n = p.view(i+1)?;
+    let n = p.view(i + 1)?;
     if !n.has_tag(T::Ardhadhatuka) {
         return None;
     }
@@ -300,7 +300,6 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
 
     Some(())
 }
-
 
 /*
 fn run_dirgha(p: Prakriya):
