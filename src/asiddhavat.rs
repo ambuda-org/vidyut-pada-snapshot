@@ -40,7 +40,7 @@ fn run_kniti_ardhadhatuka(p: &mut Prakriya, i: usize) -> Option<()> {
     let kniti_ardha = n.any(&[T::kit, T::Nit]) && n.has_tag(T::Ardhadhatuka);
 
     if kniti_ardha && dhatu.has_u("dI\\N") && n.has_adi(&*AC) {
-        p.op("6.4.63", |p| op::insert_agama(p, i, "yu~w"));
+        p.op("6.4.63", |p| op::insert_agama_after(p, i, "yu~w"));
         // No change to `n` index (`i + 1`) needed since `yu~w` is an agama and will will be
         // included in `n`.
     } else if aat && n.has_adi(&*AC) && (kniti_ardha || f::is_it_agama(n.first()?)) {
@@ -137,6 +137,43 @@ fn try_run_kniti(p: &mut Prakriya, i: usize) -> Option<()> {
     Some(())
 }
 
+fn try_run_kniti_sarvadhatuke_for_shna_and_abhyasta(p: &mut Prakriya, i: usize) -> Option<()> {
+    let anga = p.get(i)?;
+    let n = p.view(i + 1)?;
+
+    if !(anga.has_u("SnA") || anga.has_tag(T::Abhyasta)) {
+        return None;
+    }
+
+    let n_is_haladi = n.has_adi(&*HAL);
+    if anga.has_text("daridrA") && n_is_haladi {
+        p.op_term("6.4.114", i, op::antya("i"));
+    } else if anga.has_u("YiBI\\") && n_is_haladi {
+        p.op_optional("6.4.115", op::t(i, op::antya("i")));
+    } else if anga.has_antya('A') {
+        if anga.has_u("o~hA\\k") && n_is_haladi {
+            if n.has_adi('y') {
+                p.op_term("6.4.118", i, op::antya(""));
+            } else {
+                let mut run_116 = true;
+                if n.first()?.has_text("hi") {
+                    // Run 6.4.116 only if 6.4.117 was not run.
+                    run_116 = !p.op_optional("6.4.117", op::t(i, op::antya("A")));
+                }
+                if run_116 {
+                    p.op_optional("6.4.116", op::t(i, op::antya("i")));
+                }
+            }
+        } else if !anga.has_tag(T::Ghu) && n_is_haladi {
+            p.op_term("6.4.113", i, op::antya("I"));
+        } else {
+            p.op_term("6.4.112", i, op::antya(""));
+        }
+    }
+
+    Some(())
+}
+
 fn try_run_kniti_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
     let n = p.view(i + 1)?;
@@ -145,7 +182,7 @@ fn try_run_kniti_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
         return None;
     }
 
-    // Must come before 6.4.111
+    // Must come before 6.4.111.
     if (anga.has_u("asa~") || anga.has_tag(T::Ghu)) && n.has_u("hi") {
         p.op("6.4.119", |p| {
             if let Some(a) = p.find_first(T::Abhyasa) {
@@ -156,39 +193,14 @@ fn try_run_kniti_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
     }
 
     let anga = p.get(i)?;
-    let n = p.view(i + 1)?;
     if anga.has_u("Snam") {
         p.op_term("6.4.111", i, |t| {
             t.text = t.text.replace("na", "n");
         });
     } else if anga.has_u("asa~") {
         p.op_term("6.4.111", i, |t| t.text = t.text.replace('a', ""));
-    } else if anga.has_u("SnA") || anga.has_tag(T::Abhyasta) {
-        let n_is_haladi = n.has_adi(&*HAL);
-        if anga.has_text("daridrA") && n_is_haladi {
-            p.op_term("6.4.114", i, op::antya("i"));
-        } else if anga.has_u("YiBI\\") && n_is_haladi {
-            p.op_optional("6.4.115", op::t(i, op::antya("i")));
-        } else if anga.has_antya('A') {
-            if anga.has_u("o~hA\\k") && n_is_haladi {
-                if n.has_adi('y') {
-                    p.op_term("6.4.118", i, op::antya(""));
-                } else {
-                    let mut run_116 = true;
-                    if n.first()?.has_text("hi") {
-                        // Run 6.4.116 only if 6.4.117 was not run.
-                        run_116 = !p.op_optional("6.4.117", op::t(i, op::antya("A")));
-                    }
-                    if run_116 {
-                        p.op_optional("6.4.116", op::t(i, op::antya("i")));
-                    }
-                }
-            } else if !anga.has_tag(T::Ghu) && n_is_haladi {
-                p.op_term("6.4.113", i, op::antya("I"));
-            } else {
-                p.op_term("6.4.112", i, op::antya(""));
-            }
-        }
+    } else {
+        try_run_kniti_sarvadhatuke_for_shna_and_abhyasta(p, i);
     }
 
     Some(())
@@ -261,34 +273,36 @@ fn try_et_adesha_and_abhyasa_lopa_for_it(p: &mut Prakriya, i: usize) -> Option<(
     Some(())
 }
 
-/*
 /// Runs rules conditioned on a following ardhadhatuka suffix.
 ///
 /// (6.4.46 - 6.4.70)
-fn ardhadhatuke(p: &mut Prakriya, i: usize) {
-    c = p.terms[index]
-    n = TermView.make(p, index)
-    if not n or not n.any(T.ARDHADHATUKA) {
-        return
+fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
+    let anga = p.get(i)?;
+    let n = p.view(i+1)?;
+    if !n.has_tag(T::Ardhadhatuka) {
+        return None;
     }
 
     // HACK to avoid abhyasa-at-lopa
-    if c.all(T.ABHYASA) {
-        return
+    if anga.has_tag(T::Abhyasa) {
+        return None;
     }
 
-    if c.text == "Brasj" {
-        op.optional(op.text, "6.4.47", p, c, "Barj")
-
-    } else if  c.antya == "a":
-        op.antya("6.4.48", p, c, "")
-        c.add_tags(T.F_AT_LOPA)
-        // TODO: remove P F_AT_LOPA
-        p.add_tags(T.F_AT_LOPA)
+    if anga.has_text("Brasj") {
+        p.op_optional("6.4.47", op::t(i, op::text("Barj")));
+    } else if anga.has_antya('a') {
+        p.op("6.4.48", |p| {
+            p.set(i, op::antya(""));
+            p.set(i, op::add_tag(T::FlagAtLopa));
+            p.add_tag(T::FlagAtLopa);
+        });
     }
+
+    Some(())
 }
 
 
+/*
 fn run_dirgha(p: Prakriya):
     """6.4.2 - 6.4.19"""
 
@@ -461,7 +475,7 @@ pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {
 
     try_add_a_agama(p, i);
 
-    // ardhadhatuke(p, index)
+    try_ardhadhatuke(p, i);
 
     // Must run before guNa
     let n = p.view(i + 1)?;

@@ -206,13 +206,13 @@ fn try_rules_for_lit(p: &mut Prakriya, i: usize) {
             if dhatu.has_antya(&*HAL) && dhatu.has_upadha(&*F_HAL) {
                 // 'A' acepted only by some grammarians
                 if dhatu.has_adi('A') {
-                    p.op_optional("7.4.71.k", |p| op::insert_agama(p, i + 1, "nu~w"));
+                    p.op_optional("7.4.71.k", |p| op::insert_agama_after(p, i + 1, "nu~w"));
                 } else {
-                    p.op("7.4.71", |p| op::insert_agama(p, i + 1, "nu~w"));
+                    p.op("7.4.71", |p| op::insert_agama_after(p, i + 1, "nu~w"));
                 }
             // For aSnoti only, not aSnAti
             } else if dhatu.text == "aS" && dhatu.gana == Some(5) {
-                p.op("7.4.72", |p| op::insert_agama(p, i + 1, "nu~w"));
+                p.op("7.4.72", |p| op::insert_agama_after(p, i + 1, "nu~w"));
             }
         } else if p.has(i_dhatu, |t| {
             t.text == "BU" && (t.gana == Some(1) || t.gana == Some(2))

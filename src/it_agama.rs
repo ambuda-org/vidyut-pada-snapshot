@@ -21,6 +21,7 @@ use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
 use crate::filters as f;
 use crate::it_samjna;
+use crate::operators as op;
 use crate::prakriya::{Prakriya, Rule};
 use crate::sounds::{s, SoundSet};
 use crate::term::Term;
@@ -314,7 +315,17 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
             true
         }
         It::Set(code) => {
-            add_it(code, p, i);
+            if add_sak {
+                p.op(code, |p| {
+                    op::insert_agama_after(p, i, "sak");
+                    op::insert_agama_after(p, i + 1, "iw");
+                    p.step(code);
+                    it_samjna::run(p, i).unwrap();
+                    it_samjna::run(p, i + 1).unwrap();
+                });
+            } else {
+                add_it(code, p, i);
+            }
             false
         }
         It::None => false,
@@ -337,28 +348,36 @@ fn try_sarvadhatuke(p: &mut Prakriya, i: usize) -> bool {
     }
 }
 
-/*
-fn it_dirgha(p: &mut Prakriya, c: Term, n: TermView):
-    """Rules that lengthen the iṭ.
+/// Runs rules that lengthen the iṭ.
+///
+/// (7.2.37 - 7.2.40)
+fn try_lengthen_it_agama(p: &mut Prakriya, i: usize) -> Option<()> {
+    if i == 0 {
+        return None;
+    }
 
-    (7.2.37 - 7.2.40)
-    """
+    let dhatu = p.get(i - 1)?;
+    let n = p.view(i)?;
 
-    it = n.terms[0]
-    la = p.terms[-1]
+    let last = p.terms().last()?;
+    if last.has_lakshana("li~w") {
+        return None;
+    }
 
-    if not la.any("li~w"):
-        if c.text == "grah":
-            it.text = "I"
-            p.step("7.2.37")
-        } else if c.antya == "F" or c.text == "vf":
-            if la.any("li~N"):
-                p.step("7.2.39")
-            } else if any(x.u == "si~c" for x in n.terms) and la.any(T.PARASMAIPADA):
-                p.step("7.2.40")
-            else:
-                op.optional(op.text, "7.2.38", p, it, "I")
-*/
+    if dhatu.has_text("grah") {
+        p.op_term("7.2.37", i, op::text("I"));
+    } else if dhatu.has_antya('F') || dhatu.has_text("vf") {
+        if last.has_lakshana("li~N") {
+            p.step("7.2.39");
+        } else if n.slice().iter().any(|t| t.has_u("si~c")) && last.has_tag(T::Parasmaipada) {
+            p.step("7.2.40");
+        } else {
+            p.op_optional("7.2.38", op::t(i, op::text("I")));
+        }
+    }
+
+    Some(())
+}
 
 pub fn run_before_attva(p: &mut Prakriya) {
     // The abhyasa might come second, so match on it specifically.
@@ -380,33 +399,35 @@ pub fn run_before_attva(p: &mut Prakriya) {
         return;
     }
 
-    /*
-    n = TermView.make_pratyaya(p, index)
-    if not n:
-        return
-    it = n.terms[0]
-    if f.is_it_agama(it):
-        it_dirgha(p, c, n)
-    */
+    if let Some(i) = p.find_first_where(f::is_it_agama) {
+        try_lengthen_it_agama(p, i);
+    }
 }
 
-/*
-fn run_after_attva_for_index(p: &mut Prakriya, i: usize):
-    c = p.terms[index]
-    n = TermView.make_pratyaya(p, index)
-    if not n or not n.all(T.ARDHADHATUKA):
-        return
+pub fn run_after_attva(p: &mut Prakriya) -> Option<()> {
+    let i_it = p.find_last_where(f::is_it_agama)?;
 
-    if n.terms[0].u == "si~c":
-        para = p.terms[-1].all(T.PARASMAIPADA)
-        if para:
-            if c.antya == "A" and n.adi in s("val"):
-                c.text += "s"
-                op.insert_agama_after("7.2.73", p, index, "iw")
-*/
+    if i_it == 0 {
+        return None;
+    }
+    let i = i_it - 1;
 
-/*
-fn run_after_attva(p: &mut Prakriya):
-    for index, _ in enumerate(p.terms):
-        run_after_attva_for_index(p, index)
-*/
+    let dhatu = p.get(i)?;
+    let n = p.view(i_it)?;
+    if !n.has_tag(T::Ardhadhatuka) {
+        return None;
+    }
+
+    if n.has_u("si~c") {
+        let is_para = p.terms().last()?.has_tag(T::Parasmaipada);
+        if is_para && dhatu.has_antya('A') && n.has_adi(&*VAL) {
+            p.op("7.2.23", |p| {
+                p.set(i, |t| t.text += "s");
+                op::insert_agama_after(p, i, "iw");
+                it_samjna::run(p, i + 1).unwrap();
+            });
+        }
+    }
+
+    Some(())
+}

@@ -16,7 +16,6 @@ mod dhatu_karya;
 // TODO
 mod dvitva;
 mod filters;
-// TODO
 mod it_agama;
 mod it_samjna;
 mod la_karya;

@@ -37,7 +37,7 @@ fn dhatu_samprasarana_tasks(p: &mut Prakriya) {
     // ardhadhatuka::run_before_dvitva(p)
 
     // Now finish it_agama and atidesha
-    // angasya::it_agama::run_after_attva(p)
+    it_agama::run_after_attva(p);
     atidesha::run_after_attva(p);
 }
 

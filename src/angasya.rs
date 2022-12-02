@@ -155,7 +155,7 @@ fn try_nnit_vrddhi(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
     let n = p.view(i + 1)?;
 
-    if !n.any(&[T::Yit, T::Rit]) || !can_use_guna_or_vrddhi(anga, &n) || !n.has_u("RiN") {
+    if !n.any(&[T::Yit, T::Rit]) || !can_use_guna_or_vrddhi(anga, &n) {
         // Allow RiN even though it is Nit and will be excluded by `can_use_guna_or_vrddhi`.
         if !n.has_u("RiN") {
             return None;
