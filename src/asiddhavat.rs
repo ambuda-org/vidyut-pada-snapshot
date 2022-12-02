@@ -36,16 +36,16 @@ fn run_kniti_ardhadhatuka(p: &mut Prakriya, i: usize) -> Option<()> {
     let dhatu = p.get(i)?;
     let n = p.view(i + 1)?;
 
+    let aat = dhatu.has_antya('A');
     let kniti_ardha = n.any(&[T::kit, T::Nit]) && n.has_tag(T::Ardhadhatuka);
 
     if kniti_ardha && dhatu.has_u("dI\\N") && n.has_adi(&*AC) {
         p.op("6.4.63", |p| op::insert_agama(p, i, "yu~w"));
-        // No change to `n` index (`i + ``) needed since `yu~w` is an agama and will will be
+        // No change to `n` index (`i + 1`) needed since `yu~w` is an agama and will will be
         // included in `n`.
-    } else if dhatu.has_antya('A') && n.has_adi(&*AC) && (kniti_ardha || f::is_it_agama(n.first()?))
-    {
+    } else if aat && n.has_adi(&*AC) && (kniti_ardha || f::is_it_agama(n.first()?)) {
         p.op_term("6.4.64", i, op::antya(""));
-    } else if dhatu.has_antya('A') && kniti_ardha {
+    } else if aat && kniti_ardha {
         let ghu_ma = dhatu.has_tag(T::Ghu)
             || dhatu.has_text_in(&["mA", "sTA", "gA", "sA"])
             || dhatu.has_u("o~hA\\k")
@@ -77,9 +77,9 @@ fn run_kniti_ardhadhatuka(p: &mut Prakriya, i: usize) -> Option<()> {
 }
 
 /// Returns whether the given slice ends in a samyoga.
-fn is_samyogapurva(slice: &[Term]) -> bool {
+fn is_samyogapurva(p: &Prakriya, i: usize) -> bool {
     let mut num_hal = 0_u8;
-    for t in slice.iter().rev() {
+    for t in p.terms()[..i].iter().rev() {
         for c in t.text.chars().rev() {
             if HAL.contains_char(c) {
                 num_hal += 1;
@@ -105,75 +105,94 @@ fn try_run_kniti(p: &mut Prakriya, i: usize) -> Option<()> {
         return None;
     }
 
+    let next_is_hi = n.first()?.has_text("hi");
+
     if anga.has_text_in(&["gam", "han", "jan", "Kan", "Gas"]) && n.has_adi(&*AC) && !n.has_u("aN") {
         p.op_term("6.4.98", i, op::upadha(""));
-    } else if (anga.has_text("hu") || anga.has_antya(&*JHAL)) && n.last()?.has_text("hi") {
-        // TODO: why `end` here??
-        p.op_term("6.4.101", n.end(), op::text("Di"));
+    } else if (anga.has_text("hu") || anga.has_antya(&*JHAL)) && next_is_hi {
+        p.op_term("6.4.101", n.start(), op::text("Di"));
     } else if anga.has_u("ciR") {
         p.op_term("6.4.104", n.start(), op::luk);
     } else if anga.has_antya('a') && n.first()?.has_text("hi") {
         p.op_term("6.4.105", n.start(), op::luk);
-    } else if anga.has_antya('u') && !is_samyogapurva(&p.terms()[..i]) && n.first()?.has_text("hi")
-    {
-        p.op_term("6.4.106", n.start(), op::luk);
+    } else if anga.has_antya('u') && anga.has_tag(T::Pratyaya) {
+        let dhatu = p.get(i - 1)?;
+        let n_is_mv = n.has_adi('m') || n.has_adi('v');
+
+        if !dhatu.has_antya(&*HAL) && next_is_hi {
+            p.op_term("6.4.106", n.start(), op::luk);
+        } else if dhatu.has_text_in(&["kar", "kur"]) {
+            if n_is_mv {
+                p.op_term("6.4.108", i, op::luk);
+            } else if n.has_adi('y') {
+                p.op_term("6.4.109", i, op::luk);
+            }
+        } else if n_is_mv && !is_samyogapurva(p, i) {
+            p.op_optional("6.4.107", op::t(i, op::antya("")));
+        }
     }
+
+    try_run_kniti_sarvadhatuke(p, i);
 
     Some(())
 }
 
-/*
-    prev = p.terms[index - 1] if index > 0 else None
-    if c.antya == "u" and c.all(T.PRATYAYA):
-        if prev and prev.text in ("kar", "kur"):
-            if n.adi in s("m v"):
-                op.luk("6.4.108", p, c)
-            } else if  n.adi in s("y"):
-                op.luk("6.4.109", p, c)
-        } else if  n.adi in s("m v") and not samyogapurva:
-            op.optional(op.antya, "6.4.107", p, c, "")
+fn try_run_kniti_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
+    let anga = p.get(i)?;
+    let n = p.view(i + 1)?;
 
-    sarvadhatuka = n.all(T.SARVADHATUKA)
-    if sarvadhatuka:
-        // Must come before 6.4.111
-        if (c.u == "asa~" or c.all(T.GHU)) and n.terms[-1].u == "hi":
-            for t in p.terms:
-                if t.any(T.ABHYASA):
-                    t.text = ""
-            op.antya("6.4.119", p, c, "e")
+    if !n.has_tag(T::Sarvadhatuka) {
+        return None;
+    }
 
-        if c.all("Snam"):
-            // TODO: unsafe?
-            c.text = c.text.replace("na", "n")
-            p.step("6.4.111")
-        // Match on the upadesha so we don't include asu~ (asyati).
-        } else if  c.u == "asa~":
-            c.text = c.text.replace("a", "")
-            p.step("6.4.111")
+    // Must come before 6.4.111
+    if (anga.has_u("asa~") || anga.has_tag(T::Ghu)) && n.has_u("hi") {
+        p.op("6.4.119", |p| {
+            if let Some(a) = p.find_first(T::Abhyasa) {
+                p.set(a, op::text(""));
+            }
+            p.set(i, op::antya("e"));
+        });
+    }
 
-        } else if  c.u == "SnA" or c.all(T.ABHYASTA):
-            if c.text == "daridrA" and n.adi in s("hal"):
-                op.antya("6.4.114", p, c, "i")
-            } else if  c.u == "YiBI\\" and n.adi in s("hal"):
-                op.optional(op.antya, "6.4.115", p, c, "i")
-            } else if  c.antya == "A":
-                p.debug("aa")
-                if c.u == "o~hA\\k" and n.adi in s("hal"):
-                    if n.adi == "y":
-                        op.antya("6.4.118", p, c, "")
-                    else:
-                        do = True
-                        if n.text == "hi":
-                            if op.optional(op.antya, "6.4.117", p, c, "A"):
-                                do = False
-                        if do:
-                            op.optional(op.antya, "6.4.116", p, c, "i")
-                    p.debug("A", c.u, n.text)
-                } else if  n.adi in s("hal") and not c.all("ghu"):
-                    op.antya("6.4.113", p, c, "I")
-                else:
-                    op.antya("6.4.112", p, c, "")
-*/
+    let anga = p.get(i)?;
+    let n = p.view(i + 1)?;
+    if anga.has_u("Snam") {
+        p.op_term("6.4.111", i, |t| {
+            t.text = t.text.replace("na", "n");
+        });
+    } else if anga.has_u("asa~") {
+        p.op_term("6.4.111", i, |t| t.text = t.text.replace('a', ""));
+    } else if anga.has_u("SnA") || anga.has_tag(T::Abhyasta) {
+        let n_is_haladi = n.has_adi(&*HAL);
+        if anga.has_text("daridrA") && n_is_haladi {
+            p.op_term("6.4.114", i, op::antya("i"));
+        } else if anga.has_u("YiBI\\") && n_is_haladi {
+            p.op_optional("6.4.115", op::t(i, op::antya("i")));
+        } else if anga.has_antya('A') {
+            if anga.has_u("o~hA\\k") && n_is_haladi {
+                if n.has_adi('y') {
+                    p.op_term("6.4.118", i, op::antya(""));
+                } else {
+                    let mut run_116 = true;
+                    if n.first()?.has_text("hi") {
+                        // Run 6.4.116 only if 6.4.117 was not run.
+                        run_116 = !p.op_optional("6.4.117", op::t(i, op::antya("A")));
+                    }
+                    if run_116 {
+                        p.op_optional("6.4.116", op::t(i, op::antya("i")));
+                    }
+                }
+            } else if !anga.has_tag(T::Ghu) && n_is_haladi {
+                p.op_term("6.4.113", i, op::antya("I"));
+            } else {
+                p.op_term("6.4.112", i, op::antya(""));
+            }
+        }
+    }
+
+    Some(())
+}
 
 /// Run rules that replace the dhatu's vowel with e and apply abhyasa-lopa.
 /// Example: `la + laB + e` -> `leBe`
@@ -485,16 +504,8 @@ fn run_for_final_i_or_v(p: &mut Prakriya, i: usize) -> Option<()> {
 
     let yv = ["i", "I", "u", "U"];
     let iy_uv = ["iy", "iy", "uv", "uv"];
-    let is_samyogapurva = if i > 0 {
-        match p.get(i - 1) {
-            Some(t) => t.has_antya(&*HAL),
-            None => false,
-        }
-    } else {
-        false
-    };
 
-    if anga.has_u_in(&["hu\\", "Snu"]) && n.has_tag(T::Sarvadhatuka) && !is_samyogapurva {
+    if anga.has_u_in(&["hu\\", "Snu"]) && n.has_tag(T::Sarvadhatuka) && !is_samyogapurva(p, i) {
         p.op_term("6.4.87", i, op::antya("v"));
     } else if anga.has_u("i\\R") {
         p.op_term("6.4.81", i, op::antya("y"));

@@ -133,9 +133,6 @@ fn can_use_guna_or_vrddhi(anga: &Term, n: &TermView) -> bool {
 /// Runs rules that replace an anga's vowel with its corresponding vrddhi.
 /// Example: kf + i + ta -> kArita
 fn try_vrddhi_adesha(p: &mut Prakriya, i: usize) {
-    if i == 0 {
-        p.step("enter");
-    }
     if p.has(i, f::tag(T::FlagGunaApavada)) {
         return;
     }
@@ -185,22 +182,15 @@ fn try_nnit_vrddhi(p: &mut Prakriya, i: usize) -> Option<()> {
 
 /// Runs rules that replace an anga's vowel with its corresponding guna.
 /// Example: buD + a + ti -> boDati
-fn try_guna_adesha(p: &mut Prakriya, i: usize) {
-    let anga = match p.get(i) {
-        Some(t) => t,
-        None => return,
-    };
-
+fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
+    let anga = p.get(i)?;
     if anga.has_tag(T::Agama) {
-        return;
+        return None;
     }
 
-    let n = match p.view(i + 1) {
-        Some(n) => n,
-        None => return,
-    };
+    let n = p.view(i + 1)?;
     if !can_use_guna_or_vrddhi(anga, &n) {
-        return;
+        return None;
     }
 
     let is_sarva_ardha = n.any(&[T::Sarvadhatuka, T::Ardhadhatuka]);
@@ -242,18 +232,15 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) {
     */
     let can_guna = |opt: Option<char>| opt.map(|c| al::to_guna(c).is_some()).unwrap_or(false);
     if is_sarva_ardha {
-        if p.has(i, f::text("jAgf"))
-            && !n.slice()[0].has_u_in(&["kvip", "ciN"])
-            && !n.has_tag(T::Nit)
-        {
+        if anga.has_text("jAgf") && !n.get(0)?.has_u_in(&["kvip", "ciN"]) && !n.has_tag(T::Nit) {
             p.op("7.3.85", |p| {
                 p.set(i, op::add_tag(T::FlagGuna));
                 p.set(i, op::antya("ar"));
             });
-        } else if p.has(i, f::text_in(&["BU", "sU"])) && n.all(&[T::Tin, T::Sarvadhatuka, T::pit]) {
+        } else if anga.has_text_in(&["BU", "sU"]) && n.all(&[T::Tin, T::Sarvadhatuka, T::pit]) {
             p.step("7.3.88");
-        } else if p.has(i, |t| can_guna(t.antya())) {
-            let guna = al::to_guna(p.terms()[i].antya().unwrap()).unwrap();
+        } else if can_guna(anga.antya()) {
+            let guna = al::to_guna(anga.antya()?)?;
             p.op("7.3.84", |p| {
                 p.set(i, op::add_tag(T::FlagGuna));
                 p.set(i, op::antya(guna));
@@ -288,9 +275,8 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) {
             p.set(i, op::upadha(guna));
         });
     }
-    /*
-    }
-    */
+
+    Some(())
 }
 
 /// Runs rules that are conditioned on a following Sit-pratyaya.

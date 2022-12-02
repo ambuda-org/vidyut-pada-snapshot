@@ -239,6 +239,9 @@ impl Prakriya {
     }
 
     /// Applies the given operator optionally.
+    ///
+    /// Returns: whether the operation was applied. This return value is required for certain
+    /// complex conditions (e.g. 6.4.116 & 117; "if this rule was not applied, ...").
     pub fn op_optional(&mut self, code: Rule, operator: impl Fn(&mut Prakriya)) -> bool {
         if self.is_allowed(code) {
             operator(self);

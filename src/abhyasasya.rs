@@ -128,6 +128,58 @@ fn run_for_sani_cani(p: &mut Prakriya, i: usize) {
     // TODO.
 }
 
+/// Runs abhyasa rules that apply generally.
+fn try_general_rules(p: &mut Prakriya, i: usize) -> Option<()> {
+    let i_dhatu = i + 1;
+    let dhatu = p.get(i_dhatu)?;
+    let abhyasa = p.get(i)?;
+    let last = p.terms().last()?;
+
+    if dhatu.text == "dyut" {
+        p.op_term("7.4.67", i_dhatu, op::text("dit"));
+    } else if dhatu.text == "vyaT" && last.has_lakshana("li~w") {
+        // TODO: move this to `try_rules_for_lit`?
+        p.op_term("7.4.68", i_dhatu, op::text("viT"));
+    } else if SHAR.contains_opt(abhyasa.adi()) && KHAY.contains_opt(abhyasa.get(1)) {
+        let mut abhyasa = &mut p.get_mut(i)?;
+        let res = try_shar_purva(&abhyasa.text);
+        if res != abhyasa.text {
+            abhyasa.text = res;
+            p.step("7.4.61");
+        }
+    } else {
+        let mut abhyasa = &mut p.get_mut(i)?;
+        let res = try_haladi(&abhyasa.text);
+        if res != abhyasa.text {
+            abhyasa.text = res;
+            p.step("7.4.60");
+        }
+    }
+
+    let abhyasa = p.get(i)?;
+    if let Some(val) = KUH_CU.get(&abhyasa.adi()?) {
+        p.op_term("7.4.62", i, op::adi(&val.to_string()));
+    }
+
+    let abhyasa = p.get(i)?;
+    if al::is_dirgha(abhyasa.antya()?) {
+        let val = al::to_hrasva(abhyasa.antya()?)?;
+        p.op_term("7.4.62", i, op::antya(&val.to_string()));
+    }
+
+    if p.has(i, |t| t.has_antya('f')) {
+        p.op_term("7.4.66", i, op::antya("a"));
+    }
+
+    let dhatu = p.get(i_dhatu)?;
+    let last = p.terms().last()?;
+    if dhatu.has_u("i\\R") && last.has_tag(T::kit) {
+        p.op_term("7.4.69", i, op::adi("I"));
+    }
+
+    Some(())
+}
+
 /// Runs abhyasa rules specific to liT.
 ///
 /// Args:
@@ -189,6 +241,11 @@ fn try_rules_for_slu(p: &mut Prakriya, i: usize) -> Option<()> {
     let dhatu = p.get(i_dhatu)?;
 
     if dhatu.has_text_in(&["nij", "vij", "viz"]) {
+        p.debug();
+        for rule in p.history() {
+            println!("{:?}", rule);
+        }
+        println!("{} {:?}", i, abhyasa);
         let sub = al::to_guna(abhyasa.antya().unwrap()).unwrap();
         p.op_term("7.4.75", i, op::antya(sub));
     } else if dhatu.has_u_in(&["quBf\\Y", "mA\\N", "o~hA\\N"]) {
@@ -210,51 +267,7 @@ pub fn run(p: &mut Prakriya) -> Option<()> {
         return None;
     }
 
-    let dhatu = p.get(i_dhatu)?;
-    let abhyasa = p.get(i)?;
-    let last = p.terms().last()?;
-
-    if dhatu.text == "dyut" {
-        p.op_term("7.4.67", i_dhatu, op::text("dit"));
-    } else if dhatu.text == "vyaT" && last.has_lakshana("li~w") {
-        p.op_term("7.4.68", i_dhatu, op::text("viT"));
-    } else if SHAR.contains_opt(abhyasa.adi()) && KHAY.contains_opt(abhyasa.get(1)) {
-        let mut abhyasa = &mut p.get_mut(i)?;
-        let res = try_shar_purva(&abhyasa.text);
-        if res != abhyasa.text {
-            abhyasa.text = res;
-            p.step("7.4.61");
-        }
-    } else {
-        let mut abhyasa = &mut p.get_mut(i)?;
-        let res = try_haladi(&abhyasa.text);
-        if res != abhyasa.text {
-            abhyasa.text = res;
-            p.step("7.4.60");
-        }
-    }
-
-    let abhyasa = p.get(i)?;
-    if let Some(val) = KUH_CU.get(&abhyasa.adi()?) {
-        p.op_term("7.4.62", i, op::adi(&val.to_string()));
-    }
-
-    let abhyasa = p.get(i)?;
-    if al::is_dirgha(abhyasa.antya()?) {
-        let val = al::to_hrasva(abhyasa.antya()?)?;
-        p.op_term("7.4.62", i, op::antya(&val.to_string()));
-    }
-
-    if p.has(i, |t| t.has_antya('f')) {
-        p.op_term("7.4.66", i, op::antya("a"));
-    }
-
-    let dhatu = p.get(i_dhatu)?;
-    let last = p.terms().last()?;
-    if dhatu.has_u("i\\R") && last.has_tag(T::kit) {
-        p.op_term("7.4.69", i, op::adi("I"));
-    }
-
+    try_general_rules(p, i);
     try_rules_for_lit(p, i);
     try_rules_for_slu(p, i);
 

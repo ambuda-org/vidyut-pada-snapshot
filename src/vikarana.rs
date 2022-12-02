@@ -145,7 +145,7 @@ fn maybe_replace_cli_with_an(p: &mut Prakriya, i: usize) {
         return;
     }
 
-    let to_an = replace_with(i + 1, "an");
+    let to_an = replace_with(i + 1, "aN");
     if p.has(i, |t| t.has_u("asu~") || t.has_text_in(&["vac", "KyA"])) {
         p.op("3.1.52", to_an);
     } else if p.has(i, |t| t.has_text_in(&["lip", "sic", "hve"])) {
