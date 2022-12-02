@@ -8,6 +8,7 @@ Rules that modify the abhyāsa.
 
 use crate::constants::Tag as T;
 use crate::filters as f;
+use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
@@ -193,6 +194,12 @@ fn try_rules_for_lit(p: &mut Prakriya, i: usize) {
     let abhyasa = &p.terms()[i];
     let last = p.terms().last().unwrap();
 
+    let add_nut_agama = |rule, p: &mut Prakriya, i: usize| {
+        op::insert_agama_before(p, i, "nu~w");
+        p.step(rule);
+        it_samjna::run(p, i).unwrap();
+    };
+
     if last.has_lakshana("li~w") {
         if abhyasa.text == "a" {
             op::text2("7.4.70", p, i, "A");
@@ -206,13 +213,18 @@ fn try_rules_for_lit(p: &mut Prakriya, i: usize) {
             if dhatu.has_antya(&*HAL) && dhatu.has_upadha(&*F_HAL) {
                 // 'A' acepted only by some grammarians
                 if dhatu.has_adi('A') {
-                    p.op_optional("7.4.71.k", |p| op::insert_agama_after(p, i + 1, "nu~w"));
+                    let code = "7.4.71.k";
+                    if p.is_allowed(code) {
+                        add_nut_agama(code, p, i + 1);
+                    } else {
+                        p.decline(code);
+                    }
                 } else {
-                    p.op("7.4.71", |p| op::insert_agama_after(p, i + 1, "nu~w"));
+                    add_nut_agama("7.4.71", p, i + 1);
                 }
             // For aSnoti only, not aSnAti
             } else if dhatu.text == "aS" && dhatu.gana == Some(5) {
-                p.op("7.4.72", |p| op::insert_agama_after(p, i + 1, "nu~w"));
+                add_nut_agama("7.4.72", p, i + 1);
             }
         } else if p.has(i_dhatu, |t| {
             t.text == "BU" && (t.gana == Some(1) || t.gana == Some(2))
@@ -241,12 +253,7 @@ fn try_rules_for_slu(p: &mut Prakriya, i: usize) -> Option<()> {
     let dhatu = p.get(i_dhatu)?;
 
     if dhatu.has_text_in(&["nij", "vij", "viz"]) {
-        p.debug();
-        for rule in p.history() {
-            println!("{:?}", rule);
-        }
-        println!("{} {:?}", i, abhyasa);
-        let sub = al::to_guna(abhyasa.antya().unwrap()).unwrap();
+        let sub = al::to_guna(abhyasa.antya()?)?;
         p.op_term("7.4.75", i, op::antya(sub));
     } else if dhatu.has_u_in(&["quBf\\Y", "mA\\N", "o~hA\\N"]) {
         p.op_term("7.4.76", i, op::antya("i"));

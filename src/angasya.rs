@@ -23,9 +23,20 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     static ref AC: SoundSet = s("ac");
+    static ref HRASVA: SoundSet = SoundSet::new("aiufx");
+    static ref IK: SoundSet = s("ik");
     static ref HAL: SoundSet = s("hal");
     static ref JHAL: SoundSet = s("Jal");
     static ref I_U: SoundSet = s("i u");
+}
+
+fn op_antya_guna(t: &mut Term) {
+    if let Some(a) = t.antya() {
+        if let Some(sub) = al::to_guna(a) {
+            op::antya(sub)(t);
+            t.add_tag(T::FlagGuna);
+        }
+    }
 }
 
 /// Applies rules that replace an initial "J" in a pratyaya with the appropriate sounds.
@@ -194,87 +205,70 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
     }
 
     let is_sarva_ardha = n.any(&[T::Sarvadhatuka, T::Ardhadhatuka]);
-    /*
-    let can_guna = f.can_use_guna(c, n)
-    let piti_sarvadhatuke = n.all("p", T.SARVADHATUKA)
+    let piti_sarvadhatuke = n.all(&[T::pit, T::Sarvadhatuka]);
+    let is_ik = anga.has_antya(&*IK);
 
-    if (
-        c.antya == "u"
-        && n.terms[0].any("luk")
-        && n.adi in s("hal")
-        && piti_sarvadhatuke
-        && can_guna
-    ) {
-        if c.u == "UrRuY" {
-            if p.allow("7.3.90") {
-                p.step("7.3.90")
-            } else {
-                p.decline("7.3.90")
-                op.antya("7.3.89", p, c, sounds.vrddhi(c.antya))
-            }
-        } else {
-            op.antya("7.3.89", p, c, sounds.vrddhi(c.antya))
-        }
-
-    if p.has(i, f::text("mid" && n.any("S") {
-        c.add_tags(T.F_GUNA)
-        op.text("7.3.82", p, c, "med")
-
-    } else if n.first_non_empty.u == "jus" && c.antya in s("ik") {
-        c.add_tags(T.F_GUNA)
-        op.antya("7.3.83", p, c, sounds.guna(c.antya))
-
-    } else if p.has(i, f::text("tfnah" && n.adi in s("hal") && piti_sarvadhatuke {
-        op.mit("7.3.92", p, c, "i")
-
-    // General case
-    } else if can_guna && sarva_ardha && c.antya in s("ac") {
-    */
-    let can_guna = |opt: Option<char>| opt.map(|c| al::to_guna(c).is_some()).unwrap_or(false);
-    if is_sarva_ardha {
-        if anga.has_text("jAgf") && !n.get(0)?.has_u_in(&["kvip", "ciN"]) && !n.has_tag(T::Nit) {
-            p.op("7.3.85", |p| {
-                p.set(i, op::add_tag(T::FlagGuna));
-                p.set(i, op::antya("ar"));
-            });
-        } else if anga.has_text_in(&["BU", "sU"]) && n.all(&[T::Tin, T::Sarvadhatuka, T::pit]) {
-            p.step("7.3.88");
-        } else if can_guna(anga.antya()) {
-            let guna = al::to_guna(anga.antya()?)?;
-            p.op("7.3.84", |p| {
-                p.set(i, op::add_tag(T::FlagGuna));
-                p.set(i, op::antya(guna));
-            });
-        }
-    }
-
-    /*
-    // puganta-laghu-upadha (TODO: puk)
-    } else if can_guna && sarva_ardha && c.upadha in sounds.HRASVA {
-    */
     // HACK: Asiddhavat, but this blocks guna.
     // TODO: move this to asiddhavat && add no_guna tag.
-    let n = TermView::new(p.terms(), i + 1).unwrap();
-    if p.has(i, f::text("guh")) && s("ac").contains_opt(n.adi()) {
+    if anga.has_text("guh") && n.has_adi(&*AC) {
         p.op_term("6.4.89", i, op::upadha("U"));
-    } else if p.has(i, f::u_in(&["Divi~", "kfvi~"])) {
+    } else if anga.has_u_in(&["Divi~", "kfvi~"]) {
         // Per commentary on 3.1.81, make an exception for dhinv and kRNv.
-    } else if p.has(i, f::tag(T::Abhyasta))
-        && n.all(&[T::pit, T::Sarvadhatuka])
-        && s("ac").contains_opt(n.adi())
-    {
-        // e.g. nenijAma
-        p.step("7.3.87")
-    } else if p.has(i, |t| {
-        can_guna(t.upadha()) && al::is_hrasva(t.upadha().unwrap())
-    }) {
-        let upadha = p.terms()[i].upadha().unwrap();
-        p.op("7.3.86", |p| {
-            let guna = al::to_guna(upadha).unwrap();
-            p.set(i, op::add_tag(T::FlagGuna));
-            p.set(i, op::upadha(guna));
+    } else if anga.has_u("mid") && n.has_tag(T::Sit) {
+        p.op_term("7.3.82", i, |t| {
+            t.text = "med".to_string();
+            t.add_tag(T::FlagGuna);
         });
+    } else if is_ik && n.has_u("jus") {
+        p.op_term("7.3.83", i, op_antya_guna);
+    } else if is_sarva_ardha {
+        let vi_cin_nal = n.get(0)?.has_u_in(&["kvip", "ciN", "Ral"]);
+
+        // Exceptions
+        if anga.has_tag(T::Abhyasta) && piti_sarvadhatuke && n.has_adi(&*AC) {
+            // e.g. nenijAma
+            p.step("7.3.87")
+        } else if anga.has_text_in(&["BU", "sU"]) && n.has_tag(T::Tin) && piti_sarvadhatuke {
+            // e.g. aBUt
+            // TODO: broken due to `vu~k`-Agama throwing off `n`.
+            p.step("7.3.88");
+        } else if anga.has_antya('u') && n.has_adi(&*HAL) && piti_sarvadhatuke {
+            let sub = al::to_vrddhi(anga.antya()?)?;
+            if anga.has_u("UrRu") {
+                if f::is_aprkta(n.last()?) {
+                    p.op_term("7.3.91", i, op_antya_guna);
+                } else {
+                    // If vrddhi is declined, UrRu will take guna by 7.3.84 below.
+                    p.op_optional("7.3.90", op::t(i, op::antya(sub)));
+                }
+            } else if n.has_tag(T::Luk) {
+                p.op_term("7.3.89", i, op::antya(sub));
+            };
+        }
+
+        // Main guna rules.
+        let anga = p.get(i)?;
+        let n = p.get(i + 1)?;
+        if anga.has_text("jAgf") && !vi_cin_nal && !n.has_tag(T::Nit) {
+            p.op_term("7.3.85", i, |t| {
+                op::antya("ar")(t);
+                t.add_tag(T::FlagGuna);
+            });
+        } else if anga.has_upadha(&*HRASVA) {
+            // Main rules.
+            // TODO: puganta
+            let sub = al::to_guna(anga.upadha()?)?;
+            p.op_term("7.3.86", i, |t| {
+                op::upadha(sub)(t);
+                t.add_tag(T::FlagGuna);
+            });
+        } else if is_ik {
+            p.op_term("7.3.84", i, op_antya_guna);
+        } else {
+            p.step("no match");
+        }
     }
+    p.step("done");
 
     Some(())
 }

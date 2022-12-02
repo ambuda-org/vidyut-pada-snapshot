@@ -1,27 +1,4 @@
 use std::error::Error;
-use std::fmt::Display;
-use std::fmt::Formatter;
-
-/// Indicates a failure to parse a string representation of some `semantics` enum.
-#[derive(Debug, Clone)]
-pub struct PrakriyaError {
-    /// The error message.
-    msg: String,
-}
-
-impl PrakriyaError {
-    fn new(s: &str) -> Self {
-        PrakriyaError { msg: s.to_owned() }
-    }
-}
-
-impl Error for PrakriyaError {}
-
-impl Display for PrakriyaError {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.msg)
-    }
-}
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum Prayoga {

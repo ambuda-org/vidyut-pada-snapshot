@@ -119,6 +119,11 @@ pub fn upadesha_no_it(p: &mut Prakriya, i: usize, sub: &str) {
     }
 }
 
+pub fn insert_agama_before(p: &mut Prakriya, i: usize, u: &str) {
+    let agama = Term::make_agama(u);
+    p.insert_before(i, agama);
+}
+
 pub fn insert_agama_after(p: &mut Prakriya, i: usize, u: &str) {
     let agama = Term::make_agama(u);
     p.insert_after(i, agama);
