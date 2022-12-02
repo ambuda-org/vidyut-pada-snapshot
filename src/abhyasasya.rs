@@ -117,46 +117,27 @@ fn run_sani_cani_for_each(p: Prakriya, c: Term, dhatu: Term):
     # TODO: scope of this? Sarvadhatuka only?
     if dhatu.u in MAN_BADHA:
         op.antya("3.1.6", p, c, sounds.dirgha(c.antya))
-
-
-fn run_sani_cani(p: Prakriya):
-    for i, t in enumerate(p.terms):
-        if not t.any(T.ABHYASA):
-            continue
-
-        dhatu = p.terms[i + 1]
-        run_sani_cani_for_each(p, t, dhatu)
 */
 
-/*
-
-operation
-rule
-optional
-
-op::do("1.2.3", op::args))
-op::optional(|| op::do("1.2.3", args))
-op::optional("1.2.3", || op::do("1.2.3", args))
-op::optional("1.2.3", op::do, args))
-
-optionality suggests:
-- one reference to the rule
-- "wrapping" of the rule (`if rule.is_allowed ...`)
---> implies a separation of meta (p.op vs p.op_optional) and operation
-
-p.op
-p.op_optional
-p.op_then
-p.op_optional_then
-
-*/
+/// Runs abhyasa rules conditioned on either `san` or `caN`.
+///
+/// Constraints:
+/// - must follow 7.4.1 etc. which change the dhatu vowel before `caN`.
+/// - must follow guna of the dhatu vowel, which affects 7.4.1 etc. above.
+fn run_for_sani_cani(p: &mut Prakriya, i: usize) {
+    // TODO.
+}
 
 /// Runs abhyasa rules specific to liT.
+///
+/// Args:
+/// - `i`: the index of the abhyasa.
 ///
 /// Example: bu + BU + va -> baBUva.
 ///
 /// (7.4.70 - 7.4.74)
-fn try_rules_for_lit(p: &mut Prakriya, i: usize, i_dhatu: usize) {
+fn try_rules_for_lit(p: &mut Prakriya, i: usize) {
+    let i_dhatu = i + 1;
     let abhyasa = &p.terms()[i];
     let last = p.terms().last().unwrap();
 
@@ -186,48 +167,66 @@ fn try_rules_for_lit(p: &mut Prakriya, i: usize, i_dhatu: usize) {
         }) {
             // gana 1 for `BU`, gana 2 for `as` replaced by `BU`.
             op::text2("7.4.73", p, i, "ba");
+            // TODO: 7.4.74
         }
     }
 }
 
-/*
-if la.all("li~w"):
-    if c.text == "a":
-    # 2 is for as -> bhU
-    } else if  dhatu.text == "BU" and dhatu.gana in (1, 2):
-        op.text("7.4.73", p, c, "ba")
-    # TODO: 7.4.74
-    */
+/// Runs abhyasa rules specific to Slu-pratyaya.
+/// Example: `ni + nij + anti` -> `nenijanti
+///
+/// Args:
+/// - `i_abhyasa`: the index of the abhyasa.
+///
+/// Example: bu + BU + va -> baBUva.
+///
+/// (7.4.75 - 7.4.77)
+fn try_rules_for_slu(p: &mut Prakriya, i: usize) -> Option<()> {
+    p.find_last(T::Slu)?;
 
-pub fn run(p: &mut Prakriya) {
-    let i = match p.find_first(T::Abhyasa) {
-        Some(i) => i,
-        None => return,
-    };
+    let i_dhatu = i + 1;
+    let abhyasa = p.get(i)?;
+    let dhatu = p.get(i_dhatu)?;
+
+    if dhatu.has_text_in(&["nij", "vij", "viz"]) {
+        let sub = al::to_guna(abhyasa.antya().unwrap()).unwrap();
+        p.op_term("7.4.75", i, op::antya(sub));
+    } else if dhatu.has_u_in(&["quBf\\Y", "mA\\N", "o~hA\\N"]) {
+        p.op_term("7.4.76", i, op::antya("i"));
+    } else if dhatu.has_text_in(&["f", "pf", "pF"]) {
+        p.op_term("7.4.77", i, op::antya("i"));
+    }
+
+    Some(())
+    // TODO: 7.4.78 bahulaM chandasi
+}
+
+pub fn run(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_first(T::Abhyasa)?;
 
     // TODO: expand for abhyasa after dhatu.
     let i_dhatu = i + 1;
     if !p.has(i_dhatu, f::dhatu) {
-        return;
+        return None;
     }
 
-    let dhatu = &p.terms()[i_dhatu];
-    let abhyasa = &p.terms()[i];
-    let last = p.terms().last().unwrap();
+    let dhatu = p.get(i_dhatu)?;
+    let abhyasa = p.get(i)?;
+    let last = p.terms().last()?;
 
     if dhatu.text == "dyut" {
         p.op_term("7.4.67", i_dhatu, op::text("dit"));
     } else if dhatu.text == "vyaT" && last.has_lakshana("li~w") {
         p.op_term("7.4.68", i_dhatu, op::text("viT"));
     } else if SHAR.contains_opt(abhyasa.adi()) && KHAY.contains_opt(abhyasa.get(1)) {
-        let mut abhyasa = &mut p.terms_mut()[i];
+        let mut abhyasa = &mut p.get_mut(i)?;
         let res = try_shar_purva(&abhyasa.text);
         if res != abhyasa.text {
             abhyasa.text = res;
             p.step("7.4.61");
         }
     } else {
-        let mut abhyasa = &mut p.terms_mut()[i];
+        let mut abhyasa = &mut p.get_mut(i)?;
         let res = try_haladi(&abhyasa.text);
         if res != abhyasa.text {
             abhyasa.text = res;
@@ -235,16 +234,14 @@ pub fn run(p: &mut Prakriya) {
         }
     }
 
-    let abhyasa = &p.terms()[i];
-    if KUH_CU.contains_key(&abhyasa.adi().unwrap()) {
-        if let Some(val) = KUH_CU.get(&abhyasa.adi().unwrap()) {
-            p.op_term("7.4.62", i, op::adi(&val.to_string()));
-        }
+    let abhyasa = p.get(i)?;
+    if let Some(val) = KUH_CU.get(&abhyasa.adi()?) {
+        p.op_term("7.4.62", i, op::adi(&val.to_string()));
     }
 
-    let abhyasa = &p.terms()[i];
-    if al::is_dirgha(abhyasa.antya().unwrap()) {
-        let val = al::to_hrasva(abhyasa.antya().unwrap()).unwrap();
+    let abhyasa = p.get(i)?;
+    if al::is_dirgha(abhyasa.antya()?) {
+        let val = al::to_hrasva(abhyasa.antya()?)?;
         p.op_term("7.4.62", i, op::antya(&val.to_string()));
     }
 
@@ -252,27 +249,16 @@ pub fn run(p: &mut Prakriya) {
         p.op_term("7.4.66", i, op::antya("a"));
     }
 
-    let dhatu = &p.terms()[i_dhatu];
-    let last = p.terms().last().unwrap();
+    let dhatu = p.get(i_dhatu)?;
+    let last = p.terms().last()?;
     if dhatu.has_u("i\\R") && last.has_tag(T::kit) {
         p.op_term("7.4.69", i, op::adi("I"));
     }
 
-    try_rules_for_lit(p, i, i_dhatu);
+    try_rules_for_lit(p, i);
+    try_rules_for_slu(p, i);
 
-    /*
-    # Slu changes
-    if p.find(lambda x: x.all(T.SLU)):
-        if dhatu.text in ("nij", "vij", "viz"):
-            op.antya("7.4.75", p, c, sounds.guna(c.antya))
-        } else if  dhatu.u in ("quBf\\Y", "mA\\N", "o~hA\\N"):
-            op.antya("7.4.76", p, c, "i")
-        } else if  dhatu.text in ("f", "pf", "pF"):
-            op.antya("7.4.77", p, c, "i")
-        # TODO: 7.4.78
-
-
-     */
+    Some(())
 }
 
 #[cfg(test)]

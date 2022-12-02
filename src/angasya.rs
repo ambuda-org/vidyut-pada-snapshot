@@ -133,6 +133,9 @@ fn can_use_guna_or_vrddhi(anga: &Term, n: &TermView) -> bool {
 /// Runs rules that replace an anga's vowel with its corresponding vrddhi.
 /// Example: kf + i + ta -> kArita
 fn try_vrddhi_adesha(p: &mut Prakriya, i: usize) {
+    if i == 0 {
+        p.step("enter");
+    }
     if p.has(i, f::tag(T::FlagGunaApavada)) {
         return;
     }
@@ -151,23 +154,19 @@ fn try_vrddhi_adesha(p: &mut Prakriya, i: usize) {
 /// Runs rules for vrddhi conditioned on following Nit-Yit.
 ///
 /// (7.2.115 - 7.3.35)
-fn try_nnit_vrddhi(p: &mut Prakriya, i: usize) {
-    let anga = match p.get(i) {
-        Some(t) => t,
-        None => return,
-    };
-    let n = match p.view(i + 1) {
-        Some(v) => v,
-        None => return,
-    };
+fn try_nnit_vrddhi(p: &mut Prakriya, i: usize) -> Option<()> {
+    let anga = p.get(i)?;
+    let n = p.view(i + 1)?;
 
     if !n.any(&[T::Yit, T::Rit]) || !can_use_guna_or_vrddhi(anga, &n) || !n.has_u("RiN") {
         // Allow RiN even though it is Nit and will be excluded by `can_use_guna_or_vrddhi`.
         if !n.has_u("RiN") {
-            return;
+            return None;
         }
     }
 
+    let anga = p.get(i)?;
+    let n = p.view(i + 1)?;
     if anga.has_text_in(&["jan", "vaD"]) && (anga.has_u("ciR") || n.has_tag(T::Krt)) {
         // Declined for `ajani` etc.
         p.step("7.3.35");
@@ -180,6 +179,8 @@ fn try_nnit_vrddhi(p: &mut Prakriya, i: usize) {
     } else if anga.has_upadha('a') {
         p.op_term("7.2.116", i, op::upadha("A"));
     }
+
+    Some(())
 }
 
 /// Runs rules that replace an anga's vowel with its corresponding guna.
@@ -1140,7 +1141,7 @@ pub fn run_remainder(p: &mut Prakriya) {
     ani(p);
 
     // Asiddhavat must run before cani for "Ner aniTi"
-    asiddhavat::run_before_ni(p);
+    asiddhavat::run_for_ni(p);
 
     /*
     cani_after_guna(p)

@@ -211,6 +211,10 @@ impl<'a> TermView<'a> {
         self.start
     }
 
+    pub fn get(&self, i: usize) -> Option<&Term> {
+        self.slice().get(i)
+    }
+
     pub fn end(&self) -> usize {
         self.end
     }

@@ -209,7 +209,7 @@ pub fn text_yatha(term: &mut Term, old: &[&str], new: &[&str]) {
 // ====
 
 /// Deletes all of the text in the given term.
-fn lopa(t: &mut Term) {
+pub fn lopa(t: &mut Term) {
     t.text = "".to_string();
 }
 
