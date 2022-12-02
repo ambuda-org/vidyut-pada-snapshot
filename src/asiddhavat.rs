@@ -412,7 +412,7 @@ fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
 /// TODO: 6.4.41
 fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
-    let n = p.view(i+1)?;
+    let n = p.view(i + 1)?;
 
     if !(anga.has_antya('n') || anga.has_antya('m')) {
         return None;
@@ -586,29 +586,33 @@ fn run_for_final_i_or_u(p: &mut Prakriya, i: usize) -> Option<()> {
 
 /// Runs asiddhavat rules that alter a Ri suffix.
 pub fn run_for_ni(p: &mut Prakriya) -> Option<()> {
-    let i = p.find_last_where(|t| t.has_u_in(&["Ric", "RiN"]))?;
-    let c = p.get(i)?;
-    let n = p.view(i + 1)?;
+    let i_ni = p.find_last_where(|t| t.has_u_in(&["Ric", "RiN"]))?;
+    if i_ni == 0 {
+        return None;
+    }
 
-    /*
-        if (
-            c.u in ("Ric", "RiN")
-            and not f.is_it_agama(n.terms[0])
-            and n.all(T.ARDHADHATUKA)
-        ):
-            n_text = n.terms[0].text
-            if n_text in {"Am", "anta", "Alu", "Ayya", "itnu", "iznu"}:
-                op.antya("6.4.55", p, c, "ay")
-            else:
-                // Apply ac_sandhi before lopa, since later rules depend on this
-                // being done (e.g. cayyAt)
-                ac_sandhi.general_vowel_sandhi(p, p.terms[index - 1 : index + 1])
-                op.antya("6.4.51", p, c, "")
-    */
+    let i_dhatu = i_ni - 1;
+    let n = p.view(i_ni + 1)?;
 
-    if c.has_tag(T::mit) && n.has_u("Ric") && c.has_upadha(&*AC) {
-        if let Some(sub) = al::to_hrasva(c.upadha()?) {
-            p.op_term("6.4.92", i, op::upadha(&sub.to_string()));
+    if !f::is_it_agama(n.first()?) && n.has_tag(T::Ardhadhatuka) {
+        if n.first()?
+            .has_text_in(&["Am", "anta", "Alu", "Ayya", "itnu", "iznu"])
+        {
+            p.op_term("6.4.55", i_ni, op::antya("ay"));
+        } else {
+            // Apply ac_sandhi before lopa, since later rules depend on this
+            // being done (e.g. cayyAt)
+            // TODO: implement this.
+            // ac_sandhi.general_vowel_sandhi(p, p.terms[index - 1 : index + 1])
+            p.op_term("6.4.51", i_ni, op::antya(""));
+        }
+    }
+
+    let dhatu = p.get(i_dhatu)?;
+    let ni = p.get(i_ni)?;
+    if dhatu.has_tag(T::mit) && ni.has_u("Ric") && dhatu.has_upadha(&*AC) {
+        if let Some(sub) = al::to_hrasva(dhatu.upadha()?) {
+            p.op_term("6.4.92", i_ni, op::upadha(&sub.to_string()));
         }
     }
 
