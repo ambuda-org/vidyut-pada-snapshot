@@ -507,7 +507,44 @@ fn try_murdhanya(p: &mut Prakriya) {
             p.op_term("8.3.60", i, op::antya("z"));
         }
     }
+
+    try_murdhanya_for_sidhvam_lun_lit(p);
 }
+
+fn try_murdhanya_for_sidhvam_lun_lit(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_last(T::Tin)?;
+    let i_prev = p.find_prev_where(i, |t| !t.text.is_empty())?;
+
+    let anga = p.get(i_prev)?; 
+    let tin = p.get(i)?;
+
+    Some(())
+}
+
+/*
+    if (
+        c.antya in s("iR2")
+        and not c.any(T.AGAMA)
+        and (n.any("lu~N", "li~w") or n.all(T.ARDHADHATUKA, "li~N"))
+    ):
+        last = n.terms[-1]
+        if not (last.adi == "D" or n.text.endswith("zIDvam")):
+            continue
+
+        do = True
+        if f.is_it_agama(n.terms[0]):
+            code = "8.3.79"
+            if p.allow(code):
+                p.step(code)
+            else:
+                do = False
+                p.decline(code)
+
+        if do:
+            last.text = last.text.replace("D", "Q")
+            p.step("8.3.78")
+*/
+
 
 fn stu_to_scu(c: char) -> Option<&'static str> {
     // FIXME: use char map?
@@ -595,39 +632,6 @@ fn try_change_stu_to_parasavarna(p: &mut Prakriya) {
         },
     );
 }
-
-/*
-        // HACK
-        for i, u in enumerate(p.terms):
-            if c is u:
-                break
-        n = TermView.make_pratyaya(p, i)
-        if not n:
-            continue
-
-        if (
-            c.antya in s("iR2")
-            and not c.any(T.AGAMA)
-            and (n.any("lu~N", "li~w") or n.all(T.ARDHADHATUKA, "li~N"))
-        ):
-            last = n.terms[-1]
-            if not (last.adi == "D" or n.text.endswith("zIDvam")):
-                continue
-
-            do = True
-            if f.is_it_agama(n.terms[0]):
-                code = "8.3.79"
-                if p.allow(code):
-                    p.step(code)
-                else:
-                    do = False
-                    p.decline(code)
-
-            if do:
-                last.text = last.text.replace("D", "Q")
-                p.step("8.3.78")
-*/
-
 /*
 /// Run rules for retroflex Dha.
 fn dha(p: &mut Prakriya):

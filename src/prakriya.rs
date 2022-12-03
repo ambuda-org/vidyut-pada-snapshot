@@ -113,6 +113,24 @@ impl Prakriya {
         None
     }
 
+    pub fn find_prev_where(
+        &self,
+        start_index: usize,
+        filter: impl Fn(&Term) -> bool,
+    ) -> Option<usize> {
+        if self.terms.get(start_index).is_some() {
+            self.terms
+                .iter()
+                .enumerate()
+                .filter(|(i, t)| *i < start_index && filter(t))
+                .rev()
+                .map(|(i, _)| i)
+                .next()
+        } else {
+            None
+        }
+    }
+
     pub fn find_next_where(
         &self,
         start_index: usize,

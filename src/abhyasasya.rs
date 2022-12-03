@@ -16,10 +16,12 @@ use crate::sounds::{map_sounds, s, SoundMap, SoundSet};
 use lazy_static::lazy_static;
 
 lazy_static! {
+    static ref UU: SoundSet = s("u");
     static ref SHAR: SoundSet = s("Sar");
     static ref KHAY: SoundSet = s("Kay");
     static ref HAL: SoundSet = s("hal");
     static ref F_HAL: SoundSet = s("f hal");
+    static ref PU_YAN_J: SoundSet = s("pu~ yaR j");
     static ref KUH_CU: SoundMap = map_sounds("ku~ h", "cu~");
 }
 
@@ -63,6 +65,8 @@ fn try_shar_purva(text: &str) -> String {
 pub fn run_for_sani_cani(p: &mut Prakriya) -> Option<()> {
     let i = p.find_first(T::Abhyasa)?;
     let i_abhyasta = p.find_last(T::Abhyasta)?;
+
+    let abhyasa = p.get(i)?;
     let anga = p.get(i_abhyasta)?;
 
     let is_ni = anga.has_u_in(&["Ric", "RiN"]);
@@ -72,12 +76,30 @@ pub fn run_for_sani_cani(p: &mut Prakriya) -> Option<()> {
     let is_laghu_cani = is_ni && is_laghu && is_cani && !has_at_lopa;
 
     let is_sanvat = is_laghu_cani || p.find_next_where(i, f::u("san")).is_some();
+    let smf_df = &["smf", "dF", "tvar", "praT", "mrad", "stF", "spaS"];
+    let sravati_etc = &["sru\\", "Sru\\", "dru\\", "pru\\N", "plu\\N", "cyu\\N"];
+
+    // Run rules that generally apply to san.
     if is_sanvat {
-        if is_laghu_cani && anga.has_text_in(&["smf", "dF", "tvar", "praT", "mrad", "stF", "spaS"])
-        {
-            p.op_term("7.4.95", i, op::antya("a"));
-        } else if anga.has_antya('a') {
+        if anga.has_antya('a') {
             p.op_term("7.4.79", i, op::antya("i"));
+        } else if abhyasa.has_antya(&*UU) && anga.has_adi(&*PU_YAN_J) && anga.get(1)? == 'a' {
+            p.op_term("7.4.80", i, op::antya("i"));
+        } else if anga.has_u_in(sravati_etc) && anga.has_upadha('a') {
+            // Example: sru -> sisrAvayizyati
+            // Note that this rule must run after guna for the upadha check to be meaningful.
+            p.op_optional("7.4.81", op::t(i, op::antya("i")));
+        }
+    }
+
+    let anga = p.get(i_abhyasta)?;
+    if is_laghu_cani {
+        if anga.has_text_in(smf_df) {
+            p.op_term("7.4.95", i, op::antya("a"));
+        } else if !f::is_samyogadi(anga) {
+            if let Some(sub) = al::to_dirgha(anga.antya()?) {
+                p.op_term("7.4.94", i, op::antya(&sub.to_string()));
+            }
         }
     }
 
@@ -85,20 +107,6 @@ pub fn run_for_sani_cani(p: &mut Prakriya) -> Option<()> {
 }
 
 /*
-    if sanvat:
-        } else if  (
-            dhatu.adi in s("pu~ yaR j")
-            and len(dhatu.text) >= 2
-            and dhatu.text[1] == "a"
-        ):
-            op.antya("7.4.80", p, c, "i")
-        # TODO: 7.4.81
-
-    # TODO: 7.4.95
-    if laghu_cani:
-        if not f.samyogadi(dhatu):
-            op.antya("7.4.94", p, c, sounds.dirgha(c.antya))
-
     # TODO: scope of this? Sarvadhatuka only?
     if dhatu.u in MAN_BADHA:
         op.antya("3.1.6", p, c, sounds.dirgha(c.antya))
