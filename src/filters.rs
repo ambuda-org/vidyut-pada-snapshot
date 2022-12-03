@@ -46,10 +46,6 @@ pub fn is_aprkta(t: &Term) -> bool {
     t.has_tag(T::Pratyaya) && t.text.len() == 1
 }
 
-pub fn is_knit(t: &Term) -> bool {
-    t.any(&[T::kit, T::Nit])
-}
-
 pub fn is_laghu(t: &Term) -> bool {
     match t.antya() {
         Some(c) => al::is_hrasva(c),

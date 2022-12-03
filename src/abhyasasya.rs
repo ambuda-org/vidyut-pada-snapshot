@@ -23,23 +23,6 @@ lazy_static! {
     static ref KUH_CU: SoundMap = map_sounds("ku~ h", "cu~");
 }
 
-/*
-fn _has_following_san(p: Prakriya, needle: Term) -> bool:
-    seen_needle = False
-    for t in p.terms:
-        if needle is t:
-            seen_needle = True
-            continue
-        if seen_needle:
-            if t.u == "san":
-                return True
-            } else if  not t.any(T.DHATU, T.AGAMA):
-                return False
-            else:
-                continue
-    return False
-*/
-
 /// Simplifies the abhyasa per 7.4.60.
 fn try_haladi(text: &str) -> String {
     let mut ret = String::new();
@@ -72,36 +55,37 @@ fn try_shar_purva(text: &str) -> String {
     ret
 }
 
+/// Runs abhyasa rules conditioned on either `san` or `caN`.
+///
+/// Constraints:
+/// - must follow 7.4.1 etc. which change the dhatu vowel before `caN`.
+/// - must follow guna of the dhatu vowel, which affects 7.4.1 etc. above.
+pub fn run_for_sani_cani(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_first(T::Abhyasa)?;
+    let i_abhyasta = p.find_last(T::Abhyasta)?;
+    let anga = p.get(i_abhyasta)?;
+
+    let is_ni = anga.has_u_in(&["Ric", "RiN"]);
+    let is_cani = p.has(i_abhyasta + 1, f::u("caN"));
+    let is_laghu = f::is_laghu(anga);
+    let has_at_lopa = anga.has_tag(T::FlagAtLopa);
+    let is_laghu_cani = is_ni && is_laghu && is_cani && !has_at_lopa;
+
+    let is_sanvat = is_laghu_cani || p.find_next_where(i, f::u("san")).is_some();
+    if is_sanvat {
+        if is_laghu_cani && anga.has_text_in(&["smf", "dF", "tvar", "praT", "mrad", "stF", "spaS"])
+        {
+            p.op_term("7.4.95", i, op::antya("a"));
+        } else if anga.has_antya('a') {
+            p.op_term("7.4.79", i, op::antya("i"));
+        }
+    }
+
+    Some(())
+}
+
 /*
-fn run_sani_cani_for_each(p: Prakriya, c: Term, dhatu: Term):
-    # san and sanvat changes
-    abhyasta_index, _ = p.find_last(T.ABHYASTA)
-    laghu_cani = (
-        # caN-pare
-        p.terms[abhyasta_index].u in ("Ric", "RiN")
-        and p.find(lambda x: x.u == "caN")
-        # laghuni
-        and f.is_laghu(dhatu)
-        # an-ak-lope
-        and not dhatu.any(T.F_AT_LOPA)
-    )
-
-    sanvat = laghu_cani or _has_following_san(p, c)
     if sanvat:
-        if laghu_cani and dhatu.text in {
-            "smf",
-            "dF",
-            "tvar",
-            "praT",
-            "mrad",
-            "stF",
-            "spaS",
-        }:
-            op.antya("7.4.95", p, c, "a")
-            return
-
-        } else if  c.antya == "a":
-            op.antya("7.4.79", p, c, "i")
         } else if  (
             dhatu.adi in s("pu~ yaR j")
             and len(dhatu.text) >= 2
@@ -119,15 +103,6 @@ fn run_sani_cani_for_each(p: Prakriya, c: Term, dhatu: Term):
     if dhatu.u in MAN_BADHA:
         op.antya("3.1.6", p, c, sounds.dirgha(c.antya))
 */
-
-/// Runs abhyasa rules conditioned on either `san` or `caN`.
-///
-/// Constraints:
-/// - must follow 7.4.1 etc. which change the dhatu vowel before `caN`.
-/// - must follow guna of the dhatu vowel, which affects 7.4.1 etc. above.
-fn run_for_sani_cani(p: &mut Prakriya, i: usize) {
-    // TODO.
-}
 
 /// Runs abhyasa rules that apply generally.
 fn try_general_rules(p: &mut Prakriya, i: usize) -> Option<()> {

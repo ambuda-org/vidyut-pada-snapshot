@@ -1125,8 +1125,8 @@ pub fn run_remainder(p: &mut Prakriya) {
 
     /*
     cani_after_guna(p)
-    abhyasasya.run_sani_cani(p)
     */
+    abhyasasya::run_for_sani_cani(p);
 
     for index in 0..p.terms().len() {
         asiddhavat::run_after_guna(p, index);
