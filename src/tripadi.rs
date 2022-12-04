@@ -133,19 +133,12 @@ fn try_samyoganta_and_sa_lopa(p: &mut Prakriya) {
             }
         }
     }
-    /*
-    for i, _ in enumerate(p.terms[:-2]):
-        x, y, z = p.terms[i : i + 3]
-        if x.u == "iw" and y.u == "si~c" and z.u == "Iw":
-            op.lopa("8.2.28", p, y)
-
-    */
 
     // saMst can be handled only with difficulty. For details, see the
     // commentary in the mAdhavIya-dhAtuvRtti:
     //
     // https://archive.org/details/237131938MadhaviyaDhatuVrtti/page/n434/mode/1up
-    // TODO: add support for samst
+    // TODO: re-add support for samst
     char_rule(
         p,
         |_, text, i| {
