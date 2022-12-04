@@ -95,7 +95,7 @@ fn maybe_replace_cli_with_ksa(p: &mut Prakriya, i: usize) {
         t.has_antya(&*SHAL)
         && t.has_upadha(&*IK)
         // iT hasn't been added yet, so check for "U" (veT) && anudAtta (aniT).
-        && t.any(&[T::Anudatta, T::Udit])
+        && t.has_tag_in(&[T::Anudatta, T::Udit])
     };
 
     let pushadi_dyutadi_ldit = |t: &Term| {
@@ -241,56 +241,50 @@ fn add_kr_after_am_pratyaya(p: &mut Prakriya) {
     p.step("3.1.40")
 }
 
-fn maybe_add_am_pratyaya_for_lit(p: &mut Prakriya) {
-    let i = match p.find_last(T::Dhatu) {
-        Some(i) => i,
-        None => return,
-    };
+fn maybe_add_am_pratyaya_for_lit(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_last(T::Dhatu)?;
+    let dhatu = p.get(i)?;
 
-    if p.has(i, |t| t.text == "kAs" || t.has_tag(T::Pratyaya)) {
+    if dhatu.has_text("kAs") || dhatu.has_tag(T::Pratyaya) {
         p.op("3.1.35", add_aam);
-    } else if p.has(i, |t| !f::is_eka_ac(t) && !t.has_text_in(&["jAgf", "UrRu"])) {
+    } else if !f::is_eka_ac(dhatu) && !dhatu.has_text_in(&["jAgf", "UrRu"]) {
         // jAgf is handled separately below.
         p.op("3.1.35.v1", add_aam);
-    } else if p.has(i, |t| t.has_adi(&*IC) && f::is_guru(t) && !t.has_u("fCa~")) {
+    } else if dhatu.has_adi(&*IC) && f::is_guru(dhatu) && !dhatu.has_u("fCa~") {
         p.op("3.1.36", add_aam);
-    } else if p.has(i, |t| t.has_text_in(&["day", "ay", "As"])) {
+    } else if dhatu.has_text_in(&["day", "ay", "As"]) {
         p.op("3.1.37", add_aam);
-    } else if p.has(i, |t| {
-        t.has_text_in(&["uz", "jAgf"]) || (t.text == "vid" && t.gana == Some(2))
-    }) {
+    } else if dhatu.has_text_in(&["uz", "jAgf"]) || (dhatu.has_text("vid") && dhatu.has_gana(2)) {
         let mut aam = Term::make_upadesha("Am");
         aam.add_tags(&[T::Pratyaya]);
-        if let Some(i) = p.find_last(T::Dhatu) {
-            p.insert_after(i, aam);
-        }
+        p.insert_after(i, aam);
+
         let used = p.op_optional("3.1.38", add_aam);
         if used {
-            if p.has(i, |t| t.text == "vid") {
+            let dhatu = p.get(i)?;
+            if dhatu.has_text("vid") {
                 // vid does not go through guNa.
                 p.set(i, |t| t.add_tag(T::FlagGunaApavada));
             }
         } else {
-            return;
+            return None;
         }
-    } else if p.has(i, |t| {
-        t.has_text_in(&["BI", "hrI", "hu"]) || t.has_u("quBf\\Y")
-    }) {
+    } else if dhatu.has_text_in(&["BI", "hrI", "hu"]) || dhatu.has_u("quBf\\Y") {
         let add_sluvat_am = |p: &mut Prakriya| {
             let mut aam = Term::make_upadesha("Am");
             aam.add_tags(&[T::Pratyaya, T::Slu]);
-            if let Some(i) = p.find_last(T::Dhatu) {
-                p.insert_after(i, aam);
-            }
+            p.insert_after(i, aam);
         };
         if !p.op_optional("3.1.39", add_sluvat_am) {
-            return;
+            return None;
         }
     } else {
-        return;
+        return None;
     }
 
     add_kr_after_am_pratyaya(p);
+
+    Some(())
 }
 
 fn maybe_add_am_pratyaya_for_lot(p: &mut Prakriya) {

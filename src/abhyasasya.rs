@@ -72,9 +72,9 @@ pub fn run_for_sani_cani(p: &mut Prakriya) -> Option<()> {
     let anga = p.get(i_abhyasta)?;
 
     let is_ni = anga.has_u_in(&["Ric", "RiN"]);
+    let is_laghu = p.has(i_abhyasta - 1, f::is_laghu);
     let is_cani = p.has(i_abhyasta + 1, f::u("caN"));
-    let is_laghu = f::is_laghu(anga);
-    let has_at_lopa = anga.has_tag(T::FlagAtLopa);
+    let has_at_lopa = p.has(i_abhyasta - 1, f::tag(T::FlagAtLopa));
     let is_laghu_cani = is_ni && is_laghu && is_cani && !has_at_lopa;
 
     let is_sanvat = is_laghu_cani || p.find_next_where(i, f::u("san")).is_some();
@@ -94,12 +94,13 @@ pub fn run_for_sani_cani(p: &mut Prakriya) -> Option<()> {
         }
     }
 
-    let anga = p.get(i_abhyasta)?;
     if is_laghu_cani {
-        if anga.has_text_in(smf_df) {
+        let abhyasa = p.get(i)?;
+        let dhatu = p.get(i + 1)?;
+        if dhatu.has_text_in(smf_df) {
             p.op_term("7.4.95", i, op::antya("a"));
-        } else if !f::is_samyogadi(anga) {
-            if let Some(sub) = al::to_dirgha(anga.antya()?) {
+        } else if !f::is_samyogadi(dhatu) {
+            if let Some(sub) = al::to_dirgha(abhyasa.antya()?) {
                 p.op_term("7.4.94", i, op::antya(&sub.to_string()));
             }
         }

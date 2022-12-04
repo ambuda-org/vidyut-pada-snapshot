@@ -150,7 +150,7 @@ fn can_use_guna_or_vrddhi(anga: &Term, n: &TermView) -> bool {
     // 1.1.5 kNiti ca
     let kniti = n.any(&[T::kit, T::Nit]);
     // Other prohibitions
-    let blocked = anga.any(&[T::FlagAtLopa, T::FlagGunaApavada]);
+    let blocked = anga.has_tag_in(&[T::FlagAtLopa, T::FlagGunaApavada]);
     let is_pratyaya = n.has_tag(T::Pratyaya);
 
     !didhi_vevi_itam && !kniti && !blocked && is_pratyaya
@@ -240,6 +240,8 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
         p.op_term("7.3.83", i, op_antya_guna);
     } else if is_sarva_ardha {
         let vi_cin_nal = n.get(0)?.has_u_in(&["kvip", "ciN", "Ral"]);
+        let anga = p.get(i)?;
+        let n = p.view(i + 1)?;
 
         // Exceptions
         if anga.has_tag(T::Abhyasta) && piti_sarvadhatuke && n.has_adi(&*AC) {
@@ -458,6 +460,9 @@ pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
     let i = i_sarva - 1;
 
     let anga = p.get(i)?;
+    if anga.text.is_empty() {
+        return None;
+    }
     let n = p.view(i_sarva)?;
 
     if n.has_adi(&*HAL) && n.has_tag(T::Sarvadhatuka) {
@@ -969,7 +974,7 @@ fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
     // Ignore 'f' because it is handled by 7.4.7.
     if dhatu.has_upadha(&*AC) && !dhatu.has_upadha(&*FF) {
         let sub = al::to_hrasva(dhatu.upadha()?)?;
-        if dhatu.any(&[T::FlagAtLopa, T::fdit]) || dhatu.has_text("SAs") {
+        if dhatu.has_tag_in(&[T::FlagAtLopa, T::fdit]) || dhatu.has_text("SAs") {
             p.step("7.4.2");
         } else if dhatu.upadha()? != sub {
             p.op_term("7.4.1", i, op::upadha(&sub.to_string()));

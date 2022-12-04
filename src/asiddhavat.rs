@@ -41,7 +41,7 @@ fn is_knit(n: &TermView) -> bool {
 /// Returns whether the given slice has multiple vowels.
 fn is_anekac(p: &Prakriya, i: usize) -> bool {
     let mut num_ac = 0_u8;
-    for t in p.terms()[..i].iter().rev() {
+    for t in p.terms()[..=i].iter().rev() {
         for c in t.text.chars().rev() {
             if AC.contains_char(c) {
                 num_ac += 1;
@@ -488,7 +488,7 @@ fn try_add_a_agama(p: &mut Prakriya, i: usize) {
     // Dhatu may be multi-part, so insert before abhyasa.
     // But abhyasa may follow main dhatu (e.g. undidizati) --
     // So, use the first match we find.
-    let i_start = match p.find_first_where(|t| t.any(&[T::Abhyasa, T::Dhatu])) {
+    let i_start = match p.find_first_where(|t| t.has_tag_in(&[T::Abhyasa, T::Dhatu])) {
         Some(i) => i,
         None => return,
     };
@@ -519,15 +519,11 @@ pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {
     try_ardhadhatuke(p, i);
 
     // Must run before guNa.
-    let n = p.view(i + 1)?;
-    if p.has(i, f::text("BU")) && n.has_lakshana_in(&["lu~N", "li~w"]) {
-        op::append_agama("6.4.88", p, i, "vu~k");
-    }
-
     let anga = p.get(i)?;
     let n = p.view(i + 1)?;
-
-    if anga.has_u("ciR") && n.last()?.has_text("ta") {
+    if anga.has_text("BU") && n.has_lakshana_in(&["lu~N", "li~w"]) {
+        op::append_agama("6.4.88", p, i, "vu~k");
+    } else if anga.has_u("ciR") && n.last()?.has_text("ta") {
         p.op_term("6.4.101", n.end(), op::luk);
     } else if anga.has_u("daridrA") && n.has_tag(T::Ardhadhatuka) {
         if p.terms().last()?.has_lakshana("lu~N") {
@@ -566,6 +562,8 @@ fn run_for_final_i_or_u(p: &mut Prakriya, i: usize) -> Option<()> {
     };
 
     let is_asamyogapurva = !is_samyogapurva(p, i);
+    let anga = p.get(i)?;
+    let n = p.view(i + 1)?;
     if anga.has_text("strI") {
         if n.last()?.has_u_in(&["am", "Sas"]) {
             p.op_optional("6.4.80", op::t(i, op::antya("iy")));
@@ -593,7 +591,14 @@ fn run_for_final_i_or_u(p: &mut Prakriya, i: usize) -> Option<()> {
     } else if anga.has_tag(T::Dhatu) || anga.has_u("Snu") || anga.has_text("BrU") {
         p.op("6.4.77", |p| to_iy_uv(p, i));
     } else {
-        // TODO 6.4.78
+        let abhyasa = p.get(i)?;
+        let next = p.get(i + 1)?;
+        let x = abhyasa.antya()?;
+        let y = next.adi()?;
+        // HACKY implementation of asavarna
+        if al::to_dirgha(x) != al::to_dirgha(y) {
+            p.op("6.4.78", |p| to_iy_uv(p, i));
+        }
     }
 
     Some(())
@@ -645,7 +650,7 @@ pub fn run_after_guna(p: &mut Prakriya, i: usize) -> Option<()> {
     let last = p.terms().last()?;
     let anga = p.get(i)?;
     let n = p.view(i + 1)?;
-    let sarva_kniti = last.has_tag(T::Sarvadhatuka) && !last.any(&[T::kit, T::Nit]);
+    let sarva_kniti = last.has_tag(T::Sarvadhatuka) && !last.has_tag_in(&[T::kit, T::Nit]);
     if anga.has_u("qukf\\Y") && anga.has_text("kar") && n.has_adi('u') && sarva_kniti {
         p.op_term("6.4.110", i, op::text("kur"));
     }

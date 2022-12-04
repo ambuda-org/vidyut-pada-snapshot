@@ -12,7 +12,7 @@ fn run_for_prakriya(p: &mut Prakriya, i: usize) {
             p.op("3.4.115", add_ardha);
         } else if p.has(i, |t| t.has_lakshana("li~N") && p.has_tag(T::Ashih)) {
             p.op("3.4.116", add_ardha);
-        } else if p.has(i, |t| t.any(&[T::Tin, T::Sit])) {
+        } else if p.has(i, |t| t.has_tag_in(&[T::Tin, T::Sit])) {
             if !p.has(i, f::tag(T::Sarvadhatuka)) {
                 p.op("3.4.113", add_sarva);
             }

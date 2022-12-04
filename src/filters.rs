@@ -38,11 +38,31 @@ pub fn is_aprkta(t: &Term) -> bool {
     t.has_tag(T::Pratyaya) && t.text.len() == 1
 }
 
+/// Returns whether the last syllable of `t` is or could be laghu.
 pub fn is_laghu(t: &Term) -> bool {
-    match t.antya() {
-        Some(c) => al::is_hrasva(c),
-        None => false,
+    // 1.4.10 hrasvaM laghu
+    // 1.4.11 saMyoge guru
+    // 1.4.12 dIrghaM ca
+    if let Some(c) = t.antya() {
+        if al::is_ac(c) {
+            al::is_hrasva(c)
+        } else {
+            // upadha is hrasva --> laghu
+            // upadha is dirgha --> guru
+            // upadha is hal --> guru (samyoga)
+            // upadha is missing --> laghu
+            t.upadha().map(al::is_hrasva).unwrap_or(false)
+            // HACK for C, which will always become cC (= guru).
+            && c != 'C'
+        }
+    } else {
+        false
     }
+}
+
+/// Returns whether the last syllable of `t` is guru.
+pub fn is_guru(t: &Term) -> bool {
+    !is_laghu(t)
 }
 
 pub fn is_hrasva(t: &Term) -> bool {
@@ -54,11 +74,6 @@ pub fn is_dirgha(t: &Term) -> bool {
         Some(c) => al::is_dirgha(c),
         None => false,
     }
-}
-
-/// Returns whether the term ends in a *guru* syllable.
-pub fn is_guru(t: &Term) -> bool {
-    !is_laghu(t)
 }
 
 pub fn ends_with(sub: &'static str) -> impl Fn(&Term) -> bool {
@@ -76,7 +91,7 @@ pub fn tag(tag: T) -> impl Fn(&Term) -> bool {
 
 /// Returns whether the term has the given `tag`.
 pub fn tag_in(tags: &'static [T]) -> impl Fn(&Term) -> bool {
-    move |t| t.any(tags)
+    move |t| t.has_tag_in(tags)
 }
 
 /// Returns whether the term is a dhatu.
@@ -133,4 +148,22 @@ pub fn is_asti(t: &Term) -> bool {
 
 pub fn is_it_agama(t: &Term) -> bool {
     t.has_u("iw") && t.has_tag(T::Agama)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_laghu() {
+        let text_is_laghu = |s| {
+            let t = Term::make_text(s);
+            is_laghu(&t)
+        };
+        assert!(text_is_laghu("i"));
+        assert!(text_is_laghu("vid"));
+        assert!(!text_is_laghu("BU"));
+        assert!(!text_is_laghu("uC"));
+        assert!(!text_is_laghu("IS"));
+    }
 }

@@ -24,11 +24,13 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     static ref AT_KU_PU_M: SoundSet = s("aw ku~ pu~ M");
+    static ref AN: SoundSet = s("aR");
     static ref AC: SoundSet = s("ac");
     static ref CU: SoundSet = s("cu~");
     static ref INKU: SoundSet = s("iR2 ku~");
     static ref JHAL: SoundSet = s("Jal");
     static ref JHASH: SoundSet = s("JaS");
+    static ref JHAZ: SoundSet = s("Jaz");
     static ref KHAR: SoundSet = s("Kar");
     static ref JHAL_TO_CAR: SoundMap = map_sounds("Jal", "car");
     static ref JHAL_TO_JASH: SoundMap = map_sounds("Jal", "jaS");
@@ -64,7 +66,7 @@ fn try_na_lopa(p: &mut Prakriya) {
 /// Example: girati -> gilati.
 ///
 /// (8.2.18 - 8.2.20)
-fn try_ra_to_la(p: &mut Prakriya) {
+fn try_change_r_to_l(p: &mut Prakriya) {
     let do_ra_la = |t: &mut Term| {
         t.find_and_replace_text("f", "x");
         t.find_and_replace_text("r", "l");
@@ -88,10 +90,10 @@ fn try_ra_to_la(p: &mut Prakriya) {
     }
 }
 
-/// Final samyoga.
+/// Runs rules that perform `lopa` for samyogas and `s`.
 ///
 /// (8.2.23 - 8.2.29)
-fn try_samyoganta_and_sa_lopa(p: &mut Prakriya) {
+fn try_lopa_of_samyoganta_and_s(p: &mut Prakriya) {
     // Exception to 8.2.23.
     char_rule(
         p,
@@ -168,7 +170,7 @@ fn try_samyoganta_and_sa_lopa(p: &mut Prakriya) {
     for i in 0..p.terms().len() {
         if let (Some(x), Some(y), Some(z)) = (p.get(i), p.get(i + 1), p.get(i + 2)) {
             if f::is_hrasva(x) && y.has_text("s") && z.has_adi(&*JHAL) && !x.has_tag(T::Agama) {
-                p.op_term("8.2.27", i+1, op::lopa);
+                p.op_term("8.2.27", i + 1, op::lopa);
             }
         }
     }
@@ -223,11 +225,21 @@ fn try_ha_adesha(p: &mut Prakriya) {
     }
 }
 
-/// (8.2.76 - 8.2.79)
-fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) -> Option<()> {
-    if !p.has(i, f::dhatu) {
-        return None;
+fn try_add_final_r(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_last_where(|t| !t.text.is_empty())?;
+    let last = p.get(i)?;
+
+    if last.has_antya('s') {
+        p.op_term("8.2.66", i, op::antya("ru~"));
     }
+
+    Some(())
+}
+
+/// (8.2.76 - 8.2.79)
+fn try_lengthen_dhatu_vowel(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_first_where(|t| t.has_tag(T::Dhatu))?;
+    let dhatu = p.get(i)?;
 
     let is_rv = |opt| match opt {
         Some(c) => c == 'r' || c == 'v',
@@ -244,7 +256,6 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) -> Option<()> {
     let before_upadha = |t: &Term| t.text.chars().rev().nth(2);
 
     // TODO: bha
-    let dhatu = p.get(i)?;
     if dhatu.has_text_in(&["kur", "Cur"]) {
         p.step("8.2.79");
     } else if is_ik(dhatu.upadha()) && is_rv(dhatu.antya()) {
@@ -252,7 +263,8 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) -> Option<()> {
         if p.has(i + 1, |t| HAL.contains_opt(t.adi())) {
             p.op_term("8.2.77", i, op::upadha(&sub.to_string()));
         } else {
-            p.op_term("8.2.76", i, op::upadha(&sub.to_string()));
+            // TODO: only applies to padas.
+            // p.op_term("8.2.76", i, op::upadha(&sub.to_string()));
         }
     } else if is_ik(before_upadha(dhatu)) && is_rv(dhatu.upadha()) && is_hal(dhatu.antya()) {
         p.op("8.2.78", |p| {
@@ -277,28 +289,6 @@ fn iter_terms(p: &mut Prakriya, func: impl Fn(&mut Prakriya, usize) -> Option<()
 }
 
 fn per_term_1b(p: &mut Prakriya, i: usize) {
-    let n = p.view(i + 1);
-    let is_padanta = n.map(|x| x.is_padanta()).unwrap_or(true);
-    if p.has(i, |t| t.has_antya('s')) && is_padanta {
-        p.op_term("8.2.66", i, op::antya("ru~"));
-    }
-
-    try_lengthen_dhatu_vowel(p, i);
-
-    // 8.3.15
-    // TODO: next pada
-    let n = p.view(i + 1);
-    let has_ru = p.has(i, |t| t.text.ends_with("ru~") || t.has_antya('r'));
-    if has_ru && is_padanta {
-        p.op_term("8.3.15", i, |t| {
-            if let Some(prefix) = t.text.strip_suffix("ru~") {
-                t.text = CompactString::from(prefix) + "H";
-            } else if let Some(prefix) = t.text.strip_suffix('r') {
-                t.text = CompactString::from(prefix) + "H";
-            }
-        });
-    }
-
     let vrascha = &[
         "o~vrascU~",
         "Bra\\sja~^",
@@ -313,15 +303,15 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
     iter_terms(p, |p, i| {
         let x = p.get(i)?;
         if !(x.has_u_in(vrascha) || x.has_antya('C') || x.has_antya('S')) {
-            return None
+            return None;
         }
 
-        let jhali_ante = match p.get(i+1) {
+        let jhali_ante = match p.get(i + 1) {
             Some(n) => n.has_adi(&*JHAL),
             None => true,
         };
         if !jhali_ante {
-            return None
+            return None;
         }
 
         // HACK: ugly implementation.
@@ -330,7 +320,7 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
             p.op_term("8.2.36", i, |t| {
                 if let Some(prefix) = t.text.strip_prefix("tC") {
                     t.text = CompactString::from(prefix) + "z";
-                }   
+                }
             });
         } else {
             p.op_term("8.2.36", i, op::antya("z"));
@@ -367,19 +357,56 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
         let sub = JHAL_TO_JASH.get(key).unwrap();
         p.op_term("8.2.39", i, op::antya(&sub.to_string()));
     }
+}
+
+fn xy_rule(
+    p: &mut Prakriya,
+    filter: impl Fn(&Term, &Term) -> bool,
+    op: impl Fn(&mut Prakriya, usize),
+) {
+    for i in 0..p.terms().len() {
+        if let (Some(x), Some(y)) = (p.get(i), p.get(i + 1)) {
+            if filter(x, y) {
+                op(p, i);
+                break;
+            }
+        }
+    }
+}
+
+fn per_term_1c(p: &mut Prakriya) -> Option<()> {
+    xy_rule(
+        p,
+        |x, y| {
+            x.has_tag(T::Dhatu)
+                && !x.has_u("quDA\\Y")
+                && x.has_antya(&*JHAZ)
+                && (y.has_adi('t') || y.has_adi('T'))
+        },
+        |p, i| {
+            p.op_term("8.2.40", i + 1, op::adi("D"));
+        },
+    );
+
+    xy_rule(
+        p,
+        |x, y| (x.has_antya('z') || x.has_antya('Q')) && y.has_adi('s'),
+        |p, i| {
+            p.op_term("8.2.40", i, op::antya("k"));
+        },
+    );
+
+    xy_rule(
+        p,
+        |x, y| x.has_tag(T::Dhatu) && x.has_antya('m') && (y.has_adi('m') || y.has_adi('n')),
+        |p, i| {
+            p.op_term("8.2.65", i, op::antya("n"));
+        },
+    );
+
+    Some(())
 
     /*
-    if c.all(T.DHATU) and c.u != "quDA\\Y":
-        // TODO: abhyasa
-        if c.antya in s("Jaz") and n and n.adi in s("t T"):
-            op.adi("8.2.40", p, n, "D")
-
-    if c.antya in s("z Q") and n.adi == "s":
-        op.antya("8.2.41", p, c, "k")
-
-    if c.any(T.DHATU) and c.antya == "m" and n.adi in {"m", "v"}:
-        op.antya("8.2.65", p, c, "n")
-
     // TODO: sajuS
 
     try:
@@ -399,9 +426,6 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
             op.optional(op.antya, "8.2.74", p, c, "ru~")
         else:
             op.optional(op.antya, "8.2.75", p, c, "ru~")
-
-    // 8.2.77
-    // TODO: sajuS
 
     // 8.3.15
     // TODO: next pada
@@ -497,6 +521,26 @@ fn try_mn_to_anusvara(p: &mut Prakriya) {
     );
 }
 
+fn try_ra_lopa(p: &mut Prakriya) {
+    for i in 0..p.terms().len() {
+        let n = p.view(i + 1);
+        let is_padanta = n.map(|x| x.is_padanta()).unwrap_or(true);
+
+        // 8.3.15
+        // TODO: next pada
+        let has_ru = p.has(i, |t| t.text.ends_with("ru~") || t.has_antya('r'));
+        if has_ru && is_padanta {
+            p.op_term("8.3.15", i, |t| {
+                if let Some(prefix) = t.text.strip_suffix("ru~") {
+                    t.text = CompactString::from(prefix) + "H";
+                } else if let Some(prefix) = t.text.strip_suffix('r') {
+                    t.text = CompactString::from(prefix) + "H";
+                }
+            });
+        }
+    }
+}
+
 /// Runs rules that make a sound mUrdhanya when certain sounds precede.
 ///
 /// Example: `nesyati -> nezyati`
@@ -510,7 +554,7 @@ fn try_murdhanya(p: &mut Prakriya) -> Option<()> {
 
         let apadanta = !y.text.is_empty();
         // HACK: don't include Agama.
-        let adesha_pratyaya = y.any(&[T::Pratyaya, T::FlagAdeshadi, T::Agama]);
+        let adesha_pratyaya = y.has_tag_in(&[T::Pratyaya, T::FlagAdeshadi, T::Agama]);
         if x.has_antya(&*INKU) && y.has_adi('s') && adesha_pratyaya && apadanta {
             p.op_term("8.3.59", j, op::adi("z"));
         } else if x.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && x.has_upadha(&*INKU) {
@@ -643,32 +687,33 @@ fn try_change_stu_to_parasavarna(p: &mut Prakriya) {
         },
     );
 }
-/*
-/// Run rules for retroflex Dha.
-fn dha(p: &mut Prakriya):
-    view = StringView(p.terms)
-    // Save the text before Dha-lopa for a cleaner comparison below.
-    vtext = view.text
 
-    // Placed after 8.4.41, otherwise this is vyartha
-    match = re.search(f"([Q])[Q]", view.text)
-    if match:
-        view[match.span(0)[0]] = ""
-        p.step("8.3.13")
+/// Runs rules for retroflex Dha.
+///
+/// This rule is in section 8.3, but it has scope to apply only if it follows 8.4.41.
+fn try_dha_lopa(p: &mut Prakriya) -> Option<()> {
+    for i in 0..p.terms().len() {
+        let x = p.get(i)?;
+        let y = p.get(p.find_next_where(i, |t| !t.text.is_empty())?)?;
+        if x.has_antya('Q') && y.has_adi('Q') {
+            p.op_term("8.3.13", i, op::lopa);
 
-        // Placed here, otherwise this is vyartha
-        // matches aN (no f, x)
-        match = re.search(f"([aAiIuU])[Q]", view.text)
-        if match:
-            // HACK to check for sah and vah
-            if "saQ" in vtext or "sAQ" in vtext or "vaQ" in vtext or "vAQ" in vtext:
-                view[match.span(0)[0]] = "o"
-                p.step("6.3.112")
-            else:
-                res = match.group(1)
-                view[match.span(0)[0]] = sounds.dirgha(res)
-                p.step("6.3.111")
-*/
+            // Placed here, otherwise this is vyartha
+            let x = p.get(i)?;
+            // matches aN (no f, x)
+            if x.has_antya(&*AN) {
+                if x.has_u_in(&["zaha~", "va\\ha~^"]) {
+                    p.op_term("6.3.112", i, op::antya("o"));
+                } else {
+                    let sub = al::to_dirgha(x.antya()?)?;
+                    p.op_term("6.3.111", i, op::antya(&sub.to_string()));
+                }
+            }
+        }
+    }
+
+    Some(())
+}
 
 /// Runs rules that convert sounds to their savarna version.
 fn try_to_savarna(p: &mut Prakriya) {
@@ -801,20 +846,28 @@ fn try_jhal_adesha(p: &mut Prakriya) {
 }
 
 pub fn run(p: &mut Prakriya) {
+    // Ashtadhyayi 8.2
     try_na_lopa(p);
-    try_ra_to_la(p);
-    try_samyoganta_and_sa_lopa(p);
+    try_change_r_to_l(p);
+    try_lopa_of_samyoganta_and_s(p);
     try_ha_adesha(p);
+    try_add_final_r(p);
+    try_lengthen_dhatu_vowel(p);
 
     for i in 0..p.terms().len() {
         per_term_1b(p, i);
     }
+    per_term_1c(p);
 
+    // Ashtadhyayi 8.3
     try_murdhanya(p);
     try_mn_to_anusvara(p);
+    try_ra_lopa(p);
+
+    // Ashtadhyayi 8.4
     try_natva(p);
     try_change_stu_to_parasavarna(p);
-    // dha(p);
+    try_dha_lopa(p);
 
     try_jhal_adesha(p);
     try_to_savarna(p);

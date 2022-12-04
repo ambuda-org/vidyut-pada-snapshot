@@ -18,11 +18,6 @@ const LAKARA: &[La] = &[
     La::Lrn,
 ];
 
-const TIN: &[&str] = &[
-    "tip", "tas", "Ji", "sip", "Tas", "Ta", "mip", "vas", "mas", "ta", "AtAm", "Ja", "tAs", "ATAm",
-    "Dvam", "iw", "vahi", "mahiN",
-];
-
 const TIN_SEMANTICS: &[(Purusha, Vacana)] = &[
     (Purusha::Prathama, Vacana::Eka),
     (Purusha::Prathama, Vacana::Dvi),

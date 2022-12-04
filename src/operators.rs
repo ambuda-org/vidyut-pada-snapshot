@@ -42,36 +42,17 @@ pub fn t(i: usize, f: impl Fn(&mut Term)) -> impl Fn(&mut Prakriya) {
 
 /// Replaces the first sound in the given term.
 pub fn adi(sub: &str) -> impl Fn(&mut Term) + '_ {
-    move |t| {
-        let n = t.text.len();
-        if n > 0 {
-            t.text = CompactString::from(sub) + &t.text[1..];
-        }
-    }
+    |t| t.set_adi(sub)
 }
 
 /// Replaces the last sound in the given term.
 pub fn antya(sub: &str) -> impl Fn(&mut Term) + '_ {
-    |t| {
-        let n = t.text.len();
-        if n > 0 {
-            t.text = CompactString::from(&t.text[..n - 1]) + sub;
-        }
-    }
-}
-
-pub fn set_upadha(text: &str, sub: &str) -> CompactString {
-    let n = text.len();
-    CompactString::from(&text[..n - 2]) + sub + &text[n - 1..]
+    |t| t.set_antya(sub)
 }
 
 /// Replaces the penultimate sound in the given term.
 pub fn upadha(sub: &str) -> impl Fn(&mut Term) + '_ {
-    |t| {
-        if t.upadha().is_some() {
-            t.text = set_upadha(&t.text, sub);
-        }
-    }
+    |t| t.set_upadha(sub)
 }
 
 /// Inserts some text immediately after the term's last vowel:
@@ -240,11 +221,6 @@ fn lup(t: &mut Term) {
 
 // Tags
 // ====
-
-/// Adds the given samjna.
-pub fn samjna(t: &mut Term, tag: T) {
-    t.add_tag(tag);
-}
 
 pub fn add_tag(tag: T) -> impl Fn(&mut Term) {
     move |t| t.add_tag(tag)

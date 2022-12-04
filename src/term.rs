@@ -14,6 +14,8 @@ pub struct Term {
 }
 
 impl Term {
+    // Constructors
+
     pub fn make_upadesha(s: &str) -> Self {
         Term {
             u: Some(CompactString::from(s)),
@@ -49,7 +51,7 @@ impl Term {
         t
     }
 
-    // Sound selection
+    // Sound selectors
 
     pub fn adi(&self) -> Option<char> {
         self.text.chars().next()
@@ -64,12 +66,7 @@ impl Term {
     }
 
     pub fn get(&self, i: usize) -> Option<char> {
-        let n = self.text.len();
-        if i < n {
-            Some(self.text.as_bytes()[i] as char)
-        } else {
-            None
-        }
+        self.text.as_bytes().get(i).map(|x| *x as char)
     }
 
     // Sound properties
@@ -81,8 +78,8 @@ impl Term {
         }
     }
 
-    pub fn has_adi(&self, pattern: impl Pattern) -> bool {
-        self.matches_sound_pattern(self.adi(), pattern)
+    pub fn has_adi(&self, p: impl Pattern) -> bool {
+        self.matches_sound_pattern(self.adi(), p)
     }
 
     pub fn has_antya(&self, pattern: impl Pattern) -> bool {
@@ -131,13 +128,17 @@ impl Term {
         self.gana == Some(gana)
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.text.is_empty()
+    }
+
     // Tags
 
     pub fn all(&self, tags: &[Tag]) -> bool {
         tags.iter().all(|t| self.tags.contains(*t))
     }
 
-    pub fn any(&self, tags: &[Tag]) -> bool {
+    pub fn has_tag_in(&self, tags: &[Tag]) -> bool {
         tags.iter().any(|t| self.tags.contains(*t))
     }
 
@@ -146,6 +147,25 @@ impl Term {
     }
 
     // Mutators
+
+    pub fn set_adi(&mut self, s: &str) {
+        self.text.replace_range(..=0, s);
+    }
+
+    pub fn set_antya(&mut self, s: &str) {
+        let n = self.text.len();
+        if n > 0 {
+            self.text.replace_range(n - 1..n, s);
+        }
+    }
+
+    pub fn set_upadha(&mut self, s: &str) {
+        let n = self.text.len();
+        if n > 2 {
+            self.text.replace_range(n - 2..n - 1, s);
+        }
+    }
+
     pub fn set_upadesha(&mut self, s: &str) {
         self.u = Some(CompactString::from(s));
         self.text = CompactString::from(s);
@@ -260,10 +280,6 @@ impl<'a> TermView<'a> {
         None
     }
 
-    pub fn has_adi(&self, p: impl Pattern) -> bool {
-        self.matches_sound_pattern(self.adi(), p)
-    }
-
     pub fn antya(&self) -> Option<char> {
         for t in self.slice().iter().rev() {
             match t.antya() {
@@ -272,6 +288,10 @@ impl<'a> TermView<'a> {
             }
         }
         None
+    }
+
+    pub fn has_adi(&self, pattern: impl Pattern) -> bool {
+        self.matches_sound_pattern(self.adi(), pattern)
     }
 
     pub fn has_antya(&self, pattern: impl Pattern) -> bool {
@@ -353,5 +373,29 @@ mod tests {
         assert_eq!(t.get(1), Some('a'));
         assert_eq!(t.get(2), Some('m'));
         assert_eq!(t.get(3), None);
+    }
+
+    #[test]
+    fn test_properties() {
+        let t = gam();
+
+        assert!(t.has_adi('g'));
+        assert!(t.has_upadha('a'));
+        assert!(t.has_antya('m'));
+        assert!(!t.is_empty());
+    }
+
+    #[test]
+    fn test_mutators() {
+        let mut t = gam();
+
+        assert!(t.text == "gam");
+        t.set_adi("x");
+        t.set_upadha("y");
+        t.set_antya("z");
+        assert!(t.has_adi('x'));
+        assert!(t.has_upadha('y'));
+        assert!(t.has_antya('z'));
+        assert!(t.text == "xyz");
     }
 }

@@ -106,7 +106,7 @@ pub fn run_after_attva(p: &mut Prakriya) {
     let i_tin = p.terms().len() - 1;
 
     let stha_ghu = p.has(i, |t| t.text == "sTA" || t.has_tag(T::Ghu));
-    if stha_ghu || p.has(i_tin, f::atmanepada) && n.has_u("si~c") {
+    if stha_ghu && p.has(i_tin, f::atmanepada) && n.has_u("si~c") {
         let i_n_end = n.end();
         p.op("1.2.17", |p| {
             p.set(i, op::antya("i"));

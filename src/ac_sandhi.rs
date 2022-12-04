@@ -145,7 +145,7 @@ fn try_sup_sandhi_after_angasya(p: &mut Prakriya) -> Option<()> {
     let anga = p.get(i - 1)?;
     let sup = p.get(i)?;
 
-    if anga.has_antya(&*AK) && sup.any(&[T::V1, T::V2]) {
+    if anga.has_antya(&*AK) && sup.has_tag_in(&[T::V1, T::V2]) {
         if sup.has_text("am") {
             p.op_term("6.1.107", i, op::adi(""));
         } else if anga.has_antya('a') && sup.has_adi(&*IC) {

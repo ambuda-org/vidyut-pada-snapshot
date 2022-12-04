@@ -75,7 +75,7 @@ fn try_yusmad_asmad_sup_adesha(p: &mut Prakriya, i_anga: usize, i: usize) {
     let sup = &p.terms()[i];
     if sup.has_u("Nas") {
         p.op_term("7.1.27", i, op::text("a"));
-    } else if sup.has_u("Ne") || sup.any(&[T::Prathama, T::V2]) {
+    } else if sup.has_u("Ne") || sup.has_tag_in(&[T::Prathama, T::V2]) {
         if sup.has_u("Sas") {
             p.step("7.1.29");
         } else {

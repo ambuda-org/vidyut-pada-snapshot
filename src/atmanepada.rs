@@ -95,7 +95,7 @@ impl ShortRule {
     }
 }
 
-pub fn run(p: &mut Prakriya) {
+pub fn run(p: &mut Prakriya) -> Option<()> {
     let mut upasargas = vec![];
     for t in p.terms() {
         if t.has_tag(T::Upasarga) {
@@ -106,29 +106,23 @@ pub fn run(p: &mut Prakriya) {
     }
 
     // Use first because of "pUrvavat sanaH"
-    let i = match p.find_first(T::Dhatu) {
-        Some(i) => i,
-        None => return,
-    };
-    let la = match p.terms().last() {
-        Some(t) => t.text.clone(),
-        None => return,
-    };
+    let i = p.find_first(T::Dhatu)?;
 
     if p.has_tag(T::Atmanepada) {
         // E.g. if set by gana sutra (see `dhatu_karya`)
-        return;
+        return None;
     }
 
     if p.any(&[T::Bhave, T::Karmani]) {
         p.rule("1.3.13", |_| true, op_atmanepada);
     }
 
-    let vidhi_lin = la == "li~N" && !p.has_tag(T::Ashih);
+    let la = p.terms().last()?;
+    let vidhi_lin = la.has_u("li~N") && !p.has_tag(T::Ashih);
     // Needed for rules 1.3.60 and 1.3.61 below.
-    let is_sarvadhatuka = vidhi_lin || ["la~w", "lo~w", "la~N"].contains(&la.as_str());
+    let is_sarvadhatuka = vidhi_lin || la.has_u_in(&["la~w", "lo~w", "la~N"]);
     // Needed for rule 1.3.61 below.
-    let is_lun_lin = ["lu~N", "li~N"].contains(&la.as_str());
+    let is_lun_lin = la.has_u_in(&["lu~N", "li~N"]);
 
     // Most of these rules can be expressed in a simple shorthand. The last field in each in each
     // tuple is whether the pada is always Atmanepada (A), always parasmaipada (P), or dependent on
@@ -212,48 +206,45 @@ pub fn run(p: &mut Prakriya) {
 
     // Specific rules (ubhayapada)
 
+    let dhatu = p.get(i)?;
+    let la = p.terms().last()?;
     if p.any(&[T::Parasmaipada, T::Atmanepada]) {
         // Matched above already
-    } else if p.has(i, |t| t.text == "nAT") {
+    } else if dhatu.has_text("nAT") {
         // vArttika
         p.op_optional("1.3.27.v7", op_parasmaipada);
-    } else if p.has(i, |t| t.text == "sasj") {
+    } else if dhatu.has_text("sasj") {
         // Kaumudi
         p.op_optional("sasj-k", op_atmanepada);
-    } else if p.has(i, |t| t.text == "Sad" && is_sarvadhatuka) {
+    } else if dhatu.has_text("Sad") && is_sarvadhatuka {
         // Technically the condition here is "Siti", but sArvadhAtuka is close
         // enough.
         p.op("1.3.60", op_atmanepada);
-    } else if p.has(i, |t| t.has_u("mf\\N")) {
+    } else if dhatu.has_u("mf\\N") {
         if !(is_sarvadhatuka || is_lun_lin) {
             p.op_optional("1.3.61", op_parasmaipada);
         }
-    } else if p.has(i, |t| {
-        t.has_u_in(DYUT_ADI) && t.gana == Some(1) && la == "lu~N"
-    }) {
+    } else if dhatu.has_u_in(DYUT_ADI) && dhatu.has_gana(1) && la.has_u("lu~N") {
         p.op_optional("1.3.91", op_parasmaipada);
     // TODO: san
-    } else if p.has(i, |t| {
-        t.has_u_in(VRDBHYAH) && t.gana == Some(1) && ["lf~w", "lf~N"].contains(&la.as_str())
-    }) {
+    } else if dhatu.has_u_in(VRDBHYAH) && dhatu.has_gana(1) && la.has_u_in(&["lf~w", "lf~N"]) {
         p.op_optional("1.3.92", op_parasmaipada);
-    } else if p.has(i, |t| {
-        t.has_u("kfpU~\\") && ["lf~w", "lf~N", "lu~w"].contains(&la.as_str())
-    }) {
+    } else if dhatu.has_u("kfpU~\\") && la.has_u_in(&["lf~w", "lf~N", "lu~w"]) {
         p.op_optional("1.3.93", op_parasmaipada);
     }
 
     // General rules
 
+    let dhatu = p.get(i)?;
     if p.any(&[T::Parasmaipada, T::Atmanepada]) {
         // Matched above already
-    } else if p.has(i, |t| t.any(&[T::Nit, T::anudattet])) {
+    } else if dhatu.has_tag_in(&[T::Nit, T::anudattet]) {
         p.op("1.3.12", op_atmanepada);
-    } else if p.has(i, |t| t.any(&[T::Yit, T::svaritet])) {
+    } else if dhatu.has_tag_in(&[T::Yit, T::svaritet]) {
         p.op_optional("1.3.72", op_atmanepada);
     } else if p.terms().len() == 3 && p.get(1).unwrap().has_u("Ric") {
         p.op_optional("1.3.74", op_atmanepada);
-    } else if p.has(i, |t| t.text == "jYA" && upasargas.is_empty()) {
+    } else if dhatu.has_text("jYA") && upasargas.is_empty() {
         p.op_optional("1.3.76", op_atmanepada);
     }
 
@@ -264,4 +255,6 @@ pub fn run(p: &mut Prakriya) {
     }
 
     assert!(p.any(&[T::Parasmaipada, T::Atmanepada]));
+
+    Some(())
 }
