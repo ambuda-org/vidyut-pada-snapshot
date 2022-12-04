@@ -150,7 +150,9 @@ fn can_use_guna_or_vrddhi(anga: &Term, n: &TermView) -> bool {
     let kniti = n.any(&[T::kit, T::Nit]);
     // Other prohibitions
     let blocked = anga.any(&[T::FlagAtLopa, T::FlagGunaApavada]);
-    !(didhi_vevi_itam || kniti || blocked)
+    let is_pratyaya = n.has_tag(T::Pratyaya);
+
+    !didhi_vevi_itam && !kniti && !blocked && is_pratyaya
 
     // Otherwise, 1.1.3 iko guNavRddhI
 }
@@ -161,7 +163,7 @@ fn try_vrddhi_adesha(p: &mut Prakriya, i: usize) {
     if p.has(i, f::tag(T::FlagGunaApavada)) {
         return;
     }
-    let n = match p.view(i) {
+    let n = match p.view(i + 1) {
         Some(v) => v,
         None => return,
     };
@@ -278,11 +280,8 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
             });
         } else if is_ik {
             p.op_term("7.3.84", i, op_antya_guna);
-        } else {
-            p.step("no match");
         }
     }
-    p.step("done");
 
     Some(())
 }
@@ -450,25 +449,29 @@ fn try_add_num_agama(p: &mut Prakriya) -> Option<()> {
 ///
 /// Skipped: 7.3.97 ("bahulam chandasi")
 /// TODO: 7.3.99 - 100
-fn iit_agama(p: &mut Prakriya) -> Option<()> {
-    let i = p.find_first(T::Dhatu)?;
+pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
+    let i_sarva = p.find_last(T::Sarvadhatuka)?;
+    if i_sarva == 0 {
+        return None;
+    };
+    let i = i_sarva - 1;
 
-    let dhatu = p.get(i)?;
-    let n = p.view(i + 1)?;
+    let anga = p.get(i)?;
+    let n = p.view(i_sarva)?;
 
     if n.has_adi(&*HAL) && n.has_tag(T::Sarvadhatuka) {
         let piti = n.has_tag(T::pit);
         let mut rule = None;
-        if dhatu.has_text("brU") && piti {
+        if anga.has_text("brU") && piti {
             rule = Some("7.3.93");
-        } else if dhatu.has_u("yaN") && piti {
+        } else if anga.has_u("yaN") && piti {
             rule = maybe_rule(p, "7.3.94");
-        } else if dhatu.has_u_in(&["tu\\", "ru", "zwu\\Y", "Sam", "ama~"]) {
+        } else if anga.has_u_in(&["tu\\", "ru", "zwu\\Y", "Sam", "ama~"]) {
             rule = maybe_rule(p, "7.3.95");
         } else if f::is_aprkta(n.last()?) {
-            if dhatu.has_u_in(&["asa~", "si~c"]) {
+            if anga.has_u_in(&["asa~", "si~c"]) {
                 rule = Some("7.3.96");
-            } else if dhatu.has_u_in(&["rud", "svap", "Svas", "praR", "jakz"]) {
+            } else if anga.has_u_in(&["rud", "svap", "Svas", "praR", "jakz"]) {
                 rule = Some("7.3.98");
             }
         }
@@ -1170,5 +1173,5 @@ pub fn run_remainder(p: &mut Prakriya) {
         try_ato_dirgha(p, index);
     }
 
-    // asiddhavat.run_dirgha(p)
+    asiddhavat::run_dirgha(p);
 }

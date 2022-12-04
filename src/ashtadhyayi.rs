@@ -93,6 +93,8 @@ pub fn derive_tinanta(
         dhatu_samprasarana_tasks(p)
     }
 
+    angasya::iit_agama(p);
+
     // Must follow tin-siddhi (for valAdi)
     ardhadhatuka::run_am_agama(p);
 

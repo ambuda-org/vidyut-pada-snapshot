@@ -102,15 +102,7 @@ fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) {
             Some(i) => i,
             None => return,
         };
-        let i_prev = p
-            .terms()
-            .iter()
-            .enumerate()
-            .rev()
-            .filter(|(_, t)| t.text.is_empty())
-            .map(|(i, _)| i)
-            .nth(1);
-        let i_prev = match i_prev {
+        let i_prev = match p.find_prev_where(i, |t| !t.text.is_empty()) {
             Some(i) => i,
             None => return,
         };

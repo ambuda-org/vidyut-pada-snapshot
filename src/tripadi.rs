@@ -88,20 +88,11 @@ fn try_ra_to_la(p: &mut Prakriya) {
     }
 }
 
+/// Final samyoga.
+///
+/// (8.2.23 - 8.2.29)
 fn try_samyoganta_and_sa_lopa(p: &mut Prakriya) {
-    /*
-    """Final samyoga. (8.2.23 - 8.2.29)"""
-
     // Exception to 8.2.23.
-    sk = s("s k").regex
-    hal = s("hal").regex
-    jhal = s("Jal").regex
-
-    // TODO: jhal case
-    pattern = f"({sk}+){hal}+"
-    jhal = f"{jhal}"
-    */
-
     char_rule(
         p,
         xyz(|x, y, z| JHAL.contains_char(x) && y == 's' && JHAL.contains_char(z)),
@@ -111,37 +102,6 @@ fn try_samyoganta_and_sa_lopa(p: &mut Prakriya) {
             true
         },
     );
-
-    /*
-    // saMst can be handled only with difficulty. For details, see the
-    // commentary in the mAdhavIya-dhAtuvRtti:
-    //
-    // https://archive.org/details/237131938MadhaviyaDhatuVrtti/page/n434/mode/1up
-    view = StringView(p.terms)
-    vtext = view.text
-    // We find all matches at the beginning of the loop. If multiple sa-lopas
-    // apply, then each lopa will cause a frame shift that will affect later
-    // sa-lopas. As a quick hack, manage this with `offset` so that the deletion
-    // indices are always properly aligned.
-    lopa_offset = 0
-    for match in re.finditer(pattern + f"({jhal}|$)", vtext):
-        can_apply = True
-        if "sanst" in vtext:
-            // Apply the rule only if the change would not affect "sanst."
-            offset = 0
-            for t in p.terms:
-                offset += len(t.text)
-                if t.text == "sanst":
-                    break
-            if match.span(1)[0] <= offset:
-                // rule would apply to "sanst" -- block.
-                can_apply = False
-        if can_apply:
-            start, end = match.span(1)
-            view.delete_span(start - lopa_offset, end - lopa_offset)
-            p.step("8.2.29")
-            lopa_offset += 1
-    */
 
     for i in 0..p.terms().len() {
         let n = i + 1;
@@ -158,6 +118,58 @@ fn try_samyoganta_and_sa_lopa(p: &mut Prakriya) {
             p.op_term("8.2.25", i, op::antya(""));
         }
     }
+
+    for i in 0..p.terms().len() {
+        if let (Some(x), Some(y), Some(z)) = (p.get(i), p.get(i + 1), p.get(i + 2)) {
+            if x.has_u("iw") && y.has_u("si~c") && z.has_u("Iw") {
+                p.op_term("8.2.28", i + 1, op::lopa);
+
+                // sic-lopa is siddha with respect to prior rules (8.2.3 vArttika)
+                // Therefore, apply ac-sandhi:
+                p.op("6.1.101", |p| {
+                    p.set(i, op::antya("I"));
+                    p.set(i + 2, op::adi(""));
+                });
+            }
+        }
+    }
+    /*
+    for i, _ in enumerate(p.terms[:-2]):
+        x, y, z = p.terms[i : i + 3]
+        if x.u == "iw" and y.u == "si~c" and z.u == "Iw":
+            op.lopa("8.2.28", p, y)
+
+    */
+
+    // saMst can be handled only with difficulty. For details, see the
+    // commentary in the mAdhavIya-dhAtuvRtti:
+    //
+    // https://archive.org/details/237131938MadhaviyaDhatuVrtti/page/n434/mode/1up
+    // TODO: add support for samst
+    char_rule(
+        p,
+        |_, text, i| {
+            let bytes = text.as_bytes();
+            if let (Some(x), Some(y)) = (bytes.get(i), bytes.get(i + 1)) {
+                let x = *x as char;
+                let y = *y as char;
+                let sku_samyoga = (x == 's' || x == 'k') && HAL.contains_char(y);
+                if let Some(z) = bytes.get(i + 2) {
+                    let z = *z as char;
+                    sku_samyoga && JHAL.contains_char(z)
+                } else {
+                    sku_samyoga
+                }
+            } else {
+                false
+            }
+        },
+        |p, _, i| {
+            set_at(p, i, "");
+            p.step("8.2.29");
+            true
+        },
+    );
 
     /*
 
@@ -176,16 +188,6 @@ fn try_samyoganta_and_sa_lopa(p: &mut Prakriya) {
         ):
             op.lopa("8.2.27", p, n)
 
-    for i, _ in enumerate(p.terms[:-2]):
-        x, y, z = p.terms[i : i + 3]
-        if x.u == "iw" and y.u == "si~c" and z.u == "Iw":
-            op.lopa("8.2.28", p, y)
-
-            // sic-lopa is siddha with respect to prior rules (8.2.3 vArttika)
-            z.text = ""
-            // HACK: x should always have text at this point. Temp workaround.
-            if x.text:
-                op.antya("6.1.101", p, x, "I")
     */
 
     char_rule(
@@ -239,9 +241,9 @@ fn try_ha_adesha(p: &mut Prakriya) {
 }
 
 /// (8.2.76 - 8.2.79)
-fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) {
+fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) -> Option<()> {
     if !p.has(i, f::dhatu) {
-        return;
+        return None;
     }
 
     let is_rv = |opt| match opt {
@@ -259,19 +261,16 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) {
     let before_upadha = |t: &Term| t.text.chars().rev().nth(2);
 
     // TODO: bha
-    let dhatu = &p.terms()[i];
+    p.step("checking");
+    let dhatu = p.get(i)?;
     if dhatu.has_text_in(&["kur", "Cur"]) {
         p.step("8.2.79");
     } else if is_ik(dhatu.upadha()) && is_rv(dhatu.antya()) {
-        let upadha = dhatu.upadha().expect("");
-        let upadha_to_dirgha = |t: &mut Term| {
-            let sub = al::to_dirgha(upadha).unwrap().to_string();
-            op::set_upadha(&t.text, &sub);
-        };
+        let sub = al::to_dirgha(dhatu.upadha()?)?;
         if p.has(i + 1, |t| HAL.contains_opt(t.adi())) {
-            p.op_term("8.2.77", i, upadha_to_dirgha);
+            p.op_term("8.2.77", i, op::upadha(&sub.to_string()));
         } else {
-            p.op_term("8.2.76", i, upadha_to_dirgha);
+            p.op_term("8.2.76", i, op::upadha(&sub.to_string()));
         }
     } else if is_ik(before_upadha(dhatu)) && is_rv(dhatu.upadha()) && is_hal(dhatu.antya()) {
         p.op("8.2.78", |p| {
@@ -284,6 +283,8 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) {
             });
         });
     }
+
+    Some(())
 }
 
 fn per_term_1b(p: &mut Prakriya, i: usize) {

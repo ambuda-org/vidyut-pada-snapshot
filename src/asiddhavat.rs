@@ -233,7 +233,7 @@ fn try_run_kniti_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
 
 /// Run rules that replace the dhatu's vowel with e and apply abhyasa-lopa.
 /// Example: `la + laB + e` -> `leBe`
-fn try_et_adesha_and_abhyasa_lopa_for_it(p: &mut Prakriya, i: usize) -> Option<()> {
+fn try_et_adesha_and_abhyasa_lopa_for_lit(p: &mut Prakriya, i: usize) -> Option<()> {
     let dhatu = p.get(i)?;
     if !dhatu.all(&[T::Dhatu, T::Abhyasta]) {
         return None;
@@ -326,40 +326,51 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
     Some(())
 }
 
-/*
-fn run_dirgha(p: Prakriya):
-    """6.4.2 - 6.4.19"""
+/// 6.4.2 - 6.4.19
+pub fn run_dirgha(p: &mut Prakriya) -> Option<()> {
+    let i_sup = p.find_last(T::Sup)?;
+    if i_sup == 0 {
+        return None;
+    };
+    let i = p.find_prev_where(i_sup, |t| !t.has_tag(T::Agama))?;
 
-    sup = p.terms[-1]
-    if not sup.all(T.SUP):
-        return
-    anga = p.terms[-2]
+    let anga = p.get(i)?;
+    let sup = p.get(i_sup)?;
+    let has_num = if i + 1 != i_sup {
+        p.get(i + 1)?.has_u("nu~w")
+    } else {
+        false
+    };
 
-    has_num = False
-    if anga.u == "nu~w":
-        anga = p.terms[-3]
-        has_num = True
-
-    if sup.text == "Am" and has_num:
-        if anga.text in {"tisf", "catasf"}:
+    if sup.has_text("Am") && has_num {
+        if anga.has_text_in(&["tisf", "catasf"]) {
             p.step("6.4.3")
-        } else if  anga.text == "nf":
-            op.optional(op.antya, "6.4.4", p, anga, sounds.dirgha(anga.antya))
-        } else if  anga.antya == "n":
-            op.upadha("6.4.5", p, anga, sounds.dirgha(anga.upadha))
-        } else if  anga.antya in s("ac"):
-            op.antya("6.4.2", p, anga, sounds.dirgha(anga.antya))
-
-    } else if  sup.any(T.SARVANAMASTHANA) and not sup.any(T.SAMBUDDHI):
-        tr_exclude = {"pitf", "pitar", "jAmAtf", "jAmAtar", "BrAtf", "BrAtar"}
-        if anga.antya == "n":
-            op.upadha("6.4.8", p, anga, sounds.dirgha(anga.upadha))
+        } else if anga.has_text("nf") {
+            let sub = al::to_dirgha(anga.antya()?)?;
+            p.op_optional("6.4.4", op::t(i, op::antya(&sub.to_string())));
+        } else if anga.has_antya('n') {
+            let sub = al::to_dirgha(anga.upadha()?)?;
+            p.op_term("6.4.5", i, op::upadha(&sub.to_string()));
+        } else if anga.has_antya(&*AC) {
+            let sub = al::to_dirgha(anga.antya()?)?;
+            p.op_term("6.4.2", i, op::antya(&sub.to_string()));
+        }
+    } else if sup.has_tag(T::Sarvanamasthana) && !sup.has_tag(T::Sambuddhi) {
+        let tr_exclude = &["pitf", "pitar", "jAmAtf", "jAmAtar", "BrAtf", "BrAtar"];
+        if anga.has_antya('n') {
+            let sub = al::to_dirgha(anga.upadha()?)?;
+            p.op_term("6.4.8", i, op::upadha(&sub.to_string()));
         // TODO: restrict
-        } else if  (
-            anga.antya == "f" or anga.text.endswith("ar")
-        ) and anga.text not in tr_exclude:
-            op.upadha("6.4.11", p, anga, sounds.dirgha(anga.upadha))
-*/
+        } else if (anga.has_antya('f') || anga.text.ends_with("ar"))
+            && !anga.has_text_in(tr_exclude)
+        {
+            let sub = al::to_dirgha(anga.upadha()?)?;
+            p.op_term("6.4.11", i, op::upadha(&sub.to_string()));
+        }
+    }
+
+    Some(())
+}
 
 fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
@@ -636,7 +647,7 @@ pub fn run_after_guna(p: &mut Prakriya, i: usize) -> Option<()> {
             p.step("6.4.110")
 
     */
-    try_et_adesha_and_abhyasa_lopa_for_it(p, i);
+    try_et_adesha_and_abhyasa_lopa_for_lit(p, i);
 
     let n = p.view(i + 1)?;
     if n.has_tag(T::qit) {

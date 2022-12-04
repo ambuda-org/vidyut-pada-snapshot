@@ -173,7 +173,7 @@ fn maybe_replace_cli_with_an(p: &mut Prakriya, i: usize) {
 
     // Ensure no substitution has already occurred (e.g. for Svi which can be
     // matched by 3.1.49 above).
-    let to_an = replace_with(i + 1, "an");
+    let to_an = replace_with(i + 1, "aN");
     let jr_stambhu = [
         "jF", "stanB", "mruc", "mluc", "gruc", "gluc", "glunc", "Svi",
     ];

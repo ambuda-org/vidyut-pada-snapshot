@@ -57,24 +57,24 @@ fn add_it(rule: Rule, p: &mut Prakriya, i: usize) {
 ///
 /// (7.2.8 - 7.2.34)
 fn try_general_anit(p: &mut Prakriya, i: usize) -> bool {
-    let d = &p.terms()[i];
-    let n = match p.view(i) {
+    let dhatu = &p.terms()[i];
+    let n = match p.view(i + 1) {
         Some(x) => x,
         None => return false,
     };
 
     let mut it = It::None;
-    let sri_uk = d.text == "Sri" || UK.contains_opt(d.antya());
+    let sri_uk = dhatu.text == "Sri" || UK.contains_opt(dhatu.antya());
     if n.has_tag(T::Krt) && !VASH.contains_opt(n.adi()) {
         it = It::Anit("7.2.8");
-    } else if is_hacky_eka_ac(d) && sri_uk && n.has_tag(T::Kit) {
+    } else if is_hacky_eka_ac(dhatu) && sri_uk && n.has_tag(T::Kit) {
         it = It::Anit("7.2.11");
-    } else if n.has_u("san") && d.has_text_in(&["Sri", "grah", "guh"]) {
+    } else if n.has_u("san") && dhatu.has_text_in(&["Sri", "grah", "guh"]) {
         it = It::Anit("7.2.12");
     } else if n.has_tag(T::Nistha) {
-        if d.text == "Svi" || d.has_tag(T::Idit) {
+        if dhatu.text == "Svi" || dhatu.has_tag(T::Idit) {
             it = It::Anit("7.2.14");
-        } else if d.has_tag(T::Adit) {
+        } else if dhatu.has_tag(T::Adit) {
             let code = "7.2.17";
             if p.any(&[T::Bhave, T::Karmani]) && p.is_allowed(code) {
             } else {
