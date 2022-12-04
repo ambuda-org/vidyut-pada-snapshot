@@ -1,9 +1,7 @@
 mod abhyasasya;
 mod ac_sandhi;
-// TODO
 mod angasya;
 mod ardhadhatuka;
-// TODO
 mod asiddhavat;
 mod atidesha;
 mod atmanepada;

@@ -318,6 +318,10 @@ impl<'a> TermView<'a> {
         tags.iter()
             .any(|tag| self.slice().iter().any(|t| t.has_tag(*tag)))
     }
+
+    pub fn is_knit(&self) -> bool {
+        self.any(&[Tag::kit, Tag::Nit])
+    }
 }
 
 #[cfg(test)]

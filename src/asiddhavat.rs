@@ -35,7 +35,7 @@ lazy_static! {
 }
 
 fn is_knit(n: &TermView) -> bool {
-    n.any(&[T::kit, T::Nit])
+    n.is_knit()
 }
 
 /// Returns whether the given slice has multiple vowels.
@@ -521,24 +521,24 @@ pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {
         op::append_agama("6.4.88", p, i, "vu~k");
     }
 
-    /*
-    if c.u == "ciR" and n.text == "ta":
-        op.luk("6.4.104", p, n.terms[0])
+    let anga = p.get(i)?;
+    let n = p.view(i + 1)?;
 
-    // 6.4.114 has a vArttika for ArdhadhAtuke:
-    } else if c.u == "daridrA" and n.any(T.ARDHADHATUKA):
-        if p.terms[-1].all("lu~N"):
-            if p.allow("6.4.114.v2"):
-                p.step("6.4.114.v2")
-                return
-            else:
-                p.decline("6.4.114.v2")
+    if anga.has_u("ciR") && n.last()?.has_text("ta") {
+        p.op_term("6.4.101", n.end(), op::luk);
+    } else if anga.has_u("daridrA") && n.has_tag(T::Ardhadhatuka) {
+        if p.terms().last()?.has_lakshana("lu~N") {
+            // Varttika.
+            if p.op_optional("6.4.114.v2", |_| {}) {
+                return None;
+            }
+        }
 
         // Should replace just the last sound, but sak-Agama causes issues
         // here.
         // TODO: what is the correct prakriya here?
-        op.text("6.4.114.v1", p, c, "daridr")
-    */
+        p.op_term("6.4.114.v1", i, op::text("daridr"));
+    }
 
     Some(())
 }
@@ -636,17 +636,17 @@ pub fn run_after_guna(p: &mut Prakriya, i: usize) -> Option<()> {
     run_for_final_i_or_u(p, i);
     try_run_kniti(p, i);
 
-    /*
-        // TODO: fails kniti check because this depends on the last affix, and
-        // term view includes only "u" here. So the rule is awkwardly placed
-        // here.
-        last = p.terms[-1]
-        sarva_kniti = last.all(T.SARVADHATUKA) and last.any("k", "N")
-        if c.u == "qukf\\Y" and c.text == "kar" and n.adi == "u" and sarva_kniti:
-            c.text = "kur"
-            p.step("6.4.110")
+    // TODO: fails kniti check because this depends on the last affix, and
+    // term view includes only "u" here. So the rule is awkwardly placed
+    // here.
+    let last = p.terms().last()?;
+    let anga = p.get(i)?;
+    let n = p.view(i + 1)?;
+    let sarva_kniti = last.has_tag(T::Sarvadhatuka) && !last.any(&[T::kit, T::Nit]);
+    if anga.has_u("qukf\\Y") && anga.has_text("kar") && n.has_adi('u') && sarva_kniti {
+        p.op_term("6.4.110", i, op::text("kur"));
+    }
 
-    */
     try_et_adesha_and_abhyasa_lopa_for_lit(p, i);
 
     let n = p.view(i + 1)?;
