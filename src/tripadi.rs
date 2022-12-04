@@ -164,28 +164,18 @@ fn try_samyoganta_and_sa_lopa(p: &mut Prakriya) {
         },
     );
 
-    /*
-
     // hrasvAd aGgAt
-    for i, c in enumerate(p.terms):
-        try:
-            n = p.terms[i + 1]
-            n2 = p.terms[i + 2]
-        except IndexError:
-            break
-        if (
-            c.antya in sounds.HRASVA
-            and n.text == "s"
-            and n2.adi in s("Jal")
-            and not c.any(T.AGAMA)
-        ):
-            op.lopa("8.2.27", p, n)
-
-    */
+    for i in 0..p.terms().len() {
+        if let (Some(x), Some(y), Some(z)) = (p.get(i), p.get(i + 1), p.get(i + 2)) {
+            if f::is_hrasva(x) && y.has_text("s") && z.has_adi(&*JHAL) && !x.has_tag(T::Agama) {
+                p.op_term("8.2.27", i+1, op::lopa);
+            }
+        }
+    }
 
     char_rule(
         p,
-        |p, text, i| al::is_samyoganta(text) && i == text.len() - 1,
+        |_, text, i| al::is_samyoganta(text) && i == text.len() - 1,
         |p, _, i| {
             set_at(p, i, "");
             p.step("8.3.24");
@@ -279,6 +269,13 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) -> Option<()> {
     Some(())
 }
 
+fn iter_terms(p: &mut Prakriya, func: impl Fn(&mut Prakriya, usize) -> Option<()>) {
+    let n = p.terms().len();
+    for i in 0..n {
+        func(p, i);
+    }
+}
+
 fn per_term_1b(p: &mut Prakriya, i: usize) {
     let n = p.view(i + 1);
     let is_padanta = n.map(|x| x.is_padanta()).unwrap_or(true);
@@ -302,7 +299,6 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
         });
     }
 
-    /*
     let vrascha = &[
         "o~vrascU~",
         "Bra\\sja~^",
@@ -314,15 +310,34 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
         "BrAjf~\\",
     ];
 
-    jhali_ante = not n or n.adi in s("Jal")
-    if (c.u in vrascha or c.antya in s("C S")) and jhali_ante:
-        if c.text.endswith("tC"):
+    iter_terms(p, |p, i| {
+        let x = p.get(i)?;
+        if !(x.has_u_in(vrascha) || x.has_antya('C') || x.has_antya('S')) {
+            return None
+        }
+
+        let jhali_ante = match p.get(i+1) {
+            Some(n) => n.has_adi(&*JHAL),
+            None => true,
+        };
+        if !jhali_ante {
+            return None
+        }
+
+        // HACK: ugly implementation.
+        if x.text.ends_with("tC") {
             // TODO: seems implied, not sure.
-            c.text = c.text[:-2] + "z"
-            p.step("8.2.36")
-        else:
-            op.antya("8.2.36", p, c, "z")
-    */
+            p.op_term("8.2.36", i, |t| {
+                if let Some(prefix) = t.text.strip_prefix("tC") {
+                    t.text = CompactString::from(prefix) + "z";
+                }   
+            });
+        } else {
+            p.op_term("8.2.36", i, op::antya("z"));
+        }
+
+        Some(())
+    });
 
     if p.has(i, |t| t.has_antya(&*CU)) && p.has(i + 1, |t| t.has_adi(&*JHAL)) {
         let c = p.terms()[i].antya().unwrap();

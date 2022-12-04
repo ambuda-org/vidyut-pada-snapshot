@@ -313,7 +313,10 @@ impl Prakriya {
     }
 
     pub fn debug(&mut self, text: String) {
-        self.history.push(Step { rule: "debug", state: text });
+        self.history.push(Step {
+            rule: "debug",
+            state: text,
+        });
     }
 
     // Optional rules
