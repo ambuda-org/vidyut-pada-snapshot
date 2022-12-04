@@ -77,77 +77,72 @@ pub fn dhatu_adesha_before_pada(p: &mut Prakriya, la: La) {
 ///
 /// These rules must run before we choose the vikarana because the results here affect which
 /// vikarana we add.
-pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) {
+pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) -> Option<()> {
     // Rules are under 2.4.35 "ArdhadhAtuke".
     if la.is_sarvadhatuka() {
-        return;
+        return None;
     }
 
-    let i = match p.find_first(T::Dhatu) {
-        Some(i) => i,
-        None => return,
-    };
-
-    let n = i + 1;
+    let i = p.find_first(T::Dhatu)?;
+    let dhatu = p.get(i)?;
+    let n = p.get(i + 1)?;
 
     let to_ghasl = |p: &mut Prakriya| op::upadesha(p, i, "Gasx~");
-    if p.has(i, f::text("ad")) {
-        if p.has(n, f::lakshana_in(&["lu~N", "san"])) {
+    if dhatu.has_text("ad") {
+        if n.has_lakshana_in(&["lu~N", "san"]) {
             p.op("2.4.37", to_ghasl);
-        } else if p.has(n, f::u_in(&["GaY", "ap"])) {
+        } else if n.has_u_in(&["GaY", "ap"]) {
             p.op("2.4.38", to_ghasl);
-        } else if p.has(n, f::lakshana("li~w")) {
+        } else if n.has_lakshana("li~w") {
             p.op_optional("2.4.40", to_ghasl);
-        } else if p.has(n, |t| {
-            t.has_u("lyap") || (t.has_adi('t') && t.has_tag(T::kit))
-        }) {
+        } else if n.has_u("lyap") || (n.has_adi('t') && n.has_tag(T::kit)) {
             p.op("2.4.36", |p| op::upadesha(p, i, "jagDi~"));
         }
         // Skip 2.4.39 (bahulaM chandasi).
-    } else if p.has(i, f::u("ve\\Y")) && p.has(n, f::lakshana("li~w")) {
+    } else if dhatu.has_u("ve\\Y") && n.has_lakshana("li~w") {
         p.op_optional("2.4.41", |p| op::upadesha(p, i, "vayi~"));
-    } else if p.has(i, f::text("han")) {
+    } else if dhatu.has_text("han") {
         let to_vadha = |p: &mut Prakriya| op::upadesha(p, i, "vaDa");
-        if p.has(n, f::lakshana("li~N")) {
+
+        if n.has_lakshana("li~N") {
             p.op("2.4.42", to_vadha);
-        } else if p.has(n, f::lakshana("lu~N")) {
-            if p.has(n, f::tag(T::Atmanepada)) {
+        } else if n.has_lakshana("lu~N") {
+            if n.has_tag(T::Atmanepada) {
                 p.op_optional("2.4.44", to_vadha);
             } else {
                 p.op("2.4.43", to_vadha);
             }
         }
-    } else if p.has(i, f::u_in(&["i\\R", "i\\k"])) {
-        if p.has(i, f::u("i\\k")) {
-            p.step("2.4.45.v1")
-        }
-
+    } else if dhatu.has_u_in(&["i\\R", "i\\k"]) {
         let to_gami = |p: &mut Prakriya| op::upadesha(p, i, "gami~");
-        if p.has(i, f::lakshana("lu~N")) {
+
+        if dhatu.has_u("i\\k") {
+            p.step("2.4.45.v1");
+        } else if n.has_lakshana("lu~N") {
             p.op("2.4.45", |p| op::upadesha(p, i, "gA"));
-        } else if p.has(n, f::u("Ric")) {
+        } else if n.has_u("Ric") {
             p.op_optional("2.4.46", to_gami);
-        } else if p.has(n, f::u("san")) {
+        } else if n.has_u("san") {
             p.op_optional("2.4.47", to_gami);
         }
-    } else if p.has(i, f::u("i\\N")) {
+    } else if dhatu.has_u("i\\N") {
         let to_gaa = |p: &mut Prakriya| op::upadesha(p, i, "gAN");
 
-        if p.has(n, f::u("san")) {
+        if n.has_u("san") {
             p.op("2.4.48", |p| op::upadesha(p, i, "gami~"));
-        } else if p.has(n, f::lakshana("li~w")) {
+        } else if n.has_lakshana("li~w") {
             p.op("2.4.49", to_gaa);
-        } else if p.has(n, f::lakshana_in(&["lu~N", "lf~N"])) {
+        } else if n.has_lakshana_in(&["lu~N", "lf~N"]) {
             p.op_optional("2.4.50", to_gaa);
         }
-    } else if p.has(i, f::u("asa~")) {
+    } else if dhatu.has_u("asa~") {
         p.op("2.4.52", |p| op::upadesha(p, i, "BU"));
-    } else if p.has(i, f::u("brUY")) {
+    } else if dhatu.has_u("brUY") {
         // anudAtta to prevent iT
         p.op("2.4.53", |p| op::upadesha(p, i, "va\\ci~"));
-    } else if p.has(i, f::u("aja~")) && p.has(n, |t| !t.has_u_in(&["GaY", "ap"])) {
+    } else if dhatu.has_u("aja~") && !n.has_u_in(&["GaY", "ap"]) {
         let mut run = true;
-        if p.has(n, f::u("lyuw")) {
+        if n.has_u("lyuw") {
             if p.is_allowed("2.4.57") {
                 run = false;
             } else {
@@ -170,10 +165,11 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) {
         //
         // As a crude fix, just check for endings that we expect will start with
         // vowels.
+        let n = p.get(i + 1)?;
         let will_yasut = la == La::AshirLin && p.has_tag(T::Parasmaipada);
         let is_lit_ajadi = la == La::Lit && p.terms().last().unwrap().has_adi(&*AC);
         let will_have_valadi = !(will_yasut || is_lit_ajadi);
-        if p.has(n, |t| t.has_adi(&*VAL)) && will_have_valadi {
+        if n.has_adi(&*VAL) && will_have_valadi {
             if p.is_allowed("2.4.56.v2") {
                 p.step("2.4.56.v2");
                 run = false;
@@ -186,6 +182,8 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) {
             p.op("2.4.56", |p| op::upadesha(p, i, "vI\\"));
         }
     }
+
+    Some(())
 }
 
 /// This code depends on the Ric-vikaraNa being present.
