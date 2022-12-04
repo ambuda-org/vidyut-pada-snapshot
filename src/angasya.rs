@@ -216,7 +216,8 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
         return None;
     }
 
-    let n = p.view(i + 1)?;
+    let j = p.find_next_where(i, |t| !t.is_empty())?;
+    let n = p.view(j)?;
     if !can_use_guna_or_vrddhi(anga, &n) {
         return None;
     }

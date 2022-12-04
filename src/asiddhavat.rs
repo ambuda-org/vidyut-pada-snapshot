@@ -124,7 +124,8 @@ fn run_kniti_ardhadhatuka(p: &mut Prakriya, i: usize) -> Option<()> {
 /// (6.4.98 - 6.4.126)
 fn try_run_kniti(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
-    let n = p.view(i + 1)?;
+    let j = p.find_next_where(i, |t| !t.is_empty())?;
+    let n = p.view(j)?;
 
     if !n.any(&[T::kit, T::Nit]) {
         return None;
@@ -461,6 +462,7 @@ fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
         // General case
         //
         if n.has_u("lyap") {
+            p.step("check");
             p.op_optional("6.4.38", op::t(i, op::antya("")));
         } else if n.has_u("ktic") {
             // TODO: also prevent 6.4.15;

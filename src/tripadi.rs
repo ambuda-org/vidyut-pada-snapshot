@@ -361,13 +361,18 @@ fn try_ch_to_s(p: &mut Prakriya) {
 }
 
 fn per_term_1b(p: &mut Prakriya) -> Option<()> {
-    for i in 0..p.terms().len() {
-        if p.has(i, |t| t.has_antya(&*CU)) && p.has(i + 1, |t| t.has_adi(&*JHAL)) {
-            let c = p.terms()[i].antya().unwrap();
-            let sub = CU_TO_KU.get(c).unwrap();
-            p.op_term("8.2.30", i, op::antya(&sub.to_string()));
-        }
-    }
+    xy_rule(
+        p,
+        // TODO: also include end of pada.
+        |x, y| x.has_antya(&*CU) && y.has_adi(&*JHAL),
+        |p, i, _| {
+            let x = p.get(i).unwrap();
+            if let Some(c) = x.antya() {
+                let sub = CU_TO_KU.get(c).unwrap();
+                p.op_term("8.2.30", i, op::antya(&sub.to_string()));
+            }
+        },
+    );
 
     xy_rule(
         p,

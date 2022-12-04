@@ -123,11 +123,11 @@ fn try_general_rules(p: &mut Prakriya, i: usize) -> Option<()> {
     let abhyasa = p.get(i)?;
     let last = p.terms().last()?;
 
-    if dhatu.text == "dyut" {
-        p.op_term("7.4.67", i_dhatu, op::text("dit"));
+    if dhatu.has_text_in(&["dyut", "svAp"]) {
+        p.op_term("7.4.67", i, op::text("dit"));
     } else if dhatu.text == "vyaT" && last.has_lakshana("li~w") {
         // TODO: move this to `try_rules_for_lit`?
-        p.op_term("7.4.68", i_dhatu, op::text("viT"));
+        p.op_term("7.4.68", i, op::text("viT"));
     } else if SHAR.contains_opt(abhyasa.adi()) && KHAY.contains_opt(abhyasa.get(1)) {
         let mut abhyasa = &mut p.get_mut(i)?;
         let res = try_shar_purva(&abhyasa.text);
