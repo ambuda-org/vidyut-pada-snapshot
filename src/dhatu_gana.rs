@@ -245,3 +245,7 @@ pub const PU_ADI: &[&str] = &[
 ];
 
 pub const VRDBHYAH: &[&str] = &["vftu~\\", "vfDu~\\", "SfDu~\\", "SfDu~^", "syandU~\\"];
+
+/// These dhatus use san-pratyaya with a long abhyAsa.
+/// (3.1.6)
+pub const MAN_BADHA: &[&str] = &["mAna~\\", "baDa~\\", "dAna~^", "SAna~^"];

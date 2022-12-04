@@ -1,6 +1,4 @@
-// TODO
 mod abhyasasya;
-// TODO
 mod ac_sandhi;
 // TODO
 mod angasya;

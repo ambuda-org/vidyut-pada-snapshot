@@ -14,10 +14,13 @@ use lazy_static::lazy_static;
 lazy_static! {
     static ref A: SoundSet = s("a");
     static ref AK: SoundSet = s("ak");
-    static ref IK: SoundSet = s("ik");
     static ref AC: SoundSet = s("ac");
+    static ref IC: SoundSet = s("ic");
+    static ref IK: SoundSet = s("ik");
+    static ref EN: SoundSet = s("eN");
     static ref EC: SoundSet = s("ec");
     static ref VAL: SoundSet = s("val");
+    static ref HAL: SoundSet = s("hal");
 }
 
 /// Runs various general rules of vowel sandhi.
@@ -133,84 +136,97 @@ fn sup_sandhi_before_angasya(p: &mut Prakriya) {
     }
 }
 
-fn sup_sandhi_after_angasya(p: &mut Prakriya) {
-    /*
-    // Program cannot model "antAdivacca" so split the rule.
-    let y = p.terms().len() - 1;
-    if !p.has(y, |t| t.has_tag(T::Sup)) {
-        return;
-    }
-    let x = y - 1;
+fn try_sup_sandhi_after_angasya(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_last(T::Sup)?;
+    if i == 0 {
+        return None;
+    };
 
-    let mut base = p.terms()[x];
-    let mut sup = p.terms()[y];
+    let anga = p.get(i - 1)?;
+    let sup = p.get(i)?;
 
-    if base.has_antya(&s("ak")) && sup.any(&[T::V1, T::V2]) {
-        if sup.text == "am" {
-            p.op("6.1.107", op::t(y, op::adi("")));
-        } else if base.has_antya(&s("a")) && sup.has_adi(&s("ic")) {
+    if anga.has_antya(&*AK) && sup.any(&[T::V1, T::V2]) {
+        if sup.has_text("am") {
+            p.op_term("6.1.107", i, op::adi(""));
+        } else if anga.has_antya('a') && sup.has_adi(&*IC) {
             p.step("6.1.104");
-        } else if base.antya() and (sup.has_adi(&s("ic")) || sup.has_u("jas")) {
+        } else if f::is_dirgha(anga) && sup.has_adi(&*IC) || sup.has_u("jas") {
             p.step("6.1.105");
-        } else if sup.has_adi(&s("ac")) {
-            antya = c.antya
-            c.text = c.text[:-1]
-            op.adi("6.1.102", p, n, sounds.dirgha(antya))
+        } else if sup.has_adi(&*AC) {
+            let sub = al::to_dirgha(anga.antya()?)?;
+            p.op_term("6.1.102", i, op::adi(&sub.to_string()));
 
-            if n.u == "Sas" and c.all(T.PUM) {
-                p.op("6.1.103", op::t(y, op::antya("n")));
+            let sup = p.get(i)?;
+            if p.has_tag(T::Pum) && sup.has_u("Sas") {
+                p.op_term("6.1.103", i, op::antya("n"));
             }
         }
-    } else if p.has(y, f::u_in(&["Nasi~", "Nas"])) {
-        if p.has(x, |t| t.has_antya(&s("eN"))) {
-            p.op("6.1.110", op::t(s, op::adi("")));
-        } else if p.has(x, |t| t.has_antya('f')) {
-            c.text = c.text[:-1] + "ur";
-            p.op("6.1.110", op::t(y, op::adi("")));
+    } else if sup.has_u_in(&["Nasi~", "Nas"]) {
+        if anga.has_antya(&*EN) {
+            p.op_term("6.1.110", i, op::adi(""));
+        } else if anga.has_antya('f') {
+            p.op("6.1.110", |p| {
+                p.set(i - 1, op::antya("ur"));
+                p.set(i, op::adi(""));
+            });
         }
     }
-    */
+
+    Some(())
 }
 
 /// Runs vowel sandhi rules that apply between terms (as opposed to between sounds).
-fn apply_ac_sandhi_at_term_boundary(p: &mut Prakriya, i: usize) {
-    let n = match p.find_next_where(i, |t| !t.text.is_empty()) {
-        Some(n) => n,
-        None => return,
-    };
+fn apply_ac_sandhi_at_term_boundary(p: &mut Prakriya, i: usize) -> Option<()> {
+    let j = p.find_next_where(i, |t| !t.text.is_empty())?;
 
-    /*
-    // TODO: NI, Ap
+    let x = p.get(i)?;
+    let y = p.get(j)?;
+
+    let ni_ap = x.has_u_in(&["GI", "Ap"]) && x.has_tag(T::Pratyaya);
     // Check for Agama to avoid lopa on yAs + t.
-    if (
-        c.antya in s("hal")
-        && n
-        && len(n.text) == 1
-        && n.u in ("su~", "tip", "sip")
-        && not c.all(T.AGAMA)
-    ) {
-        op.antya("6.1.68", p, n, "")
+    let hal_ni_ap_dirgha = (x.has_antya(&*HAL) || ni_ap) && f::is_dirgha(x) && !x.has_tag(T::Agama);
+    if hal_ni_ap_dirgha && f::is_aprkta(y) && y.has_u_in(&["su~", "tip", "sip"]) {
+        p.op_term("6.1.68", j, op::lopa);
     }
 
-    if (c.antya in sounds.HRASVA or c.antya in s("eN")) && p.terms[-1].any(
-        T.SAMBUDDHI
-    ) {
-        op.lopa("6.1.69", p, p.terms[-1])
+    let x = p.get(i)?;
+    let y = p.get(j)?;
+    if (f::is_hrasva(x) || x.has_antya(&*EN)) && y.has_tag(T::Sambuddhi) {
+        p.op_term("6.1.69", j, op::lopa);
     }
-    */
 
-    if p.has(i, |t| t.antya() == Some('a') || t.antya() == Some('A')) && p.has(n, f::text("us")) {
+    let x = p.get(i)?;
+    let y = p.get(j)?;
+    if (x.has_antya('a') || x.has_antya('A')) && y.has_text("us") {
         p.op_term("6.1.96", i, op::antya(""));
-    } else if p.has(i, f::u("Aw")) && p.has(n, |t| t.has_adi(&*IK)) {
+    } else if x.has_u("Aw") && y.has_adi(&*IK) {
+        let sub = al::to_vrddhi(y.adi()?)?;
         p.op("6.1.90", |p| {
-            let next = &p.terms()[n];
-            let sub = al::to_vrddhi(next.adi().unwrap()).unwrap();
-
             // ekaH pUrvapara (6.1.84)
             p.set(i, op::text(""));
-            p.set(n, op::adi(sub));
+            p.set(j, op::adi(sub));
         });
     }
+
+    Some(())
+}
+
+fn hacky_apply_ni_asiddhavat_rules(p: &mut Prakriya) -> Option<()> {
+    for i in 0..p.terms().len() {
+        let x = p.get(i)?;
+        let y = p.get(i + 1)?;
+
+        // HACK: duplicate 6.4.92 from the asiddhavat section for ci -> cAy, cap
+        if x.has_tag(T::mit) && x.has_text_in(&["cAy", "cA"]) && y.has_u_in(&["Ric", "pu~k"]) {
+            if x.has_text("cA") {
+                p.op_term("6.4.92", i, op::antya("a"));
+            } else {
+                p.op_term("6.4.92", i, op::upadha("a"));
+            }
+        }
+    }
+
+    Some(())
 }
 
 fn run_common(p: &mut Prakriya) {
@@ -219,27 +235,11 @@ fn run_common(p: &mut Prakriya) {
     }
 
     apply_general_ac_sandhi(p);
-
-    /*
-    for i, c in enumerate(p.terms) {
-        try {
-            n = p.terms[i + 1]
-        except IndexError {
-            continue
-        // HACK: duplicate 6.4.92 from the asiddhavat section for ci -> cAy, cap
-        if c.all("m") and n.u in {"Ric", "pu~k"} and c.text in {"cAy", "cA"} {
-            if c.text == "cA" {
-                p.op("6.4.92", op::t(i, op::antya("a")));
-            } else {
-                p.op("6.4.92", op::t(i, op::upadha("a")));
-            }
-        }
-    }
-    */
+    hacky_apply_ni_asiddhavat_rules(p);
 }
 
 pub fn run(p: &mut Prakriya) {
     run_common(p);
     sup_sandhi_before_angasya(p);
-    sup_sandhi_after_angasya(p);
+    try_sup_sandhi_after_angasya(p);
 }

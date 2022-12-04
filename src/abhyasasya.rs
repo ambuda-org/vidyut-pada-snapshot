@@ -7,6 +7,7 @@ Rules that modify the abhyāsa.
 */
 
 use crate::constants::Tag as T;
+use crate::dhatu_gana as gana;
 use crate::filters as f;
 use crate::it_samjna;
 use crate::operators as op;
@@ -104,14 +105,15 @@ pub fn run_for_sani_cani(p: &mut Prakriya) -> Option<()> {
         }
     }
 
+    let anga = p.get(i_abhyasta)?;
+    // TODO: scope of this? Sarvadhatuka only?
+    if anga.has_u_in(gana::MAN_BADHA) {
+        let sub = al::to_dirgha(anga.antya()?)?;
+        p.op_term("3.1.6", i, op::antya(&sub.to_string()));
+    }
+
     Some(())
 }
-
-/*
-    # TODO: scope of this? Sarvadhatuka only?
-    if dhatu.u in MAN_BADHA:
-        op.antya("3.1.6", p, c, sounds.dirgha(c.antya))
-*/
 
 /// Runs abhyasa rules that apply generally.
 fn try_general_rules(p: &mut Prakriya, i: usize) -> Option<()> {

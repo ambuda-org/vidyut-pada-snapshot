@@ -7,7 +7,6 @@ filters and various utilities for working with filters in the rest of the system
 
 */
 use crate::constants::Tag as T;
-use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
 use crate::term::Term;
@@ -16,13 +15,6 @@ use lazy_static::lazy_static;
 lazy_static! {
     static ref AC: SoundSet = s("ac");
     static ref HAL: SoundSet = s("hal");
-}
-
-pub fn t(i: usize, f: impl Fn(&Term) -> bool) -> impl Fn(&mut Prakriya) -> bool {
-    move |p| match p.get(i) {
-        Some(t) => f(t),
-        None => false,
-    }
 }
 
 /// Returns whether the given term has exactly one vowel sound.
@@ -53,9 +45,15 @@ pub fn is_laghu(t: &Term) -> bool {
     }
 }
 
-/// Returns whether the term ends in a *hrasva* vowel.
 pub fn is_hrasva(t: &Term) -> bool {
-    is_laghu(t)
+    !is_dirgha(t)
+}
+
+pub fn is_dirgha(t: &Term) -> bool {
+    match t.antya() {
+        Some(c) => al::is_dirgha(c),
+        None => false,
+    }
 }
 
 /// Returns whether the term ends in a *guru* syllable.
@@ -69,10 +67,6 @@ pub fn ends_with(sub: &'static str) -> impl Fn(&Term) -> bool {
 
 pub fn empty(t: &Term) -> bool {
     t.text.is_empty()
-}
-
-pub fn not_empty(t: &Term) -> bool {
-    !t.text.is_empty()
 }
 
 /// Returns whether the term has the given `tag`.

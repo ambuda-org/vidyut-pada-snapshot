@@ -3,6 +3,7 @@
 use crate::constants::La;
 use crate::constants::Tag as T;
 use crate::filters as f;
+use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
@@ -11,6 +12,8 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     static ref AC: SoundSet = s("ac");
+    static ref EC: SoundSet = s("ec");
+    static ref JHAL: SoundSet = s("Jal");
     static ref VAL: SoundSet = s("val");
 }
 
@@ -18,7 +21,7 @@ lazy_static! {
 ///
 /// > 6.1.50 minātiminotidīṅāṃ lyapi ca
 /// > 6.1.51 vibhāṣā līyateḥ
-fn will_cause_guna(n: TermView) -> bool {
+fn will_cause_guna(n: &TermView) -> bool {
     let is_apit = !n.has_tag(T::pit);
     !(
         // Parasmaipada Ashir-liN will use yAsuT-Agama, which is kit.
@@ -185,52 +188,47 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) {
     }
 }
 
-/*
-fn dhatu_adesha_after_vikarana(p: Prakriya):
-    """
-    This code depends on the Ric-vikaraNa being present.
-    """
-    index, c = p.find_first(T::DHATU)
-    n = TermView.make(p, index)
+/// This code depends on the Ric-vikaraNa being present.
+fn dhatu_adesha_after_vikarana(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_first(T::Dhatu)?;
+    let n = p.view(i + 1)?;
 
-    if not n.any(T::ARDHADHATUKA):
-        return
+    if !n.has_tag(T::Ardhadhatuka) {
+        return None;
+    }
 
-    // HACK to make the below readable
-    n.u = n.terms[0].u
+    let dhatu = p.get(i)?;
+    if dhatu.has_u("i\\N") && p.terms().get(i + 2).is_some() {
+        let n2 = p.terms().get(i + 2)?;
+        if n.has_u("Ric") && n2.has_u_in(&["san", "caN"]) {
+            let done = p.op_optional("2.4.50", |p| op::upadesha(p, i, "gAN"));
+            if done {
+                it_samjna::run(p, i).ok()?;
+            }
+        }
+    }
 
-    try:
-        n2 = p.terms[index + 2]
-    except IndexError:
-        n2 = None
-    if c.u == "i\\N" && n2:
-        n2 = p.terms[index + 2]
-        if n.u == "Ric" && n2 && n2.u in ("san", "caN"):
-            op.optional(op.upadesha, "2.4.50", p, c, "gAN")
+    Some(())
+}
 
+fn try_aa_adesha(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_first(T::Dhatu)?;
+    let n = p.view(i + 1)?;
 
-fn aa_adesha(p: Prakriya, index: int):
-    c = p.terms[index]
-    if not c.any(T::DHATU):
-        return
-    n = TermView.make(p, index)
-    if not n:
-        return
-
-    // HACK
-    n.u = n.terms[0].u
+    let dhatu = p.get(i)?;
 
     // Substitution of A for root vowel
-
-    if c.antya in s("ec") && not n.any("S"):
-        if c.text == "vye" && n.any("li~w"):
-            p.step("6.1.46")
-        else:
-            op.antya("6.1.45", p, c, "A")
-    } else if  c.text in {"sPur", "sPul"} && n.u == "GaY":
-        op.upadha("6.1.47", p, c, "A")
-    } else if  c.u in {"qukrI\\Y", "i\\N", "ji\\"} && n.u == "Ric":
-        op.antya("6.1.48", p, c, "A")
+    if dhatu.has_antya(&*EC) && !n.has_tag(T::Sit) {
+        if dhatu.has_text("vye") && !n.has_lakshana("li~w") {
+            p.step("6.1.46");
+        } else {
+            p.op_term("6.1.45", i, op::antya("A"));
+        }
+    } else if dhatu.has_text_in(&["sPur", "sPul"]) && n.has_u("GaY") {
+        p.op_term("6.1.47", i, op::upadha("A"));
+    } else if dhatu.has_u_in(&["qukrI\\Y", "i\\N", "ji\\"]) && n.has_u("Ric") {
+        p.op_term("6.1.48", i, op::antya("A"));
+    }
     // TODO: 6.1.49
 
     // 6.1.50 has a circular dependency:
@@ -242,57 +240,56 @@ fn aa_adesha(p: Prakriya, index: int):
     //
     // So, "look ahead" and use this rule only if the suffix will potentially
     // cause guNa. See `will_cause_guna` for details.
-    ashiti_lyapi = not n.any("S") or n.u == "lyap"
-    if c.u in {"mI\\Y", "qu\\mi\\Y", "dI\\N"} && ashiti_lyapi && will_cause_guna(n):
-        op.antya("6.1.50", p, c, "A")
-    } else if  c.text == "lI" && ashiti_lyapi && will_cause_guna(n) && c.gana != 10:
+    let dhatu = p.get(i)?;
+    let n = p.view(i + 1)?;
+    let ashiti_lyapi = !n.has_tag(T::Sit) || n.has_u("lyap");
+
+    if dhatu.has_u_in(&["mI\\Y", "qu\\mi\\Y", "dI\\N"]) && ashiti_lyapi && will_cause_guna(&n) {
+        p.op_term("6.1.50", i, op::antya("A"));
+    } else if dhatu.has_text("lI") && ashiti_lyapi && will_cause_guna(&n) && !dhatu.has_gana(10) {
         // līyateriti yakā nirdeśo na tu śyanā. līlīṅorātvaṃ vā syādejviṣaye
         // lyapi ca. (SK)
-        op.optional(op.antya, "6.1.51", p, c, "A")
+        p.op_optional("6.1.51", op::t(i, op::antya("A")));
     // TODO: 6.1.52 - 6.1.53
-    } else if  c.u in {"ciY", "ci\\Y", "sPura~"} && n.u == "Ric":
-        if c.text == "sPura~":
-            op.optional(op.upadha, "6.1.54", p, c, "A")
-        else:
-            op.optional(op.antya, "6.1.54", p, c, "A")
+    } else if dhatu.has_u_in(&["ciY", "ci\\Y", "sPura~"]) && n.has_u("Ric") {
+        if dhatu.has_text("sPura~") {
+            p.op_optional("6.1.54", op::t(i, op::upadha("A")));
+        } else {
+            p.op_optional("6.1.54", op::t(i, op::antya("A")));
+        }
     // TODO: 6.1.55 - 6.1.56
-    } else if  c.text == "smi" && n.u == "Ric":
-        op.optional(op.antya, "6.1.57", p, c, "A")
+    } else if dhatu.has_text("smi") && n.has_u("Ric") {
+        p.op_optional("6.1.57", op::t(i, op::antya("A")));
+    }
 
+    Some(())
+}
 
-fn am_agama_for_term(p: Prakriya, index: int):
-    c = p.terms[index]
-    if not c.any(T::DHATU):
-        return
-    n = TermView.make(p, index)
-    if not n:
-        return
+pub fn run_am_agama(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_first(T::Dhatu)?;
+    let n = p.view(i + 1)?;
 
-    if n.adi in s("Jal") && not n.any("k") {
-        if c.text in {"sfj", "dfS"} {
-            op.mit("6.1.58", p, c, "a")
-        } else if  c.all(T::ANUDATTA) && c.upadha == "f":
-            op.optional(op.mit, "6.1.59", p, c, "a")
+    let dhatu = p.get(i)?;
+
+    if n.has_adi(&*JHAL) && !n.has_tag(T::kit) {
+        if dhatu.has_text_in(&["sfj", "dfS"]) {
+            p.op_term("6.1.58", i, op::mit("a"));
+        } else if dhatu.has_tag(T::Anudatta) && dhatu.has_upadha('f') {
+            p.op_optional("6.1.59", op::t(i, op::mit("a")));
         }
     }
 
+    Some(())
+}
 
-fn run_before_vikarana(p: Prakriya):
-    dhatu_adesha_before_vikarana(p)
+pub fn run_before_vikarana(p: &mut Prakriya, la: La) {
+    dhatu_adesha_before_vikarana(p, la);
+}
 
-
-fn run_before_dvitva(p: Prakriya):
-    """Replace the dhAtu based on the following suffix.
-
-    These rules must run after the vikarana is added and before dvitva.
-    """
-    dhatu_adesha_after_vikarana(p)
-
-    for i, _ in enumerate(p.terms):
-        aa_adesha(p, i)
-
-
-fn am_agama(p: Prakriya):
-    for i, _ in enumerate(p.terms):
-        am_agama_for_term(p, i)
-*/
+/// Replaces the dhAtu based on the following suffix.
+///
+/// These rules must run after the vikarana is added and before dvitva.
+pub fn run_before_dvitva(p: &mut Prakriya) {
+    dhatu_adesha_after_vikarana(p);
+    try_aa_adesha(p);
+}

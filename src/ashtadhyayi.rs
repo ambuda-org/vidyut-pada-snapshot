@@ -34,7 +34,7 @@ fn dhatu_samprasarana_tasks(p: &mut Prakriya) {
     // Depends on atidesha (for kit-Nit).
     samprasarana::run_for_dhatu(p);
     // Ad-Adeza and other special tasks for Ardhadhatuka
-    // ardhadhatuka::run_before_dvitva(p)
+    ardhadhatuka::run_before_dvitva(p);
 
     // Now finish it_agama and atidesha
     it_agama::run_after_attva(p);
@@ -70,7 +70,7 @@ pub fn derive_tinanta(
     }
 
     // Add necessary vikaranas.
-    ardhadhatuka::dhatu_adesha_before_vikarana(p, la);
+    ardhadhatuka::run_before_vikarana(p, la);
     vikarana::run(p)?;
     samjna::run(p);
 
@@ -79,6 +79,8 @@ pub fn derive_tinanta(
     if !la.is_sarvadhatuka() {
         dhatu_samprasarana_tasks(p)
     }
+
+    angasya::hacky_before_dvitva(p);
 
     dvitva::run(p);
     samprasarana::run_for_abhyasa(p);
@@ -90,6 +92,9 @@ pub fn derive_tinanta(
     if la.is_sarvadhatuka() {
         dhatu_samprasarana_tasks(p)
     }
+
+    // Must follow tin-siddhi (for valAdi)
+    ardhadhatuka::run_am_agama(p);
 
     angasya::run_remainder(p);
 

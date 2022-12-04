@@ -1,5 +1,6 @@
 use crate::constants::La;
 use crate::constants::Tag as T;
+use crate::dhatu_gana as gana;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::{Prakriya, Rule};
@@ -33,8 +34,6 @@ pub fn run(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
         None => return Ok(()),
     };
 
-    // These dhatus use san-pratyaya with a long abhyAsa.
-    const MAN_BADHA: &[&str] = &["mAna~\\", "baDa~\\", "dAna~^", "SAna~^"];
     // These dhatus use their pratyaya optionally if followed by ArdhadhAtuka.
     const AYADAYA: &[&str] = &[
         "gupU~", "DUpa~", "vicCa~", "paRa~\\", "pana~\\", "fti", "kamu~\\",
@@ -46,7 +45,7 @@ pub fn run(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
     }) {
         add_sanadi("3.1.5", p, i, "san")?;
         p.set(i + 1, |t| t.add_tag(T::FlagNoArdhadhatuka));
-    } else if p.has(i, |t| t.has_u_in(MAN_BADHA)) {
+    } else if p.has(i, |t| t.has_u_in(gana::MAN_BADHA)) {
         add_sanadi("3.1.6", p, i, "san")?;
         p.set(i + 1, |t| t.add_tag(T::FlagNoArdhadhatuka));
     } else if p.has(i, |t| t.gana == Some(10)) {
