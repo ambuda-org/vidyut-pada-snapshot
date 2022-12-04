@@ -655,24 +655,23 @@ fn unknown(p: &mut Prakriya, i: usize) -> Option<()> {
 }
 
 fn try_add_tuk_agama_to_ch(p: &mut Prakriya) {
-    char_rule(p, xy(|x, y| al::is_hrasva(x) && y == 'C'), |p, _, i| {
+    char_rule(p, xy(|x, y| al::is_ac(x) && y == 'C'), |p, text, i| {
         // tena cicchidatuḥ, cicchiduḥ ityatra tukabhyāsasya grahaṇena na
         // gṛhyate iti halādiḥśeṣeṇa na nivartyate
         // -- kAzikA
-        if let Some(t) = get_at(p, i) {
+        if let Some(t) = get_at(p, i + 1) {
             if t.has_tag(T::Abhyasa) {
                 return false;
             }
         }
 
+        let x = text.as_bytes()[i] as char;
         set_at(p, i + 1, "tC");
-        p.step("6.1.73");
-        true
-    });
-
-    char_rule(p, xy(|x, y| al::is_dirgha(x) && y == 'C'), |p, _, i| {
-        set_at(p, i + 1, "tC");
-        p.step("6.1.73");
+        if al::is_dirgha(x) {
+            p.step("6.1.73");
+        } else {
+            p.step("6.1.71");
+        }
         true
     });
 }
@@ -992,14 +991,12 @@ fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
 /// Run rules that condition on a following liT-pratyaya.
 ///
 /// (7.4.9 - 7.4.12)
-fn liti(p: &mut Prakriya) {
-    let i = match p.find_first(T::Dhatu) {
-        Some(i) => i,
-        None => return,
-    };
-    let i_tin = p.terms().len() - 1;
-    if !p.has(i, f::lakshana("li~w")) {
-        return;
+fn liti(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_first(T::Dhatu)?;
+
+    let tin = p.terms().last()?;
+    if !tin.has_lakshana("li~w") {
+        return None;
     }
 
     let do_ar_guna = |t: &mut Term| {
@@ -1007,12 +1004,14 @@ fn liti(p: &mut Prakriya) {
         op::antya("ar")(t);
     };
 
-    let can_guna = p.has(i_tin, |t| !t.has_tag(T::Rit));
+    let can_guna = !tin.has_tag(T::Rit);
     if p.has(i, |t| t.has_antya('f') && f::is_samyogadi(t)) && can_guna {
         p.op_term("7.4.10", i, do_ar_guna);
     } else if p.has(i, |t| t.has_antya('F') || t.has_u_in(&["fCa~", "f\\"])) && can_guna {
         p.op_term("7.4.11", i, do_ar_guna);
     }
+
+    Some(())
 }
 
 /// Runs rules conditioned on a following aN-pratyaya (luN-vikarana).

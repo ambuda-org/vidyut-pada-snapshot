@@ -27,6 +27,7 @@ lazy_static! {
     static ref AN: SoundSet = s("aR");
     static ref AC: SoundSet = s("ac");
     static ref CU: SoundSet = s("cu~");
+    static ref IN2: SoundSet = s("iR2");
     static ref INKU: SoundSet = s("iR2 ku~");
     static ref JHAL: SoundSet = s("Jal");
     static ref JHAR: SoundSet = s("Jar");
@@ -217,8 +218,8 @@ fn try_ha_adesha(p: &mut Prakriya) {
                     p.op_term("8.2.34", i, op::antya("D"));
                 } else if dhatu.text == "Ah" {
                     p.op_term("8.2.35", i, op::antya("T"));
-                } else if dhatu.has_adi('d') {
-                    p.op_term("8.2.35", i, op::antya("G"));
+                } else if dhatu.has_adi('d') && dhatu.has_antya('h') {
+                    p.op_term("8.2.32", i, op::antya("G"));
                 }
             }
             // If no change was made, use the default.
@@ -375,11 +376,11 @@ fn per_term_1b(p: &mut Prakriya) -> Option<()> {
                 && x.has_antya(&*JHAZ)
                 && (y.has_adi('s') || (y.has_tag(T::Pratyaya) && y.text.starts_with("Dv")))
         },
-        |p, i| {
+        |p, i, _| {
             p.op_term("8.2.37", i, |t| {
                 let key = t.adi().unwrap();
                 let sub = BASH_TO_BHAZ.get(key).unwrap();
-                t.set_antya(&sub.to_string());
+                t.set_adi(&sub.to_string());
             });
         },
     );
@@ -405,19 +406,24 @@ fn per_term_1b(p: &mut Prakriya) -> Option<()> {
     Some(())
 }
 
+/// Processes a sliding window of terms where each term is non-empty.
 fn xy_rule(
     p: &mut Prakriya,
     filter: impl Fn(&Term, &Term) -> bool,
-    op: impl Fn(&mut Prakriya, usize),
-) {
-    for i in 0..p.terms().len() {
-        if let (Some(x), Some(y)) = (p.get(i), p.get(i + 1)) {
-            if filter(x, y) {
-                op(p, i);
-                break;
-            }
+    op: impl Fn(&mut Prakriya, usize, usize),
+) -> Option<()> {
+    let n = p.terms().len();
+    for i in 0..n - 1 {
+        let j = p.find_next_where(i, |t| !t.is_empty())?;
+
+        let x = p.get(i)?;
+        let y = p.get(j)?;
+        if filter(x, y) {
+            op(p, i, j);
+            break;
         }
     }
+    Some(())
 }
 
 fn per_term_1c(p: &mut Prakriya) -> Option<()> {
@@ -429,15 +435,15 @@ fn per_term_1c(p: &mut Prakriya) -> Option<()> {
                 && x.has_antya(&*JHAZ)
                 && (y.has_adi('t') || y.has_adi('T'))
         },
-        |p, i| {
-            p.op_term("8.2.40", i + 1, op::adi("D"));
+        |p, _, j| {
+            p.op_term("8.2.40", j, op::adi("D"));
         },
     );
 
     xy_rule(
         p,
         |x, y| (x.has_antya('z') || x.has_antya('Q')) && y.has_adi('s'),
-        |p, i| {
+        |p, i, _| {
             p.op_term("8.2.40", i, op::antya("k"));
         },
     );
@@ -445,7 +451,7 @@ fn per_term_1c(p: &mut Prakriya) -> Option<()> {
     xy_rule(
         p,
         |x, y| x.has_tag(T::Dhatu) && x.has_antya('m') && (y.has_adi('m') || y.has_adi('n')),
-        |p, i| {
+        |p, i, _| {
             p.op_term("8.2.65", i, op::antya("n"));
         },
     );
@@ -554,12 +560,7 @@ fn try_ra_lopa(p: &mut Prakriya) {
     }
 }
 
-/// Runs rules that make a sound mUrdhanya when certain sounds precede.
-///
-/// Example: `nesyati -> nezyati`
-///
-/// (8.3.55 - 8.3.119)
-fn try_murdhanya(p: &mut Prakriya) -> Option<()> {
+fn try_murdhanya_for_s(p: &mut Prakriya) -> Option<()> {
     for i in 0..p.terms().len() {
         let j = i + 1;
         let x = p.get(i)?;
@@ -574,39 +575,50 @@ fn try_murdhanya(p: &mut Prakriya) -> Option<()> {
             p.op_term("8.3.60", i, op::antya("z"));
         }
     }
-
-    try_murdhanya_for_sidhvam_lun_lit(p);
-
     Some(())
 }
 
-fn try_murdhanya_for_sidhvam_lun_lit(p: &mut Prakriya) -> Option<()> {
+fn try_murdhanya_for_dha_in_tinanta(p: &mut Prakriya) -> Option<()> {
+    let n = p.terms().len();
+    for i in 0..n {
+        let anga = p.get(i)?;
+        if anga.has_tag(T::Agama) {
+            continue;
+        }
+        let anga = p.get(i)?;
+        if anga.has_antya(&*IN2) && !anga.has_tag(T::Agama) {
+            let last = p.get(n - 1)?;
+            let lun_lit = last.has_lakshana_in(&["lu~N", "li~w"]);
+
+            let next = p.view(i + 1)?;
+            if !next.has_tag(T::Pratyaya) {
+                continue;
+            }
+            let dha = p.terms().last()?.has_adi('D');
+            let is_shidhvam = next.text().ends_with("zIDvam");
+
+            if (lun_lit && dha) || is_shidhvam {
+                let next = p.view(i + 1)?;
+                if f::is_it_agama(next.first()?) {
+                    p.op_optional("8.3.79", op::t(n - 1, op::adi("Q")));
+                } else {
+                    p.op_term("8.3.78", n - 1, op::adi("Q"));
+                }
+            }
+        }
+    }
     Some(())
 }
 
-/*
-    if (
-        c.antya in s("iR2")
-        and not c.any(T.AGAMA)
-        and (n.any("lu~N", "li~w") or n.all(T.ARDHADHATUKA, "li~N"))
-    ):
-        last = n.terms[-1]
-        if not (last.adi == "D" or n.text.endswith("zIDvam")):
-            continue
-
-        do = True
-        if f.is_it_agama(n.terms[0]):
-            code = "8.3.79"
-            if p.allow(code):
-                p.step(code)
-            else:
-                do = False
-                p.decline(code)
-
-        if do:
-            last.text = last.text.replace("D", "Q")
-            p.step("8.3.78")
-*/
+/// Runs rules that make a sound mUrdhanya when certain sounds precede.
+///
+/// Example: `nesyati -> nezyati`
+///
+/// (8.3.55 - 8.3.119)
+fn try_murdhanya(p: &mut Prakriya) {
+    try_murdhanya_for_s(p);
+    try_murdhanya_for_dha_in_tinanta(p);
+}
 
 fn stu_to_scu(c: char) -> Option<&'static str> {
     // FIXME: use char map?
@@ -703,7 +715,7 @@ fn try_dha_lopa(p: &mut Prakriya) -> Option<()> {
         let x = p.get(i)?;
         let y = p.get(p.find_next_where(i, |t| !t.text.is_empty())?)?;
         if x.has_antya('Q') && y.has_adi('Q') {
-            p.op_term("8.3.13", i, op::lopa);
+            p.op_term("8.3.13", i, op::antya(""));
 
             // Placed here, otherwise this is vyartha
             let x = p.get(i)?;

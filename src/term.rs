@@ -147,9 +147,14 @@ impl Term {
     }
 
     // Mutators
+    // TODO: how to handle errors if mutation is impossible?
 
     pub fn set_adi(&mut self, s: &str) {
-        self.text.replace_range(..=0, s);
+        if self.is_empty() {
+            self.text.push_str(s);
+        } else {
+            self.text.replace_range(..=0, s);
+        }
     }
 
     pub fn set_antya(&mut self, s: &str) {
@@ -341,6 +346,14 @@ impl<'a> TermView<'a> {
 
     pub fn is_knit(&self) -> bool {
         self.any(&[Tag::kit, Tag::Nit])
+    }
+
+    pub fn text(&self) -> CompactString {
+        let mut ret = CompactString::from("");
+        for t in self.slice() {
+            ret.push_str(&t.text);
+        }
+        ret
     }
 }
 
