@@ -416,8 +416,9 @@ impl Uccarana {
         dist + sthana_dist
     }
 }
-pub fn savarna(c: Sound) -> SoundSet {
-    let sounds = match c {
+
+fn savarna_str(c: Sound) -> &'static str {
+    match c {
         'a' | 'A' => "aA",
         'i' | 'I' => "iI",
         'u' | 'U' => "uU",
@@ -428,8 +429,15 @@ pub fn savarna(c: Sound) -> SoundSet {
         't' | 'T' | 'd' | 'D' | 'n' => "tTdDn",
         'p' | 'P' | 'b' | 'B' | 'm' => "pPbBm",
         _ => "",
-    };
-    SoundSet::new(sounds)
+    }
+}
+
+pub fn is_savarna(x: Sound, y: Sound) -> bool {
+    savarna_str(x) == savarna_str(y)
+}
+
+pub fn savarna(c: Sound) -> SoundSet {
+    SoundSet::new(savarna_str(c))
 }
 
 pub fn map_sounds(xs: &str, ys: &str) -> SoundMap {

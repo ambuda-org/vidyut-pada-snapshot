@@ -278,7 +278,7 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
             // TODO: puganta
             let sub = al::to_guna(anga.upadha()?)?;
             p.op_term("7.3.86", i, |t| {
-                op::upadha(sub)(t);
+                t.set_upadha(sub);
                 t.add_tag(T::FlagGuna);
             });
         } else if is_ik {

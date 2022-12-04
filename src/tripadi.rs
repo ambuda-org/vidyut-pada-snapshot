@@ -29,9 +29,13 @@ lazy_static! {
     static ref CU: SoundSet = s("cu~");
     static ref INKU: SoundSet = s("iR2 ku~");
     static ref JHAL: SoundSet = s("Jal");
+    static ref JHAR: SoundSet = s("Jar");
     static ref JHASH: SoundSet = s("JaS");
     static ref JHAZ: SoundSet = s("Jaz");
     static ref KHAR: SoundSet = s("Kar");
+    static ref YAM: SoundSet = s("yam");
+    static ref BASH: SoundSet = s("baS");
+    static ref BASH_TO_BHAZ: SoundMap = map_sounds("baS", "Baz");
     static ref JHAL_TO_CAR: SoundMap = map_sounds("Jal", "car");
     static ref JHAL_TO_JASH: SoundMap = map_sounds("Jal", "jaS");
     static ref JHAL_TO_JASH_EXCEPTIONS: SoundSet = s("c S s h");
@@ -226,6 +230,31 @@ fn try_ha_adesha(p: &mut Prakriya) {
 }
 
 fn try_add_final_r(p: &mut Prakriya) -> Option<()> {
+    // Exception to general rule 8.2.66 below.
+    let n = p.terms().len();
+    for i in 0..n - 1 {
+        let x = p.get(i)?;
+        let y = p.get(i + 1)?;
+        let is_last = i + 2 == n;
+
+        // FIXME: sloppy
+        if x.has_antya('s') && y.has_text("") && y.has_u("tip") && is_last {
+            p.op_term("8.2.73", i, op::antya("d"));
+        } else if (x.has_antya('s') || x.has_antya('d'))
+            && y.has_text("")
+            && y.has_u("sip")
+            && is_last
+        {
+            // FIXME: where do these rules go?
+            if x.has_antya('s') {
+                p.op_optional("8.2.74", op::t(i, op::antya("ru~")));
+            } else {
+                p.op_optional("8.2.75", op::t(i, op::antya("ru~")));
+            }
+        }
+    }
+
+    // TODO: sajuS
     let i = p.find_last_where(|t| !t.text.is_empty())?;
     let last = p.get(i)?;
 
@@ -288,7 +317,7 @@ fn iter_terms(p: &mut Prakriya, func: impl Fn(&mut Prakriya, usize) -> Option<()
     }
 }
 
-fn per_term_1b(p: &mut Prakriya, i: usize) {
+fn try_ch_to_s(p: &mut Prakriya) {
     let vrascha = &[
         "o~vrascU~",
         "Bra\\sja~^",
@@ -328,19 +357,32 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
 
         Some(())
     });
+}
 
-    if p.has(i, |t| t.has_antya(&*CU)) && p.has(i + 1, |t| t.has_adi(&*JHAL)) {
-        let c = p.terms()[i].antya().unwrap();
-        let sub = CU_TO_KU.get(c).unwrap();
-        p.op_term("8.2.30", i, op::antya(&sub.to_string()));
+fn per_term_1b(p: &mut Prakriya) -> Option<()> {
+    for i in 0..p.terms().len() {
+        if p.has(i, |t| t.has_antya(&*CU)) && p.has(i + 1, |t| t.has_adi(&*JHAL)) {
+            let c = p.terms()[i].antya().unwrap();
+            let sub = CU_TO_KU.get(c).unwrap();
+            p.op_term("8.2.30", i, op::antya(&sub.to_string()));
+        }
     }
 
-    /*
-    sdhvoh = n and (n.adi == "s" or n.all(T.PRATYAYA) and n.u.startswith("Dv"))
-    basho_bhash = sounds.map_sounds_s("baS", "Baz")
-    if c.adi in basho_bhash and c.antya in s("JaS") and sdhvoh:
-        op.adi("8.2.37", p, c, basho_bhash[c.adi])
-    */
+    xy_rule(
+        p,
+        |x, y| {
+            x.has_adi(&*BASH)
+                && x.has_antya(&*JHAZ)
+                && (y.has_adi('s') || (y.has_tag(T::Pratyaya) && y.text.starts_with("Dv")))
+        },
+        |p, i| {
+            p.op_term("8.2.37", i, |t| {
+                let key = t.adi().unwrap();
+                let sub = BASH_TO_BHAZ.get(key).unwrap();
+                t.set_antya(&sub.to_string());
+            });
+        },
+    );
 
     // Exclude the following from 8.2.39 so that the corresponding rules aren't
     // vyartha:
@@ -348,15 +390,19 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
     // - S for 8.2.36 (vraSca-Brasja-...-Ca-SAM zaH)
     // - s for 8.2.66 (sasajuSo ruH)
     // - h for 8.2.31 (ho QaH)
-    let c = &p.terms()[i];
-    let n = p.view(i + 1);
-    let is_padanta = n.map(|x| x.is_padanta()).unwrap_or(true);
-    let has_exception = c.has_antya(&*JHAL_TO_JASH_EXCEPTIONS);
-    if c.has_antya(&*JHAL) && !has_exception && is_padanta {
-        let key = c.antya().unwrap();
-        let sub = JHAL_TO_JASH.get(key).unwrap();
-        p.op_term("8.2.39", i, op::antya(&sub.to_string()));
+    for i in 0..p.terms().len() {
+        let c = &p.terms()[i];
+        let n = p.view(i + 1);
+        let is_padanta = n.map(|x| x.is_padanta()).unwrap_or(true);
+        let has_exception = c.has_antya(&*JHAL_TO_JASH_EXCEPTIONS);
+        if c.has_antya(&*JHAL) && !has_exception && is_padanta {
+            let key = c.antya().unwrap();
+            let sub = JHAL_TO_JASH.get(key).unwrap();
+            p.op_term("8.2.39", i, op::antya(&sub.to_string()));
+        }
     }
+
+    Some(())
 }
 
 fn xy_rule(
@@ -405,37 +451,6 @@ fn per_term_1c(p: &mut Prakriya) -> Option<()> {
     );
 
     Some(())
-
-    /*
-    // TODO: sajuS
-
-    try:
-        rn = p.terms[index + 1]
-    except IndexError:
-        rn = None
-    next_is_last = index + 1 == len(p.terms) - 1
-    if c.antya == "s" and next_is_last and rn.text == "" and rn.u == "tip":
-        // Exception to general rule 8.2.66 below
-        op.antya("8.2.73", p, c, "d")
-
-    } else if c.antya == "s" and (not n or (next_is_last and rn.text == "")):
-        op.antya("8.2.66", p, c, "ru~")
-
-    if c.antya in s("s d") and rn and rn.text == "" and rn.u == "sip":
-        if c.antya == "s":
-            op.optional(op.antya, "8.2.74", p, c, "ru~")
-        else:
-            op.optional(op.antya, "8.2.75", p, c, "ru~")
-
-    // 8.3.15
-    // TODO: next pada
-    has_ru = c.text.endswith("ru~") or c.text.endswith("r")
-    if has_ru and not n:
-        c.text = c.text.replace("ru~", "H")
-        if c.text.endswith("r"):
-            c.text = c.text[:-1] + "H"
-        p.step("8.3.15")
-    */
 }
 
 fn allows_natva(text: &str, i: usize) -> bool {
@@ -483,26 +498,24 @@ fn try_natva(p: &mut Prakriya) {
         },
     );
 
-    /*
-    view = StringView(p.terms)
-    between = s("aw ku~ pu~ M").regex
-    match = re.search(f"[rzfF]({between}*)n", view.text)
+    // view = StringView(p.terms)
+    // between = s("aw ku~ pu~ M").regex
+    // match = re.search(f"[rzfF]({between}*)n", view.text)
 
-    if match:
-        // End of pada
-        if match.span(0)[1] == len(view.text):
-            p.step("8.4.37")
-        else:
-            view[match.span(0)[1] - 1] = "R"
-            if match.group(1):
-                p.step("8.4.2")
-            else:
-                trigger = view[match.span(0)[0]]
-                if trigger in "rz":
-                    p.step("8.4.1")
-                else:
-                    p.step("8.4.1-v")
-    */
+    // if match:
+    //     // End of pada
+    //     if match.span(0)[1] == len(view.text):
+    //         p.step("8.4.37")
+    //     else:
+    //         view[match.span(0)[1] - 1] = "R"
+    //         if match.group(1):
+    //             p.step("8.4.2")
+    //         else:
+    //             trigger = view[match.span(0)[0]]
+    //             if trigger in "rz":
+    //                 p.step("8.4.1")
+    //             else:
+    //                 p.step("8.4.1-v")
 }
 
 /// Converts "m" and "n" to the anusvara when a consonant follows.
@@ -568,12 +581,6 @@ fn try_murdhanya(p: &mut Prakriya) -> Option<()> {
 }
 
 fn try_murdhanya_for_sidhvam_lun_lit(p: &mut Prakriya) -> Option<()> {
-    let i = p.find_last(T::Tin)?;
-    let i_prev = p.find_prev_where(i, |t| !t.text.is_empty())?;
-
-    let anga = p.get(i_prev)?;
-    let tin = p.get(i)?;
-
     Some(())
 }
 
@@ -734,35 +741,24 @@ fn try_to_savarna(p: &mut Prakriya) {
             p.step("8.4.58");
             true
         },
-    )
+    );
 
-    /*
-    hal = s("hal").regex
-    yam = s("yam").regex
-    jhar = s("Jar").regex
+    char_rule(
+        p,
+        xyz(|x, y, z| HAL.contains_char(x) && YAM.contains_char(y) && YAM.contains_char(z)),
+        |p, _, i| p.op_optional("8.4.64", |p| set_at(p, i + 1, "")),
+    );
 
-    view = StringView(p.terms)
-    match = re.search(f"{hal}({yam})({yam})", view.text)
-    if match:
-        c = match.group(1)
-        n = match.group(2)
-        if c == n:
-            if p.allow("8.4.64"):
-                view.delete_span(*match.span(1))
-            else:
-                p.decline("8.4.64")
-
-    view = StringView(p.terms)
-    match = re.search(f"{hal}({jhar})({jhar})", view.text)
-    if match:
-        c = match.group(1)
-        n = match.group(2)
-        if n in sounds.savarna(c):
-            if p.allow("8.4.65"):
-                view.delete_span(*match.span(1))
-            else:
-                p.decline("8.4.65")
-    */
+    char_rule(
+        p,
+        xyz(|x, y, z| {
+            HAL.contains_char(x)
+                && JHAR.contains_char(y)
+                && JHAR.contains_char(z)
+                && al::is_savarna(y, z)
+        }),
+        |p, _, i| p.op_optional("8.4.64", |p| set_at(p, i + 1, "")),
+    );
 }
 
 fn try_jhal_adesha(p: &mut Prakriya) {
@@ -853,10 +849,9 @@ pub fn run(p: &mut Prakriya) {
     try_ha_adesha(p);
     try_add_final_r(p);
     try_lengthen_dhatu_vowel(p);
+    try_ch_to_s(p);
 
-    for i in 0..p.terms().len() {
-        per_term_1b(p, i);
-    }
+    per_term_1b(p);
     per_term_1c(p);
 
     // Ashtadhyayi 8.3

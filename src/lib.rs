@@ -21,7 +21,6 @@ mod sanadi;
 mod stem_gana;
 mod sup_adesha;
 mod tin_pratyaya;
-// TODO
 mod tripadi;
 mod vikarana;
 

@@ -154,14 +154,14 @@ impl Term {
 
     pub fn set_antya(&mut self, s: &str) {
         let n = self.text.len();
-        if n > 0 {
+        if n >= 1 {
             self.text.replace_range(n - 1..n, s);
         }
     }
 
     pub fn set_upadha(&mut self, s: &str) {
         let n = self.text.len();
-        if n > 2 {
+        if n >= 2 {
             self.text.replace_range(n - 2..n - 1, s);
         }
     }
