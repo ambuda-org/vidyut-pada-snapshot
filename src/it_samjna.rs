@@ -7,90 +7,126 @@
 use crate::constants::Tag as T;
 use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
-use crate::term::Term;
+use compact_str::CompactString;
 use lazy_static::lazy_static;
-use regex::Regex;
 use std::error::Error;
 
-fn make_re_anunasika_ac() -> Regex {
-    let s_ac = s("ac").into_string();
-    Regex::new(&format!("([{s_ac}]~[\\\\^]?)")).unwrap()
+lazy_static! {
+    // FIXME: find a better approach for `s`.
+    static ref AC: SoundSet = s("ac");
+    static ref HAL: SoundSet = s("hal");
+    static ref TUSMA: SoundSet = s("tu~ s m");
+    static ref CUTU: SoundSet = s("cu~ wu~");
+    static ref CUTU_EXCEPTION: SoundSet = s("C J W Q");
+    static ref LASHAKU: SoundSet = s("l S ku~");
 }
 
-// 1.3.2 - 1.3.9
-pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
-    lazy_static! {
-        // FIXME: find a better approach for `s`.
-        static ref AC: SoundSet = s("ac");
-        static ref HAL: SoundSet = s("hal");
-        static ref TUSMA: SoundSet = s("tu~ s m");
-        static ref CUTU: SoundSet = s("cu~ wu~");
-        static ref LASHAKU: SoundSet = s("l S ku~");
-        static ref RE_ANUNASIKA_AC: Regex = make_re_anunasika_ac();
+fn get_adi(s: &CompactString) -> Option<char> {
+    s.as_bytes().first().map(|u| *u as char)
+}
+
+/// Runs rule 1.3.2 ("upadeśe janunāsika iṭ").
+fn run_1_3_2(p: &mut Prakriya, i_term: usize, before: &mut CompactString) -> Option<()> {
+    let term = p.get_mut(i_term)?;
+
+    let mut i = 0;
+    let bytes = before.as_bytes();
+    let mut after = CompactString::from("");
+
+    while let Some(u) = bytes.get(i) {
+        let c = *u as char;
+
+        if AC.contains_char(c) {
+            if let Some(b'~') = bytes.get(i + 1) {
+                // Nasal vowel: parse as it.
+                term.add_tag(T::parse_it(c).ok()?);
+                let maybe_tag = match bytes.get(i + 2) {
+                    Some(b'^') => Some(T::svaritet),
+                    Some(b'\\') => Some(T::anudattet),
+                    _ => None,
+                };
+                let shift = if let Some(tag) = maybe_tag {
+                    term.add_tag(tag);
+                    3
+                } else {
+                    2
+                };
+
+                i += shift;
+            } else {
+                // Non-nasal vowel: get accent.
+                let maybe_tag = match bytes.get(i + 1) {
+                    Some(b'^') => Some(T::Svarita),
+                    Some(b'\\') => Some(T::Anudatta),
+                    _ => None,
+                };
+                let shift = if let Some(tag) = maybe_tag {
+                    term.add_tag(tag);
+                    2
+                } else {
+                    1
+                };
+                after.push(c);
+                i += shift;
+            }
+        } else {
+            after.push(c);
+            i += 1;
+        }
     }
 
+    if before != &after {
+        before.clear();
+        before.push_str(&after);
+        p.step("1.3.2");
+    }
+
+    Some(())
+}
+
+/// Runs rules that identify and remove it letters from the term at index `i`.
+///
+/// (1.3.2 - 1.3.9)
+pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
     let t = match p.get(i) {
         Some(t) => t,
         None => return Ok(()),
     };
-    let upadesha = match &t.u {
-        Some(x) => x.clone(),
+
+    // All it sounds are removed at once by 1.3.9 "tasya lopaH". Before then, keep the text in the
+    // term unchanged. Instead, mutate a new temporary string and copy it over as part of 1.3.9.
+    let mut temp: CompactString = match &t.u {
+        Some(s) => s.clone(),
         None => return Ok(()),
     };
-
-    // Wrap the upadesha text so that we can call `antya`, etc. against it.
-    let u = Term::make_upadesha(&upadesha);
-    let mut temp = t.text.clone();
 
     // Varttika: `i~r` is its own it.
     let mut irit = false;
     if let Some(t) = p.get_mut(i) {
         if let Some(prefix) = temp.strip_suffix("i~r") {
-            temp = prefix.to_string();
+            temp.truncate(prefix.len());
             t.add_tag(T::irit);
             irit = true;
         } else if let Some(prefix) = temp.strip_suffix("i~^r") {
-            temp = prefix.to_string();
+            temp.truncate(prefix.len());
             t.add_tags(&[T::irit, T::svaritet]);
             irit = true;
         }
     }
 
-    // 1.3.2 उपदेशे ऽजनुनासिक इत्
-    if let Some(t) = p.get_mut(i) {
-        let mut tags = vec![];
-        for m in RE_ANUNASIKA_AC.find_iter(&temp) {
-            let s = m.as_str();
-            if s.contains('\\') {
-                tags.push(T::anudattet);
-            } else if s.contains('^') {
-                tags.push(T::svaritet);
-            }
-            tags.push(T::parse_it(&s[0..1])?);
-        }
-        temp = RE_ANUNASIKA_AC.replace_all(&temp, "").to_string();
-        t.add_tags(&tags);
-        p.step("1.3.2");
-    }
+    run_1_3_2(p, i, &mut temp);
 
-    // Also handle general anudatta/svarita.
+    let t = match p.get(i) {
+        Some(t) => t,
+        None => return Ok(()),
+    };
+    let antya = t.antya().unwrap();
     if let Some(t) = p.get_mut(i) {
-        if temp.contains('\\') {
-            t.add_tag(T::Anudatta);
-        }
-        if temp.contains('^') {
-            t.add_tag(T::Svarita);
-        }
-        temp = temp.replace('\\', "").replace('^', "");
-    }
-
-    if let Some(t) = p.get_mut(i) {
-        if u.has_antya(&*HAL) && !irit {
-            let vibhaktau_tusmah = t.has_tag(T::Vibhakti) && u.has_antya(&*TUSMA);
+        if HAL.contains_char(antya) && !irit {
+            let vibhaktau_tusmah = t.has_tag(T::Vibhakti) && TUSMA.contains_char(antya);
             if !vibhaktau_tusmah {
-                t.add_tag(T::parse_it(&u.antya().unwrap().to_string())?);
-                let n = temp.len();
-                temp = temp[..n - 1].to_string();
+                t.add_tag(T::parse_it(antya)?);
+                temp.truncate(temp.len() - 1);
                 p.step("1.3.3");
             } else {
                 p.step("1.3.4");
@@ -98,11 +134,12 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
         }
     }
 
+    let mut temp_slice = &temp[..];
     if let Some(t) = p.get_mut(i) {
         let mut matched = false;
         for (it, tag) in [("Yi", T::YIt), ("wu", T::wvit), ("qu", T::qvit)] {
-            if let Some(prefix) = temp.strip_prefix(it) {
-                temp = prefix.to_string();
+            if temp.strip_prefix(it).is_some() {
+                temp_slice = &temp_slice[it.len()..];
                 t.add_tag(tag);
             }
             matched = true;
@@ -112,18 +149,19 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
         }
     }
 
+    let adi = get_adi(&temp).unwrap();
     if let Some(t) = p.get_mut(i) {
         if t.has_tag(T::Pratyaya) {
-            if u.has_adi('z') {
-                t.add_tag(T::parse_it(&u.adi().unwrap().to_string())?);
-                temp = temp[1..].to_string();
+            if adi == 'z' {
+                t.add_tag(T::parse_it(adi)?);
+                temp_slice = &temp_slice[1..];
                 p.step("1.3.6")
-            } else if u.has_adi(&*CUTU) {
+            } else if CUTU.contains_char(adi) {
                 // The sounds C, J, W, and Q are replaced later in the grammar.
                 // If we substitute them now, those rules will become vyartha.
-                if !u.has_adi(&s("C J W Q")) {
-                    t.add_tag(T::parse_it(&u.adi().unwrap().to_string())?);
-                    temp = temp[1..].to_string();
+                if !CUTU_EXCEPTION.contains_char(adi) {
+                    t.add_tag(T::parse_it(adi)?);
+                    temp_slice = &temp_slice[1..];
                 }
                 p.step("1.3.7");
             } else if !t.has_tag(T::Taddhita) && t.has_adi(&*LASHAKU) {
@@ -132,9 +170,9 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
                 let lakara = [
                     "la~w", "li~w", "lu~w", "lf~w", "le~w", "lo~w", "la~N", "li~N", "lu~N", "lf~N",
                 ];
-                if !lakara.contains(&u.text.as_str()) {
-                    t.add_tag(T::parse_it(&u.adi().unwrap().to_string())?);
-                    temp = temp[1..].to_string();
+                if !t.has_u_in(&lakara) {
+                    t.add_tag(T::parse_it(adi)?);
+                    temp_slice = &temp_slice[1..];
                     p.step("1.3.8");
                 }
             }
@@ -142,8 +180,9 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
     }
 
     if let Some(t) = p.get_mut(i) {
-        if t.text != temp {
-            t.text = temp;
+        if temp_slice != t.text {
+            t.text.clear();
+            t.text.push_str(temp_slice);
             p.step("1.3.9")
         }
     }
@@ -154,6 +193,7 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::term::Term;
 
     fn check(t: Term) -> Term {
         let mut p = Prakriya::new();

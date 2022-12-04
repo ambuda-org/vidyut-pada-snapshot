@@ -1,12 +1,13 @@
 use crate::constants::Tag;
 use crate::sounds::Pattern;
-use std::collections::HashSet;
+use compact_str::CompactString;
+use enumset::EnumSet;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Term {
-    pub u: Option<String>,
-    pub text: String,
-    pub tags: HashSet<Tag>,
+    pub u: Option<CompactString>,
+    pub text: CompactString,
+    pub tags: EnumSet<Tag>,
     pub gana: Option<i32>,
     pub number: Option<i32>,
     pub lakshana: Vec<String>,
@@ -15,9 +16,9 @@ pub struct Term {
 impl Term {
     pub fn make_upadesha(s: &str) -> Self {
         Term {
-            u: Some(s.to_string()),
-            text: s.to_string(),
-            tags: HashSet::new(),
+            u: Some(CompactString::from(s)),
+            text: CompactString::from(s),
+            tags: EnumSet::new(),
             gana: None,
             number: None,
             lakshana: Vec::new(),
@@ -27,8 +28,8 @@ impl Term {
     pub fn make_text(s: &str) -> Self {
         Term {
             u: None,
-            text: s.to_string(),
-            tags: HashSet::new(),
+            text: CompactString::from(s),
+            tags: EnumSet::new(),
             gana: None,
             number: None,
             lakshana: Vec::new(),
@@ -94,7 +95,7 @@ impl Term {
 
     pub fn has_u(&self, s: &str) -> bool {
         match &self.u {
-            Some(u) => u == s,
+            Some(u) => u == &s,
             None => false,
         }
     }
@@ -133,21 +134,31 @@ impl Term {
     // Tags
 
     pub fn all(&self, tags: &[Tag]) -> bool {
-        tags.iter().all(|t| self.tags.contains(t))
+        tags.iter().all(|t| self.tags.contains(*t))
     }
 
     pub fn any(&self, tags: &[Tag]) -> bool {
-        tags.iter().any(|t| self.tags.contains(t))
+        tags.iter().any(|t| self.tags.contains(*t))
     }
 
     pub fn has_tag(&self, tag: Tag) -> bool {
-        self.tags.contains(&tag)
+        self.tags.contains(tag)
     }
 
     // Mutators
     pub fn set_upadesha(&mut self, s: &str) {
-        self.u = Some(s.to_string());
-        self.text = s.to_string();
+        self.u = Some(CompactString::from(s));
+        self.text = CompactString::from(s);
+    }
+
+    pub fn set_text(&mut self, s: &str) {
+        self.text = CompactString::from(s);
+    }
+
+    pub fn find_and_replace_text(&mut self, needle: &str, sub: &str) {
+        // Ugly, but it works
+        let alloc = self.text.replace(needle, sub);
+        self.text = CompactString::from(&alloc);
     }
 
     pub fn add_tag(&mut self, tag: Tag) {
@@ -155,21 +166,22 @@ impl Term {
     }
 
     pub fn add_tags(&mut self, tags: &[Tag]) {
-        self.tags.extend(tags)
+        for t in tags {
+            self.tags.insert(*t);
+        }
     }
 
     pub fn remove_tag(&mut self, tag: Tag) {
-        self.tags.remove(&tag);
+        self.tags.remove(tag);
     }
 
     pub fn remove_tags(&mut self, tags: &[Tag]) {
         for t in tags {
-            self.tags.remove(t);
+            self.tags.remove(*t);
         }
     }
 }
 
-/// An abstra
 #[derive(Debug)]
 pub struct TermView<'a> {
     terms: &'a Vec<Term>,
@@ -314,15 +326,15 @@ mod tests {
 
     fn gam() -> Term {
         let mut t = Term::make_upadesha("gamx~");
-        t.text = "gam".to_string();
+        t.text = CompactString::from("gam");
         t
     }
 
     #[test]
     fn test_make_upadesha() {
         let t = Term::make_upadesha("Satf");
-        assert_eq!(t.u, Some("Satf".to_string()));
-        assert_eq!(t.text, "Satf");
+        assert!(t.has_u("Satf"));
+        assert!(t.has_text("Satf"));
     }
 
     #[test]

@@ -22,9 +22,17 @@ use crate::filters as f;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
-use crate::sounds::s;
+use crate::sounds::{s, SoundSet};
 use crate::term::Term;
+use compact_str::CompactString;
+use lazy_static::lazy_static;
 use std::error::Error;
+
+lazy_static! {
+    static ref SHAL: SoundSet = s("Sal");
+    static ref IK: SoundSet = s("ik");
+    static ref IC: SoundSet = s("ic");
+}
 
 /// Returns a function that inserts the vikarana `v` after the dhatu.
 fn add_vikarana(v: &'static str) -> impl Fn(&mut Prakriya) {
@@ -84,8 +92,8 @@ fn maybe_replace_cli_with_ksa(p: &mut Prakriya, i: usize) {
     }
 
     let shal_igupadha_anit = |t: &Term| {
-        s("Sal").contains_opt(t.antya())
-        && s("ik").contains_opt(t.upadha())
+        t.has_antya(&*SHAL)
+        && t.has_upadha(&*IK)
         // iT hasn't been added yet, so check for "U" (veT) && anudAtta (aniT).
         && t.any(&[T::Anudatta, T::Udit])
     };
@@ -225,7 +233,7 @@ fn add_lun_vikarana(p: &mut Prakriya) {
 
 fn add_kr_after_am_pratyaya(p: &mut Prakriya) {
     let mut kf = Term::make_dhatu("qukf\\Y", 8, 10);
-    kf.text = "kf".to_string();
+    kf.set_text("kf");
     kf.add_tag(T::Dhatu);
 
     let i_tin = p.terms().len() - 1;
@@ -244,9 +252,7 @@ fn maybe_add_am_pratyaya_for_lit(p: &mut Prakriya) {
     } else if p.has(i, |t| !f::is_eka_ac(t) && !t.has_text_in(&["jAgf", "UrRu"])) {
         // jAgf is handled separately below.
         p.op("3.1.35.v1", add_aam);
-    } else if p.has(i, |t| {
-        t.has_adi(&s("ic")) && f::is_guru(t) && !t.has_u("fCa~")
-    }) {
+    } else if p.has(i, |t| t.has_adi(&*IC) && f::is_guru(t) && !t.has_u("fCa~")) {
         p.op("3.1.36", add_aam);
     } else if p.has(i, |t| t.has_text_in(&["day", "ay", "As"])) {
         p.op("3.1.37", add_aam);
@@ -355,7 +361,7 @@ fn add_sarvadhatuka_vikarana(p: &mut Prakriya) {
         p.op("3.1.73", add_vikarana("Snu"));
     } else if p.has(i, |t| t.text == "Sru") {
         p.op("3.1.74", |p| {
-            p.set(i, |t| t.text = "Sf".to_string());
+            p.set(i, |t| t.set_text("Sf"));
             add_vikarana("Snu")(p);
         });
     } else if p.has(i, |t| t.gana == Some(6)) {
@@ -504,7 +510,7 @@ pub fn run(p: &mut Prakriya) -> Result<(), Box<dyn Error>> {
         None => return Ok(()),
     };
     if p.has(i, |t| t.text == "gA") && p.has(i + 1, |t| t.text == "a") {
-        p.set(i + 1, |t| t.text = "".to_string());
+        p.set(i + 1, |t| t.text = CompactString::from("".to_string()));
         p.step("6.1.101")
     }
 

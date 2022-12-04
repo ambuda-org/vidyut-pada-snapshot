@@ -26,6 +26,7 @@ use crate::it_samjna;
 use crate::prakriya::{Prakriya, Rule};
 use crate::sounds::is_ac;
 use crate::term::Term;
+use compact_str::CompactString;
 
 /// Wraps a `Term` operator and converts it to a `Prakriya` operator.
 pub fn t(i: usize, f: impl Fn(&mut Term)) -> impl Fn(&mut Prakriya) {
@@ -44,7 +45,7 @@ pub fn adi(sub: &str) -> impl Fn(&mut Term) + '_ {
     move |t| {
         let n = t.text.len();
         if n > 0 {
-            t.text = String::from(sub) + &t.text[1..];
+            t.text = CompactString::from(sub) + &t.text[1..];
         }
     }
 }
@@ -54,14 +55,14 @@ pub fn antya(sub: &str) -> impl Fn(&mut Term) + '_ {
     |t| {
         let n = t.text.len();
         if n > 0 {
-            t.text = String::from(&t.text[..n - 1]) + sub;
+            t.text = CompactString::from(&t.text[..n - 1]) + sub;
         }
     }
 }
 
-pub fn set_upadha(text: &str, sub: &str) -> String {
+pub fn set_upadha(text: &str, sub: &str) -> CompactString {
     let n = text.len();
-    String::from(&text[..n - 2]) + sub + &text[n - 1..]
+    CompactString::from(&text[..n - 2]) + sub + &text[n - 1..]
 }
 
 /// Replaces the penultimate sound in the given term.
@@ -80,7 +81,7 @@ pub fn mit(sub: &'static str) -> impl Fn(&mut Term) {
     |t| {
         let text = &t.text;
         if let Some(i) = text.rfind(is_ac) {
-            t.text = String::from(&text[..=i]) + sub + &text[i + 1..];
+            t.text = CompactString::from(&text[..=i]) + sub + &text[i + 1..];
         }
     }
 }
@@ -94,14 +95,14 @@ pub fn ti(sub: &'static str) -> impl Fn(&mut Term) {
     move |t| {
         let text = &t.text;
         if let Some(i) = text.rfind(is_ac) {
-            t.text = String::from(&text[..i]) + sub;
+            t.text = CompactString::from(&text[..i]) + sub;
         }
     }
 }
 
 /// Replaces all of the text of the given term.
 pub fn text(sub: &'static str) -> impl Fn(&mut Term) {
-    |t| t.text = sub.to_string()
+    move |t| t.text = CompactString::from(sub)
 }
 
 /// Replaces all of the text in the given term.
@@ -114,8 +115,8 @@ pub fn upadesha_no_it(p: &mut Prakriya, i: usize, sub: &str) {
         if let Some(u) = &t.u {
             t.lakshana.push(u.to_string());
         }
-        t.u = Some(sub.to_string());
-        t.text = sub.to_string();
+        t.u = Some(CompactString::from(sub));
+        t.text = CompactString::from(sub);
     }
 }
 
@@ -134,8 +135,8 @@ pub fn upadesha(p: &mut Prakriya, i: usize, sub: &str) {
         if let Some(u) = &t.u {
             t.lakshana.push(u.to_string());
         }
-        t.u = Some(sub.to_string());
-        t.text = sub.to_string();
+        t.u = Some(CompactString::from(sub));
+        t.text = CompactString::from(sub);
         it_samjna::run(p, i).unwrap();
     }
 }
@@ -145,8 +146,8 @@ pub fn upadesha_v2(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
         if let Some(u) = &t.u {
             t.lakshana.push(u.to_string());
         }
-        t.u = Some(sub.to_string());
-        t.text = sub.to_string();
+        t.u = Some(CompactString::from(sub));
+        t.text = CompactString::from(sub);
         p.step(rule);
         it_samjna::run(p, i).unwrap();
     }
@@ -166,8 +167,8 @@ pub fn adesha(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
         if let Some(u) = &t.u {
             t.lakshana.push(u.to_string());
         }
-        t.u = Some(sub.to_string());
-        t.text = sub.to_string();
+        t.u = Some(CompactString::from(sub));
+        t.text = CompactString::from(sub);
         p.step(rule);
         it_samjna::run(p, i).unwrap();
     }
@@ -204,7 +205,7 @@ pub fn text_yatha(term: &mut Term, old: &[&str], new: &[&str]) {
     assert_eq!(old.len(), new.len());
     for (i, o) in old.iter().enumerate() {
         if term.text == *o {
-            term.text = new[i].to_string();
+            term.text = CompactString::from(new[i]);
             return;
         }
     }
@@ -215,7 +216,7 @@ pub fn text_yatha(term: &mut Term, old: &[&str], new: &[&str]) {
 
 /// Deletes all of the text in the given term.
 pub fn lopa(t: &mut Term) {
-    t.text = "".to_string();
+    t.text = CompactString::from("");
 }
 
 /// Delete all of the text in the given term through *luk*.
@@ -244,8 +245,6 @@ fn lup(t: &mut Term) {
 pub fn samjna(t: &mut Term, tag: T) {
     t.add_tag(tag);
 }
-
-pub fn none(_: &mut Term) {}
 
 pub fn add_tag(tag: T) -> impl Fn(&mut Term) {
     move |t| t.add_tag(tag)

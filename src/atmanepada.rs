@@ -15,6 +15,7 @@ use crate::constants::Tag as T;
 use crate::dhatu_gana::{DYUT_ADI, VRDBHYAH};
 use crate::prakriya::{Prakriya, Rule};
 use crate::term::Term;
+use compact_str::CompactString;
 
 enum Pada {
     Parasmai,
@@ -64,7 +65,7 @@ impl ShortRule {
         }
     }
 
-    fn is_match(&self, p: &Prakriya, upasargas: &[String], i: usize) -> bool {
+    fn is_match(&self, p: &Prakriya, upasargas: &[CompactString], i: usize) -> bool {
         let upasarga_match = if self.upasargas.is_empty() {
             // Match by default if no upasargas required.
             true
@@ -199,7 +200,7 @@ pub fn run(p: &mut Prakriya) {
         para("1.3.59", &["prati", "AN"], &["Sru"]),
         atma("1.3.57", &[], &["jYA", "Sru", "smf", "dfS"]),
     ];
-    let has_san = |t: &Term| t.u == Some("san".to_string()) && t.has_tag(T::Pratyaya);
+    let has_san = |t: &Term| t.has_u("san") && t.has_tag(T::Pratyaya);
     if p.terms().iter().any(has_san) {
         for rule in san_rules {
             if rule.is_match(p, &upasargas, i) {

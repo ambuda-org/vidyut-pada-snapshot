@@ -105,24 +105,6 @@ pub fn sup(t: &Term) -> bool {
     t.has_tag(T::Sup)
 }
 
-/// Returns whether the term starts with the given sounds.
-pub fn adi(sounds: &'static str) -> impl Fn(&Term) -> bool {
-    let sounds = s(sounds);
-    move |t| sounds.contains_opt(t.adi())
-}
-
-/// Returns whether the term ends with the given sounds.
-pub fn antya(sounds: &'static str) -> impl Fn(&Term) -> bool {
-    let sounds = s(sounds);
-    move |t| sounds.contains_opt(t.antya())
-}
-
-/// Returns whether the term ends with the given sounds.
-pub fn upadha(sounds: &'static str) -> impl Fn(&Term) -> bool {
-    let sounds = s(sounds);
-    move |t| sounds.contains_opt(t.upadha())
-}
-
 /// Returns whether the term's text is exactly `x`.
 pub fn text(x: &'static str) -> impl Fn(&Term) -> bool {
     move |t| t.text == x
@@ -152,10 +134,7 @@ pub fn u_in(us: &'static [&str]) -> impl Fn(&Term) -> bool {
 }
 
 pub fn is_asti(t: &Term) -> bool {
-    match &t.u {
-        Some(x) => x == "asa~" && t.gana == Some(2),
-        None => false,
-    }
+    t.has_u("asa~") && t.has_gana(2)
 }
 
 pub fn is_it_agama(t: &Term) -> bool {

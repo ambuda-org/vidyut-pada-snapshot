@@ -47,6 +47,7 @@ fn run() -> Result<(), Box<dyn Error>> {
                     Prayoga::Kartari,
                     *purusha,
                     *vacana,
+                    false,
                 ) {
                     println!("{la:?}: {}", p.text());
                 }

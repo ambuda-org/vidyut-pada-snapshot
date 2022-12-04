@@ -80,11 +80,11 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
             }
         }
 
-        let ps = A::derive_tinantas(dhatu, &code, la, Prayoga::Kartari, purusha, vacana);
+        let ps = A::derive_tinantas(dhatu, &code, la, Prayoga::Kartari, purusha, vacana, false);
         let padas: Vec<_> = ps.iter().map(|p| p.text()).collect();
 
         n += 1;
-        if padas.iter().any(|p| p == pada) {
+        if padas.iter().any(|p| p == &pada) {
             // println!("[  OK  ]  {code:<10} {dhatu:<10} {pada}");
             num_matches += 1;
         } else {

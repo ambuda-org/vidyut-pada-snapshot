@@ -19,8 +19,8 @@ use crate::filters as f;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
-use crate::sounds::s;
 use crate::term::Term;
+use compact_str::CompactString;
 use std::error::Error;
 
 const TIN_PARA: &[&str] = &["tip", "tas", "Ji", "sip", "Tas", "Ta", "mip", "vas", "mas"];
@@ -120,10 +120,10 @@ fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) {
             t.has_u("si~c") || t.has_tag(T::Abhyasta) || is_vid
         }) {
             op::adesha("3.4.109", p, i, "jus");
-        } else if p.has(i_dhatu, |t| t.has_antya(&s("A"))) && p.has(i_prev, |t| t.has_u("si~c")) {
+        } else if p.has(i_dhatu, |t| t.has_antya('A')) && p.has(i_prev, |t| t.has_u("si~c")) {
             op::adesha("3.4.110", p, i, "jus");
         } else if la == La::Lan {
-            if p.has(i_prev, |t| t.has_antya(&s("A")) && t.has_tag(T::Dhatu)) {
+            if p.has(i_prev, |t| t.has_antya('A') && t.has_tag(T::Dhatu)) {
                 p.op_optional("3.4.111", |p| op::upadesha(p, i, "jus"));
             } else if p.has(i_dhatu, |t| t.text == "dviz") {
                 p.op_optional("3.4.112", |p| op::upadesha(p, i, "jus"));
@@ -160,8 +160,7 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
             p.op(
                 "3.4.87",
                 op::t(i, |t| {
-                    t.u = Some("hi".to_string());
-                    t.text = "hi".to_string();
+                    t.set_upadesha("hi");
                     t.remove_tag(T::pit);
                 }),
             );
@@ -180,9 +179,9 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
                 p.set(i, |t| {
                     let n = t.text.len();
                     if t.text.ends_with("se") {
-                        t.text = String::from(&t.text[..n - 2]) + "sva";
+                        t.text = CompactString::from(&t.text[..n - 2]) + "sva";
                     } else {
-                        t.text = String::from(&t.text[..n - 2]) + "vam";
+                        t.text = CompactString::from(&t.text[..n - 2]) + "vam";
                     }
                 });
                 p.step("3.4.91")
@@ -238,7 +237,10 @@ fn maybe_do_lin_siddhi(p: &mut Prakriya, i_tin: usize, la: La) -> Result<(), Box
     }
 
     if p.has(i, |t| t.text.contains('t') || t.text.contains('T')) {
-        p.set(i, |t| t.text = t.text.replace('t', "st").replace('T', "sT"));
+        p.set(i, |t| {
+            t.find_and_replace_text("t", "st");
+            t.find_and_replace_text("T", "sT");
+        });
         p.step("3.4.107");
     }
 
@@ -314,7 +316,7 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
             && p.has(i, |t| TIN_PARA[..5].contains(&t.text.as_str()))
         {
             p.op_optional("3.4.84", |p| {
-                p.set(i_dhatu, |t| t.text = "Ah".to_string());
+                p.set(i_dhatu, |t| t.set_text("Ah"));
                 op::upadesha_yatha(p, i, TIN_PARA, NAL_PARA);
             });
         }

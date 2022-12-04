@@ -13,6 +13,7 @@ use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{map_sounds, s, SoundMap, SoundSet};
+use compact_str::CompactString;
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -26,8 +27,8 @@ lazy_static! {
 }
 
 /// Simplifies the abhyasa per 7.4.60.
-fn try_haladi(text: &str) -> String {
-    let mut ret = String::new();
+fn try_haladi(text: &str) -> CompactString {
+    let mut ret = CompactString::from("");
     for (i, c) in text.chars().enumerate() {
         if al::is_hal(c) {
             if i == 0 {
@@ -42,8 +43,8 @@ fn try_haladi(text: &str) -> String {
 }
 
 /// Simplifies the absyasa per 7.4.61.
-fn try_shar_purva(text: &str) -> String {
-    let mut ret = String::new();
+fn try_shar_purva(text: &str) -> CompactString {
+    let mut ret = CompactString::from("");
     for (i, c) in text.chars().enumerate() {
         if i == 0 {
             assert!(SHAR.contains_char(c));
@@ -141,7 +142,7 @@ fn try_general_rules(p: &mut Prakriya, i: usize) -> Option<()> {
     }
 
     let abhyasa = p.get(i)?;
-    if let Some(val) = KUH_CU.get(&abhyasa.adi()?) {
+    if let Some(val) = KUH_CU.get(abhyasa.adi()?) {
         p.op_term("7.4.62", i, op::adi(&val.to_string()));
     }
 

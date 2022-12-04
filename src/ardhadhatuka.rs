@@ -5,8 +5,14 @@ use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
-use crate::sounds::s;
+use crate::sounds::{s, SoundSet};
 use crate::term::TermView;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref AC: SoundSet = s("ac");
+    static ref VAL: SoundSet = s("val");
+}
 
 /// Lookahead function for the following rules:
 ///
@@ -162,9 +168,9 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) {
         // As a crude fix, just check for endings that we expect will start with
         // vowels.
         let will_yasut = la == La::AshirLin && p.has_tag(T::Parasmaipada);
-        let is_lit_ajadi = la == La::Lit && p.terms().last().unwrap().has_adi(&s("ac"));
+        let is_lit_ajadi = la == La::Lit && p.terms().last().unwrap().has_adi(&*AC);
         let will_have_valadi = !(will_yasut || is_lit_ajadi);
-        if p.has(n, |t| t.has_adi(&s("val"))) && will_have_valadi {
+        if p.has(n, |t| t.has_adi(&*VAL)) && will_have_valadi {
             if p.is_allowed("2.4.56.v2") {
                 p.step("2.4.56.v2");
                 run = false;

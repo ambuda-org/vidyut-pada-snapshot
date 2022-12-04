@@ -1,3 +1,4 @@
+use enumset::EnumSetType;
 use std::error::Error;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -79,7 +80,7 @@ impl La {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+#[derive(Debug, EnumSetType)]
 pub enum Tag {
     // Morpheme types
     Upasarga,
@@ -228,38 +229,38 @@ pub enum Tag {
 }
 
 impl Tag {
-    pub fn parse_it(it: &str) -> Result<Tag, Box<dyn Error>> {
+    pub fn parse_it(it: char) -> Result<Tag, Box<dyn Error>> {
         let res = match it {
-            "a" => Tag::adit,
-            "A" => Tag::Adit,
-            "i" => Tag::idit,
-            "I" => Tag::Idit,
-            "u" => Tag::udit,
-            "U" => Tag::Udit,
-            "f" => Tag::fdit,
-            "x" => Tag::xdit,
-            "e" => Tag::edit,
-            "o" => Tag::odit,
-            "k" => Tag::kit,
-            "K" => Tag::Kit,
-            "G" => Tag::Git,
-            "N" => Tag::Nit,
-            "c" => Tag::cit,
-            "C" => Tag::Cit,
-            "j" => Tag::jit,
-            "J" => Tag::Jit,
-            "Y" => Tag::Yit,
-            "w" => Tag::wit,
-            "q" => Tag::qit,
-            "Q" => Tag::Qit,
-            "R" => Tag::Rit,
-            "n" => Tag::nit,
-            "p" => Tag::pit,
-            "P" => Tag::Pit,
-            "m" => Tag::mit,
-            "l" => Tag::lit,
-            "S" => Tag::Sit,
-            "z" => Tag::zit,
+            'a' => Tag::adit,
+            'A' => Tag::Adit,
+            'i' => Tag::idit,
+            'I' => Tag::Idit,
+            'u' => Tag::udit,
+            'U' => Tag::Udit,
+            'f' => Tag::fdit,
+            'x' => Tag::xdit,
+            'e' => Tag::edit,
+            'o' => Tag::odit,
+            'k' => Tag::kit,
+            'K' => Tag::Kit,
+            'G' => Tag::Git,
+            'N' => Tag::Nit,
+            'c' => Tag::cit,
+            'C' => Tag::Cit,
+            'j' => Tag::jit,
+            'J' => Tag::Jit,
+            'Y' => Tag::Yit,
+            'w' => Tag::wit,
+            'q' => Tag::qit,
+            'Q' => Tag::Qit,
+            'R' => Tag::Rit,
+            'n' => Tag::nit,
+            'p' => Tag::pit,
+            'P' => Tag::Pit,
+            'm' => Tag::mit,
+            'l' => Tag::lit,
+            'S' => Tag::Sit,
+            'z' => Tag::zit,
             _ => panic!("Unknown it letter {it}"),
         };
         Ok(res)

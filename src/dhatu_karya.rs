@@ -4,8 +4,8 @@ use crate::filters as f;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
-use crate::sounds::s;
 use crate::term::Term;
+use compact_str::CompactString;
 
 use std::error::Error;
 
@@ -23,14 +23,15 @@ fn init(p: &mut Prakriya, dhatu: &str, code: &str) -> Result<(), Box<dyn Error>>
 }
 
 fn add_samjnas(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
-    p.op("1.3.1", op::t(i, op::add_tag(T::Dhatu)));
+    p.op_term("1.3.1", i, op::add_tag(T::Dhatu));
     it_samjna::run(p, i)?;
-    p.term_rule(
-        "1.1.20",
-        i,
-        |t| t.has_text_in(&["dA", "de", "do", "DA", "De"]) && t.u != Some("dA\\p".to_string()),
-        |t| op::samjna(t, T::Ghu),
-    );
+
+    if p.has(i, |t| {
+        t.has_text_in(&["dA", "de", "do", "DA", "De"]) && !t.has_u("dA\\p")
+    }) {
+        p.op_term("1.1.20", i, op::add_tag(T::Ghu));
+    };
+
     Ok(())
 }
 
@@ -64,54 +65,34 @@ fn gana_sutras(p: &mut Prakriya, i: usize) {
     }
 }
 
-fn satva_and_natva(p: &mut Prakriya, i: usize) {
-    if p.get(i).unwrap().has_adi(&s("z")) {
-        // FIXME: better control flow here.
-        // Satva
-        // Varttika -- no change for zWiv or zvask
-        // Vartika -- also change next sound
-        let ok = p.term_rule(
-            "6.1.64.v1",
-            i,
-            |t| t.has_text_in(&["zWiv", "zvazk"]),
-            op::none,
-        );
-        if !ok {
-            let ok = p.term_rule(
-                "6.1.64.v2",
-                i,
-                |t| t.has_prefix_in(&["zw", "zW", "zR"]),
-                |t| {
-                    t.text = t.text.replace("zw", "st");
-                    t.text = t.text.replace("zW", "sT");
-                    t.text = t.text.replace("zR", "sn");
-                    t.add_tag(T::FlagAdeshadi);
-                },
-            );
-            if !ok {
-                p.term_rule(
-                    "6.1.64",
-                    i,
-                    |_| true,
-                    |t| {
-                        t.add_tag(T::FlagAdeshadi);
-                        op::adi("s")(t);
-                    },
-                );
-            }
+fn satva_and_natva(p: &mut Prakriya, i: usize) -> Option<()> {
+    let dhatu = p.get_mut(i)?;
+    if dhatu.has_adi('z') {
+        if dhatu.has_text_in(&["zWiv", "zvazk"]) {
+            // Varttika -- no change for zWiv or zvask
+            p.step("6.1.64.v1");
+        } else if dhatu.has_prefix_in(&["zw", "zW", "zR"]) {
+            // Varttika -- also change next sound
+            match &dhatu.text[..2] {
+                "zw" => dhatu.text = CompactString::from("st") + &dhatu.text[2..],
+                "zW" => dhatu.text = CompactString::from("sT") + &dhatu.text[2..],
+                "zR" => dhatu.text = CompactString::from("sn") + &dhatu.text[2..],
+                _ => (),
+            };
+            dhatu.add_tag(T::FlagAdeshadi);
+            p.step("6.1.64.v2");
+        } else {
+            dhatu.add_tag(T::FlagAdeshadi);
+            p.set(i, op::adi("s"));
+            p.step("6.1.64");
         }
-    } else {
-        // Natva
-        p.term_rule(
-            "6.1.65",
-            i,
-            |t| t.has_adi(&s("R")),
-            |t| {
-                t.add_tag(T::FlagAdeshadi);
-                op::adi("n")(t);
-            },
-        );
+    } else if dhatu.has_adi('R') {
+        dhatu.add_tag(T::FlagAdeshadi);
+        p.set(i, op::adi("n"));
+        p.step("6.1.65");
     }
+
+    Some(())
 }
 
 // nu~m-Agama
@@ -122,12 +103,9 @@ fn satva_and_natva(p: &mut Prakriya, i: usize) {
 //
 // TODO: why exception for cakz?
 fn maybe_add_num_agama(p: &mut Prakriya, i: usize) {
-    p.term_rule(
-        "7.1.58",
-        i,
-        |t| t.has_tag(T::idit) && !t.has_u("ca\\kzi~\\N"),
-        op::mit("n"),
-    );
+    if p.has(i, |t| t.has_tag(T::idit) && !t.has_u("ca\\kzi~\\N")) {
+        p.op_term("7.1.58", i, op::mit("n"));
+    }
 }
 
 fn maybe_add_upasarga(p: &mut Prakriya, i: usize) {

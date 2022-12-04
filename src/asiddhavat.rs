@@ -20,6 +20,7 @@ use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
 use crate::term::{Term, TermView};
+use compact_str::CompactString;
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -219,10 +220,10 @@ fn try_run_kniti_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
     if anga.has_u("Snam") {
         p.op_term("6.4.111", i, |t| {
-            t.text = t.text.replace("na", "n");
+            t.text = CompactString::from("n");
         });
     } else if anga.has_u("asa~") {
-        p.op_term("6.4.111", i, |t| t.text = t.text.replace('a', ""));
+        p.op_term("6.4.111", i, op::adi(""));
     } else {
         try_run_kniti_sarvadhatuke_for_shna_and_abhyasta(p, i);
     }
@@ -484,7 +485,7 @@ fn try_add_a_agama(p: &mut Prakriya, i: usize) {
         return;
     }
 
-    if p.has(i, f::adi("ac")) {
+    if p.has(i, |t| t.has_adi(&*AC)) {
         let agama = Term::make_agama("Aw");
         p.insert_before(i, agama);
         p.step("6.4.72");

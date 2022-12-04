@@ -69,6 +69,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
                     Prayoga::Kartari,
                     *purusha,
                     *vacana,
+                    true,
                 );
                 for p in ps {
                     words.push(p.text());

@@ -1,6 +1,7 @@
 use crate::constants::Tag;
 use crate::term::{Term, TermView};
-use std::collections::HashSet;
+use compact_str::CompactString;
+use enumset::EnumSet;
 
 /// A string code for some grammar rule. All rule codes are static strings.
 pub type Rule = &'static str;
@@ -22,13 +23,25 @@ pub enum RuleChoice {
     Decline(Rule),
 }
 
+#[derive(Default)]
+pub struct Config {
+    pub rule_choices: Vec<RuleChoice>,
+    pub log_steps: bool,
+}
+
+impl Config {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
 /// Models a derivation.
 #[derive(Default)]
 pub struct Prakriya {
     terms: Vec<Term>,
-    tags: HashSet<Tag>,
+    tags: EnumSet<Tag>,
     history: Vec<Step>,
-    options_config: Vec<RuleChoice>,
+    pub config: Config,
     rule_decisions: Vec<RuleChoice>,
 }
 
@@ -39,22 +52,17 @@ impl Prakriya {
     pub fn new() -> Self {
         Prakriya {
             terms: Vec::new(),
-            tags: HashSet::new(),
+            tags: EnumSet::new(),
             history: Vec::new(),
-            options_config: Vec::new(),
+            config: Config::new(),
             rule_decisions: Vec::new(),
         }
     }
 
-    pub fn from_terms(terms: &[Term]) -> Self {
+    pub fn with_config(config: Config) -> Self {
         let mut p = Prakriya::new();
-        p.terms = terms.to_vec();
+        p.config = config;
         p
-    }
-
-    pub fn set_options(&mut self, options: &[RuleChoice]) {
-        self.options_config.clear();
-        self.options_config.extend(options);
     }
 
     // Term accessors
@@ -185,15 +193,15 @@ impl Prakriya {
     }
 
     pub fn all(&self, tags: &[Tag]) -> bool {
-        tags.iter().all(|t| self.tags.contains(t))
+        tags.iter().all(|t| self.tags.contains(*t))
     }
 
     pub fn any(&self, tags: &[Tag]) -> bool {
-        tags.iter().any(|t| self.tags.contains(t))
+        tags.iter().any(|t| self.tags.contains(*t))
     }
 
     pub fn has_tag(&self, tag: Tag) -> bool {
-        self.tags.contains(&tag)
+        self.tags.contains(tag)
     }
 
     // Basic mutators
@@ -203,7 +211,9 @@ impl Prakriya {
     }
 
     pub fn add_tags(&mut self, tags: &[Tag]) {
-        self.tags.extend(tags)
+        for t in tags {
+            self.tags.insert(*t);
+        }
     }
 
     pub fn set(&mut self, index: usize, operator: impl Fn(&mut Term)) {
@@ -226,17 +236,6 @@ impl Prakriya {
     }
 
     // Rule application
-
-    /// Applies the given rule.
-    pub fn term_rule(
-        &mut self,
-        code: Rule,
-        index: usize,
-        filter: impl Fn(&Term) -> bool,
-        operator: impl Fn(&mut Term),
-    ) -> bool {
-        self.rule(code, |p| p.has(index, &filter), |p| p.set(index, &operator))
-    }
 
     /// Applies the given operator.
     pub fn op(&mut self, code: Rule, operator: impl Fn(&mut Prakriya)) -> bool {
@@ -301,20 +300,22 @@ impl Prakriya {
 
     /// Add a rule to the history.
     pub fn step(&mut self, rule: Rule) {
-        let state = self.terms.iter().fold(String::new(), |a, b| {
-            if a.is_empty() {
-                a + &b.text
-            } else {
-                a + " + " + &b.text
-            }
-        });
-        self.history.push(Step { rule, state })
+        if self.config.log_steps {
+            let state = self.terms.iter().fold(String::new(), |a, b| {
+                if a.is_empty() {
+                    a + &b.text
+                } else {
+                    a + " + " + &b.text
+                }
+            });
+            self.history.push(Step { rule, state })
+        }
     }
 
     // Optional rules
 
     pub fn is_allowed(&mut self, r: Rule) -> bool {
-        for option in &self.options_config {
+        for option in &self.config.rule_choices {
             match option {
                 RuleChoice::Accept(code) => {
                     if r == *code {
@@ -352,8 +353,12 @@ impl Prakriya {
 
     // Final output
 
-    pub fn text(&self) -> String {
-        self.terms.iter().fold(String::new(), |a, b| a + &b.text)
+    pub fn text(&self) -> CompactString {
+        let mut ret = CompactString::from("");
+        for t in &self.terms {
+            ret.push_str(&t.text);
+        }
+        ret
     }
 }
 
@@ -376,17 +381,23 @@ impl PrakriyaStack {
         Self::default()
     }
 
+    fn new_prakriya(rule_choices: Vec<RuleChoice>, log_steps: bool) -> Prakriya {
+        Prakriya::with_config(Config {
+            rule_choices,
+            log_steps,
+        })
+    }
+
     /// Finds all variants of the given derivation function.
     ///
     /// `derive` should accept an empty `Prakriya` and mutate it in-place.
-    pub fn find_all(&mut self, derive: impl Fn(&mut Prakriya)) {
-        let mut p_init = Prakriya::new();
+    pub fn find_all(&mut self, derive: impl Fn(&mut Prakriya), log_steps: bool) {
+        let mut p_init = Self::new_prakriya(vec![], log_steps);
         derive(&mut p_init);
         self.add_prakriya(p_init, &[]);
 
         while let Some(path) = self.pop_path() {
-            let mut p = Prakriya::new();
-            p.set_options(&path);
+            let mut p = Self::new_prakriya(path.clone(), log_steps);
             derive(&mut p);
             self.add_prakriya(p, &path);
         }

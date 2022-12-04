@@ -9,22 +9,18 @@ use std::error::Error;
 fn add_sanadi(
     rule: Rule,
     p: &mut Prakriya,
-    index: usize,
+    i_dhatu: usize,
     upadesha: &str,
 ) -> Result<(), Box<dyn Error>> {
-    let mut pratyaya = Term::make_upadesha(upadesha);
-    pratyaya.add_tags(&[T::Pratyaya]);
-    p.insert_after(index, pratyaya);
-    p.step(rule);
+    p.op(rule, |p| {
+        let mut pratyaya = Term::make_upadesha(upadesha);
+        pratyaya.add_tags(&[T::Pratyaya]);
+        p.insert_after(i_dhatu, pratyaya)
+    });
 
-    let pratyaya_index = index + 1;
-    p.term_rule(
-        "3.1.32",
-        pratyaya_index,
-        |_| true,
-        |t| op::samjna(t, T::Dhatu),
-    );
-    it_samjna::run(p, pratyaya_index)?;
+    let i_pratyaya = i_dhatu + 1;
+    p.op_term("3.1.32", i_pratyaya, op::add_tag(T::Dhatu));
+    it_samjna::run(p, i_pratyaya)?;
 
     Ok(())
 }

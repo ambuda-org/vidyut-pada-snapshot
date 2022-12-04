@@ -1,13 +1,77 @@
 use lazy_static::lazy_static;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 type Sound = char;
-pub type SoundMap = HashMap<Sound, Sound>;
 
 lazy_static! {
     static ref SUTRAS: Vec<Sutra> = create_shiva_sutras();
-    static ref SOUND_PROPS: HashMap<Sound, Uccarana> = create_sound_props();
+    static ref SOUND_PROPS: FxHashMap<Sound, Uccarana> = create_sound_props();
     static ref HAL: SoundSet = s("hal");
+}
+
+pub struct SoundSet([u8; 256]);
+
+impl SoundSet {
+    pub fn new(string: &str) -> Self {
+        let mut res = SoundSet([0; 256]);
+        for c in string.chars() {
+            res.0[c as usize] = 1;
+        }
+        res
+    }
+
+    pub fn contains_char(&self, c: Sound) -> bool {
+        self.0[c as usize] == 1
+    }
+
+    pub fn contains_opt(&self, o: Option<char>) -> bool {
+        if let Some(c) = o {
+            self.contains_char(c)
+        } else {
+            false
+        }
+    }
+
+    pub fn to_string(&self) -> String {
+        let mut ret = String::new();
+        // Use Paninian order.
+        for c in "aAiIuUfFxXeEoOMHkKgGNcCjJYwWqQRtTdDnpPbBmyrlvSzsh".chars() {
+            if self.contains_char(c) {
+                ret.push(c);
+            }
+        }
+        ret
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct SoundMap([u8; 256]);
+
+impl SoundMap {
+    pub fn new() -> Self {
+        Self([0; 256])
+    }
+
+    pub fn insert(&mut self, key: Sound, val: Sound) {
+        self.0[key as usize] = val as u8;
+    }
+
+    pub fn contains(&self, key: Sound) -> bool {
+        self.0[key as usize] != 0
+    }
+
+    pub fn get(&self, key: Sound) -> Option<Sound> {
+        match self.0[key as usize] {
+            0 => None,
+            c => Some(c as char),
+        }
+    }
+}
+
+impl Default for SoundMap {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 pub trait Pattern {
@@ -66,21 +130,21 @@ fn create_shiva_sutras() -> Vec<Sutra> {
     ]
 }
 
-fn create_sound_props() -> HashMap<Sound, Uccarana> {
-    fn flatten_multi<T: Copy>(data: Vec<(SoundSet, T)>) -> HashMap<Sound, Vec<T>> {
-        let mut mapping = HashMap::new();
+fn create_sound_props() -> FxHashMap<Sound, Uccarana> {
+    fn flatten_multi<T: Copy>(data: Vec<(SoundSet, T)>) -> FxHashMap<Sound, Vec<T>> {
+        let mut mapping = FxHashMap::default();
         for (ks, v) in data {
-            for k in ks.iter() {
+            for k in ks.to_string().chars() {
                 mapping.entry(k).or_insert_with(Vec::new).push(v);
             }
         }
         mapping
     }
 
-    fn flatten<T: Copy>(data: Vec<(SoundSet, T)>) -> HashMap<Sound, T> {
-        let mut mapping = HashMap::new();
+    fn flatten<T: Copy>(data: Vec<(SoundSet, T)>) -> FxHashMap<Sound, T> {
+        let mut mapping = FxHashMap::default();
         for (ks, v) in data {
-            for k in ks.iter() {
+            for k in ks.to_string().chars() {
                 mapping.insert(k, v);
             }
         }
@@ -97,7 +161,7 @@ fn create_sound_props() -> HashMap<Sound, Uccarana> {
         (s("o O"), Sthana::KanthaOshtha),
         (s("v"), Sthana::DantaOshtha),
     ]);
-    for k in s("Yam M").iter() {
+    for k in s("Yam M").to_string().chars() {
         sthana
             .entry(k)
             .or_insert_with(Vec::new)
@@ -118,8 +182,8 @@ fn create_sound_props() -> HashMap<Sound, Uccarana> {
         (s("Yay"), Prayatna::Sprshta),
     ]);
 
-    let mut res = HashMap::new();
-    for k in s("al H M").iter() {
+    let mut res = FxHashMap::default();
+    for k in s("al H M").to_string().chars() {
         let sthana = match sthana.get(&k) {
             Some(s) => s.clone(),
             None => Vec::new(),
@@ -272,42 +336,6 @@ fn pratyahara(s: &str) -> SoundSet {
     SoundSet::new(&res)
 }
 
-pub struct SoundSet {
-    string: String,
-}
-
-impl SoundSet {
-    pub fn new(string: &str) -> Self {
-        SoundSet {
-            string: string.to_string(),
-        }
-    }
-
-    pub fn contains(&self, s: &str) -> bool {
-        self.string.contains(s)
-    }
-
-    pub fn contains_char(&self, c: Sound) -> bool {
-        self.string.contains(c)
-    }
-
-    pub fn contains_opt(&self, o: Option<char>) -> bool {
-        if let Some(c) = o {
-            self.contains_char(c)
-        } else {
-            false
-        }
-    }
-
-    pub fn into_string(self) -> String {
-        self.string
-    }
-
-    pub fn iter(&self) -> std::str::Chars {
-        self.string.chars()
-    }
-}
-
 pub fn s(terms: &str) -> SoundSet {
     let mut ret = String::new();
     let ak = ["a", "A", "i", "I", "u", "U", "f", "F", "x", "X"];
@@ -315,11 +343,11 @@ pub fn s(terms: &str) -> SoundSet {
     for term in terms.split_whitespace() {
         if term.ends_with("u~") || ak.contains(&term) {
             let first = term.chars().next().unwrap();
-            ret += &savarna(first).string;
+            ret += &savarna(first).to_string();
         } else if term.len() == 1 {
             ret += term;
         } else {
-            ret += &pratyahara(term).string;
+            ret += &pratyahara(term).to_string();
         }
     }
 
@@ -408,13 +436,14 @@ pub fn map_sounds(xs: &str, ys: &str) -> SoundMap {
     let xs = s(xs);
     let ys = s(ys);
 
-    let mut mapping = HashMap::new();
-    for x in xs.iter() {
+    let mut mapping = SoundMap::new();
+    for x in xs.to_string().chars() {
         let x_props = SOUND_PROPS.get(&x).unwrap();
 
         // The best sound has the minimal distance.
         let best_y = ys
-            .iter()
+            .to_string()
+            .chars()
             .min_by_key(|y| SOUND_PROPS.get(y).unwrap().distance(x_props))
             .unwrap();
         mapping.insert(x, best_y);
@@ -426,28 +455,26 @@ pub fn map_sounds(xs: &str, ys: &str) -> SoundMap {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashSet;
 
     #[test]
     fn test_s() {
         let tests = vec![
             ("ac", "aAiIuUfFxXeEoO"),
             ("iR", "iIuU"),
-            ("iR2", "iIuUfFxXeEoOhyvrl"),
-            ("yaR", "yrvl"),
+            ("iR2", "iIuUfFxXeEoOyrlvh"),
+            ("yaR", "yrlv"),
             ("hal", "kKgGNcCjJYwWqQRtTdDnpPbBmyrlvSzsh"),
-            ("Yam", "YmNRn"),
+            ("Yam", "NYRnm"),
             ("Sar", "Szs"),
             ("a", "aA"),
             ("e", "e"),
             ("ku~", "kKgGN"),
             ("cu~", "cCjJY"),
             ("i cu~", "iIcCjJY"),
-            ("a ku~ h H", "aAkKgGNhH"),
+            ("a ku~ h H", "aAHkKgGNh"),
         ];
         for (input, expected) in tests {
-            let expected: HashSet<Sound> = expected.chars().collect();
-            let actual: HashSet<Sound> = s(input).string.chars().collect();
+            let actual = s(input).to_string();
             assert_eq!(actual, expected, "input: `{input}`");
         }
     }
@@ -455,7 +482,7 @@ mod tests {
     #[test]
     fn test_map_sounds_jhal_jhash() {
         let actual = map_sounds("Jal", "jaS");
-        let expected: HashMap<Sound, Sound> = vec![
+        let expected_vec = vec![
             ('J', 'j'),
             ('B', 'b'),
             ('G', 'g'),
@@ -480,27 +507,30 @@ mod tests {
             ('z', 'q'),
             ('s', 'd'),
             ('h', 'g'),
-        ]
-        .iter()
-        .map(|(k, v)| (*k, *v))
-        .collect();
+        ];
+        let mut expected = SoundMap::new();
+        for (k, v) in expected_vec {
+            expected.insert(k, v);
+        }
         assert_eq!(expected, actual);
     }
 
     #[test]
     fn test_map_sounds_kuh_cu() {
         let actual = map_sounds("ku~ h", "cu~");
-        let expected: HashMap<Sound, Sound> = vec![
+        let expected_vec = vec![
             ('k', 'c'),
             ('K', 'C'),
             ('g', 'j'),
             ('G', 'J'),
             ('N', 'Y'),
             ('h', 'J'),
-        ]
-        .iter()
-        .map(|(k, v)| (*k, *v))
-        .collect();
+        ];
+        let mut expected = SoundMap::new();
+        for (k, v) in expected_vec {
+            expected.insert(k, v);
+        }
+        assert_eq!(expected, actual);
 
         assert_eq!(expected, actual);
     }

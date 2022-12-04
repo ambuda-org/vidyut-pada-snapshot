@@ -19,10 +19,12 @@ use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{map_sounds, s, SoundMap, SoundSet};
 use crate::term::Term;
+use compact_str::CompactString;
 use lazy_static::lazy_static;
 
 lazy_static! {
     static ref AT_KU_PU_M: SoundSet = s("aw ku~ pu~ M");
+    static ref AC: SoundSet = s("ac");
     static ref CU: SoundSet = s("cu~");
     static ref INKU: SoundSet = s("iR2 ku~");
     static ref JHAL: SoundSet = s("Jal");
@@ -30,6 +32,7 @@ lazy_static! {
     static ref KHAR: SoundSet = s("Kar");
     static ref JHAL_TO_CAR: SoundMap = map_sounds("Jal", "car");
     static ref JHAL_TO_JASH: SoundMap = map_sounds("Jal", "jaS");
+    static ref JHAL_TO_JASH_EXCEPTIONS: SoundSet = s("c S s h");
     static ref JHAL_TO_JASH_CAR: SoundMap = map_sounds("Jal", "jaS car");
     static ref CU_TO_KU: SoundMap = map_sounds("cu~", "ku~");
     static ref IK: SoundSet = s("ik");
@@ -62,7 +65,10 @@ fn try_na_lopa(p: &mut Prakriya) {
 ///
 /// (8.2.18 - 8.2.20)
 fn try_ra_to_la(p: &mut Prakriya) {
-    let do_ra_la = |t: &mut Term| t.text = t.text.replace('f', "x").replace('r', "l");
+    let do_ra_la = |t: &mut Term| {
+        t.find_and_replace_text("f", "x");
+        t.find_and_replace_text("r", "l");
+    };
 
     for i in 0..p.terms().len() {
         let n = i + 1;
@@ -74,8 +80,7 @@ fn try_ra_to_la(p: &mut Prakriya) {
             p.op("8.2.18", op::t(i, do_ra_la));
         } else if p.has(i, f::u("gF")) && p.has(n, f::u("yaN")) {
             p.op("8.2.20", op::t(i, do_ra_la));
-        } else if p.has(i, |t| t.has_u("gF") && t.gana == Some(6))
-            && p.has(n, |t| t.has_adi(&s("ac")))
+        } else if p.has(i, |t| t.has_u("gF") && t.gana == Some(6)) && p.has(n, |t| t.has_adi(&*AC))
         {
             // TODO: where is it specified that this is only for gF/girati?
             p.op("8.2.21", op::t(i, do_ra_la));
@@ -275,7 +280,7 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) {
             let pre_upadha = before_upadha(dhatu).unwrap();
             let sub = al::to_dirgha(pre_upadha).unwrap().to_string();
             p.set(i, |t| {
-                t.text = String::from(&t.text[..n - 3]) + &sub + &t.text[n - 2..]
+                t.text = CompactString::from(&t.text[..n - 3]) + &sub + &t.text[n - 2..]
             });
         });
     }
@@ -296,10 +301,10 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
     let has_ru = p.has(i, |t| t.text.ends_with("ru~") || t.has_antya('r'));
     if has_ru && is_padanta {
         p.op_term("8.3.15", i, |t| {
-            if let Some(p) = t.text.strip_suffix("ru~") {
-                t.text = p.to_owned() + "H";
-            } else if let Some(p) = t.text.strip_suffix('r') {
-                t.text = p.to_owned() + "H";
+            if let Some(prefix) = t.text.strip_suffix("ru~") {
+                t.text = CompactString::from(prefix) + "H";
+            } else if let Some(prefix) = t.text.strip_suffix('r') {
+                t.text = CompactString::from(prefix) + "H";
             }
         });
     }
@@ -328,7 +333,7 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
 
     if p.has(i, |t| t.has_antya(&*CU)) && p.has(i + 1, |t| t.has_adi(&*JHAL)) {
         let c = p.terms()[i].antya().unwrap();
-        let sub = CU_TO_KU.get(&c).unwrap();
+        let sub = CU_TO_KU.get(c).unwrap();
         p.op_term("8.2.30", i, op::antya(&sub.to_string()));
     }
 
@@ -348,9 +353,10 @@ fn per_term_1b(p: &mut Prakriya, i: usize) {
     let c = &p.terms()[i];
     let n = p.view(i + 1);
     let is_padanta = n.map(|x| x.is_padanta()).unwrap_or(true);
-    if c.has_antya(&*JHAL) && !c.has_antya(&s("c S s h")) && is_padanta {
+    let has_exception = c.has_antya(&*JHAL_TO_JASH_EXCEPTIONS);
+    if c.has_antya(&*JHAL) && !has_exception && is_padanta {
         let key = c.antya().unwrap();
-        let sub = JHAL_TO_JASH.get(&key).unwrap();
+        let sub = JHAL_TO_JASH.get(key).unwrap();
         p.op_term("8.2.39", i, op::antya(&sub.to_string()));
     }
 
@@ -488,34 +494,32 @@ fn try_mn_to_anusvara(p: &mut Prakriya) {
 /// Example: `nesyati -> nezyati`
 ///
 /// (8.3.55 - 8.3.119)
-fn try_murdhanya(p: &mut Prakriya) {
+fn try_murdhanya(p: &mut Prakriya) -> Option<()> {
     for i in 0..p.terms().len() {
-        let n = i + 1;
-        if p.get(n).is_none() {
-            return;
-        }
+        let j = i + 1;
+        let x = p.get(i)?;
+        let y = p.get(j)?;
 
-        let apadanta = p.has(n, f::not_empty);
+        let apadanta = !y.text.is_empty();
         // HACK: don't include Agama.
-        let adesha_pratyaya = p.has(n, |t| t.any(&[T::Pratyaya, T::FlagAdeshadi, T::Agama]));
-        if p.has(i, |t| t.has_antya(&*INKU)) && p.has(n, f::adi("s")) && adesha_pratyaya && apadanta
-        {
-            p.op_term("8.3.59", n, op::adi("z"));
-        } else if p.has(i, |t| {
-            t.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && t.has_upadha(&*INKU)
-        }) {
+        let adesha_pratyaya = y.any(&[T::Pratyaya, T::FlagAdeshadi, T::Agama]);
+        if x.has_antya(&*INKU) && y.has_adi('s') && adesha_pratyaya && apadanta {
+            p.op_term("8.3.59", j, op::adi("z"));
+        } else if x.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && x.has_upadha(&*INKU) {
             p.op_term("8.3.60", i, op::antya("z"));
         }
     }
 
     try_murdhanya_for_sidhvam_lun_lit(p);
+
+    Some(())
 }
 
 fn try_murdhanya_for_sidhvam_lun_lit(p: &mut Prakriya) -> Option<()> {
     let i = p.find_last(T::Tin)?;
     let i_prev = p.find_prev_where(i, |t| !t.text.is_empty())?;
 
-    let anga = p.get(i_prev)?; 
+    let anga = p.get(i_prev)?;
     let tin = p.get(i)?;
 
     Some(())
@@ -544,7 +548,6 @@ fn try_murdhanya_for_sidhvam_lun_lit(p: &mut Prakriya) -> Option<()> {
             last.text = last.text.replace("D", "Q")
             p.step("8.3.78")
 */
-
 
 fn stu_to_scu(c: char) -> Option<&'static str> {
     // FIXME: use char map?
@@ -715,8 +718,8 @@ fn try_jhal_adesha(p: &mut Prakriya) {
         xy(|x, y| JHAL.contains_char(x) && JHASH.contains_char(y)),
         |p, text, i| {
             let x = text.as_bytes()[i] as char;
-            let sub = JHAL_TO_JASH.get(&x).unwrap();
-            if x != *sub {
+            let sub = JHAL_TO_JASH.get(x).unwrap();
+            if x != sub {
                 set_at(p, i, &sub.to_string());
                 p.step("8.4.53");
                 true
@@ -730,7 +733,7 @@ fn try_jhal_adesha(p: &mut Prakriya) {
         let abhyasa = p.get(i).unwrap();
         if JHAL.contains_opt(abhyasa.adi()) {
             let sub = JHAL_TO_JASH_CAR
-                .get(&abhyasa.adi().unwrap())
+                .get(abhyasa.adi().unwrap())
                 .unwrap()
                 .to_string();
             p.op_term("8.4.54", i, op::adi(&sub));
@@ -752,8 +755,8 @@ fn try_jhal_adesha(p: &mut Prakriya) {
         xy(|x, y| JHAL.contains_char(x) && KHAR.contains_char(y)),
         |p, text, i| {
             let x = text.as_bytes()[i] as char;
-            let sub = JHAL_TO_CAR.get(&x).unwrap();
-            if x != *sub {
+            let sub = JHAL_TO_CAR.get(x).unwrap();
+            if x != sub {
                 set_at(p, i, &sub.to_string());
                 p.step("8.4.55");
                 true
@@ -772,8 +775,8 @@ fn try_jhal_adesha(p: &mut Prakriya) {
         |p, text, i| {
             let code = "8.4.56";
             let x = text.as_bytes()[i] as char;
-            let sub = JHAL_TO_CAR.get(&x).unwrap();
-            if x != *sub {
+            let sub = JHAL_TO_CAR.get(x).unwrap();
+            if x != sub {
                 if p.is_allowed(code) {
                     set_at(p, i, &sub.to_string());
                     p.step("8.4.56");

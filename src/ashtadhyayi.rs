@@ -107,8 +107,12 @@ pub fn derive_tinantas(
     prayoga: Prayoga,
     purusha: Purusha,
     vacana: Vacana,
+    log_steps: bool,
 ) -> Vec<Prakriya> {
     let mut stack = PrakriyaStack::new();
-    stack.find_all(|p| derive_tinanta(p, dhatu, code, la, prayoga, purusha, vacana).unwrap());
+    stack.find_all(
+        |p| derive_tinanta(p, dhatu, code, la, prayoga, purusha, vacana).unwrap(),
+        log_steps,
+    );
     stack.prakriyas()
 }

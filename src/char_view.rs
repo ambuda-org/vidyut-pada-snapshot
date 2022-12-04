@@ -22,7 +22,7 @@ pub fn set_at(p: &mut Prakriya, index: usize, substitute: &str) {
         let delta = t.text.len();
         if (cur..cur + delta).contains(&index) {
             let t_offset = index - cur;
-            t.text = String::from(&t.text[..t_offset]) + substitute + &t.text[t_offset + 1..];
+            t.text.replace_range(t_offset..=t_offset, substitute);
             return;
         } else {
             cur += delta;

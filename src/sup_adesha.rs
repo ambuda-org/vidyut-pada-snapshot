@@ -2,7 +2,6 @@ use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
-use crate::sounds::s;
 use crate::stem_gana as gana;
 
 fn yatha(needle: &str, old: &'static [&str], new: &'static [&str]) -> Option<&'static str> {
@@ -95,7 +94,7 @@ fn try_yusmad_asmad_sup_adesha(p: &mut Prakriya, i_anga: usize, i: usize) {
 }
 
 fn try_ni_adesha(p: &mut Prakriya, i_anga: usize, i: usize) {
-    if p.has(i, f::u("Ni")) && p.has(i_anga, f::antya("it ut")) {
+    if p.has(i, f::u("Ni")) && p.has(i_anga, |t| t.has_antya('i') || t.has_antya('u')) {
         p.op_term("7.3.118", i, op::text("O"));
         if p.has(i_anga, f::tag(T::Ghi)) {
             p.op_term("7.3.119", i_anga, op::antya("a"));
@@ -130,7 +129,7 @@ pub fn run(p: &mut Prakriya) {
     } else if p.has(i_anga, f::text("zaz")) && is_jas_shas {
         p.op_term("7.1.22", i, op::luk);
     } else if is_napumsaka && p.has(i, f::u_in(&["su~", "am"])) {
-        if p.has(i_anga, |t| t.has_antya(&s("a"))) {
+        if p.has(i_anga, |t| t.has_antya('a')) {
             if p.has(i_anga, |t| t.has_text_in(gana::DATARA_ADI)) {
                 p.op_term("7.1.25", i, op::text("adq"));
             } else {
