@@ -244,19 +244,22 @@ fn try_et_adesha_and_abhyasa_lopa_for_lit(p: &mut Prakriya, i: usize) -> Option<
     }
     let n = p.view(i + 1)?;
 
-    let kniti = n.any(&[T::kit, T::Nit]);
-    let thali_seti = n.get(0)?.has_u("iw") && n.get(1)?.has_u("Tal");
+    let kniti = n.is_knit();
+    let thali_seti = f::is_it_agama(n.get(0)?) && n.get(1)?.has_u("Tal");
     if !(kniti || thali_seti) {
         return None;
     }
+    let abhyasa = p.get(i - 1)?;
+    let n = p.view(i + 1)?;
 
     let op_et_abhyasa_lopa = |p: &mut Prakriya| {
         p.set(i, op::upadha("e"));
         p.set(i - 1, op::lopa);
     };
 
+    let dhatu = p.get(i)?;
     if dhatu.text == "daB" && dhatu.has_u("danBu~") {
-        p.op("6.4.120", op_et_abhyasa_lopa);
+        p.op("6.4.120.v1", op_et_abhyasa_lopa);
     } else if dhatu.has_u("tF") || dhatu.has_text_in(&["Pal", "Baj", "trap"]) {
         p.op("6.4.122", op_et_abhyasa_lopa);
     } else if dhatu.has_text("SraT") && dhatu.has_u("SranTa~") {
@@ -454,7 +457,7 @@ fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
         if !used {
             p.op_optional("6.4.45.a", op::t(i, op::antya("A")));
         }
-    } else if is_anudatta || is_tanadi || anga.has_text("van") && jhali_kniti {
+    } else if (is_anudatta || is_tanadi || anga.has_text("van")) && jhali_kniti {
         // General case
         //
         if n.has_u("lyap") {

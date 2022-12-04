@@ -254,7 +254,6 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya, i: usize) -> Option<()> {
     let before_upadha = |t: &Term| t.text.chars().rev().nth(2);
 
     // TODO: bha
-    p.step("checking");
     let dhatu = p.get(i)?;
     if dhatu.has_text_in(&["kur", "Cur"]) {
         p.step("8.2.79");

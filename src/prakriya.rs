@@ -312,6 +312,10 @@ impl Prakriya {
         }
     }
 
+    pub fn debug(&mut self, text: String) {
+        self.history.push(Step { rule: "debug", state: text });
+    }
+
     // Optional rules
 
     pub fn is_allowed(&mut self, r: Rule) -> bool {
@@ -344,7 +348,7 @@ impl Prakriya {
         self.rule_decisions.push(RuleChoice::Decline(rule));
     }
 
-    pub fn debug(&self) {
+    pub fn debug_print(&self) {
         for t in &self.terms {
             println!("- {t:?}");
         }
