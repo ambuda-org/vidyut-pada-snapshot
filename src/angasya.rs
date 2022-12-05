@@ -938,10 +938,10 @@ fn try_cani_before_guna(p: &mut Prakriya) -> Option<()> {
     let dhatu = p.get(i)?;
     let last = p.terms().last()?;
     if dhatu.has_text_in(&["SF", "dF", "pF"]) && last.has_lakshana("li~w") && !dhatu.has_gana(10) {
-        p.op_term("7.4.12", i, |t| {
+        p.op_optional("7.4.12", op::t(i, |t| {
             op::antya("f")(t);
             t.add_tag(T::FlagGunaApavada);
-        });
+        }));
     }
 
     Some(())

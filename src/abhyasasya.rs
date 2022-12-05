@@ -119,16 +119,18 @@ pub fn run_for_sani_cani(p: &mut Prakriya) -> Option<()> {
 /// Runs abhyasa rules that apply generally.
 fn try_general_rules(p: &mut Prakriya, i: usize) -> Option<()> {
     let i_dhatu = i + 1;
-    let dhatu = p.get(i_dhatu)?;
-    let abhyasa = p.get(i)?;
-    let last = p.terms().last()?;
 
+    let dhatu = p.get(i_dhatu)?;
+    let last = p.terms().last()?;
     if dhatu.has_text_in(&["dyut", "svAp"]) {
         p.op_term("7.4.67", i, op::text("dit"));
     } else if dhatu.text == "vyaT" && last.has_lakshana("li~w") {
         // TODO: move this to `try_rules_for_lit`?
         p.op_term("7.4.68", i, op::text("viT"));
-    } else if SHAR.contains_opt(abhyasa.adi()) && KHAY.contains_opt(abhyasa.get(1)) {
+    }
+
+    let abhyasa = p.get(i)?;
+    if SHAR.contains_opt(abhyasa.adi()) && KHAY.contains_opt(abhyasa.get(1)) {
         let mut abhyasa = &mut p.get_mut(i)?;
         let res = try_shar_purva(&abhyasa.text);
         if res != abhyasa.text {

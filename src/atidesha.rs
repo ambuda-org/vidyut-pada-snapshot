@@ -22,14 +22,13 @@ lazy_static! {
 pub fn is_kutadi(t: &Term) -> bool {
     // Check number explicitly because some roots are duplicated within tudAdi
     // but outside this gana (e.g. juq).
-    t.has_gana(6) && t.has_u_in(&gana::KUT_ADI)
+    t.has_gana(6) && t.has_u_in(gana::KUT_ADI)
 }
 
-fn run_before_attva_at_index(p: &mut Prakriya, i: usize) {
-    let n = match p.view(i + 1) {
-        Some(x) => x,
-        None => return,
-    };
+fn run_before_attva_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
+    let dhatu = p.get(i)?;
+    let n = p.view(i + 1)?;
+
     let add_nit = op::add_tag(T::Nit);
     let add_kit = op::add_tag(T::kit);
 
@@ -39,29 +38,31 @@ fn run_before_attva_at_index(p: &mut Prakriya, i: usize) {
     let gan_kutadi = p.has(i, |t| t.has_u("gAN") || is_kutadi(t));
     if gan_kutadi && !n.any(&[T::Rit, T::Yit]) {
         p.op_term("1.2.1", i + 1, add_nit);
-    } else if p.has(i, f::text("vij")) && iti {
+    } else if dhatu.has_text("vij") && iti {
         p.op_term("1.2.2", n.end(), add_nit);
-    } else if p.has(i, f::text("UrRu")) && iti {
+    } else if dhatu.has_text("UrRu") && iti {
         p.op_optional("1.2.3", op::t(n.end(), add_nit));
     } else if n.has_tag(T::Sarvadhatuka) && !n.has_tag(T::pit) {
+        let n = p.view(i + 1)?;
         p.op_term("1.2.4", n.end(), add_nit);
-    } else if p.has(i, |t| t.has_tag(T::Dhatu) && !f::is_samyoganta(t))
+    } else if dhatu.has_tag(T::Dhatu) && !f::is_samyoganta(dhatu)
         && n.has_lakshana("li~w")
         && !n.has_tag(T::pit)
     {
         p.op_term("1.2.5", n.end(), add_kit);
-    } else if p.has(i, f::text_in(&["BU", "inD"])) && n.has_lakshana("li~w") {
+    } else if dhatu.has_text_in(&["BU", "inD"]) && n.has_lakshana("li~w") {
         p.op_term("1.2.6", n.end(), add_kit);
-    } else if n.has_lakshana("li~w") && p.has(i, f::text_in(&["SranT", "granT", "danB", "svanj"])) {
+    } else if n.has_lakshana("li~w") && dhatu.has_text_in(&["SranT", "granT", "danB", "svanj"]) {
         // TODO: rule seems obligatory; where is optionality defined?
         p.op_optional("1.2.6.v1", op::t(n.end(), add_kit));
     }
 
-    let n = p.view(i + 1).unwrap();
-    let last = p.terms().last().unwrap();
+    let n = p.view(i + 1)?;
+    let last = p.terms().last()?;
     let lin_or_sic = last.has_lakshana("li~N") || n.has_u("si~c");
+
     if last.has_tag(T::Atmanepada) && lin_or_sic && n.has_adi(&*JHAL) {
-        let t = &p.terms()[i];
+        let t = p.get(i)?;
         let is_dhatu = t.has_tag(T::Dhatu);
         let i_n = n.end();
         let is_ik_halanta = t.has_upadha(&*IK) && t.has_antya(&*HAL);
@@ -71,6 +72,8 @@ fn run_before_attva_at_index(p: &mut Prakriya, i: usize) {
             p.op_term("1.2.12", i_n, op::add_tag(T::kit));
         }
     }
+
+    Some(())
 }
 
 /// Runs most atidesha rules.

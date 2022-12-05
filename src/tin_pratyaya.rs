@@ -186,7 +186,7 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
             p.op("3.4.92", |p| {
                 let agama = Term::make_agama("Aw");
                 // Add pit to the pratyaya, not the Agama.
-                p.set(i, |t| t.add_tag(T::Pit));
+                p.set(i, |t| t.add_tag(T::pit));
                 p.insert_before(i, agama);
             });
             it_samjna::run(p, i)?;

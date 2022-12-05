@@ -255,10 +255,6 @@ fn maybe_add_am_pratyaya_for_lit(p: &mut Prakriya) -> Option<()> {
     } else if dhatu.has_text_in(&["day", "ay", "As"]) {
         p.op("3.1.37", add_aam);
     } else if dhatu.has_text_in(&["uz", "jAgf"]) || (dhatu.has_text("vid") && dhatu.has_gana(2)) {
-        let mut aam = Term::make_upadesha("Am");
-        aam.add_tags(&[T::Pratyaya]);
-        p.insert_after(i, aam);
-
         let used = p.op_optional("3.1.38", add_aam);
         if used {
             let dhatu = p.get(i)?;

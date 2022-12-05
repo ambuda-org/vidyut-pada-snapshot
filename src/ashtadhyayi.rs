@@ -81,7 +81,6 @@ pub fn derive_tinanta(
     }
 
     angasya::hacky_before_dvitva(p);
-
     dvitva::run(p);
     samprasarana::run_for_abhyasa(p);
 
@@ -102,6 +101,7 @@ pub fn derive_tinanta(
 
     // Apply sandhi rules and return.
     ac_sandhi::run(p);
+    // Finally, run the tripAdi.
     tripadi::run(p);
 
     Ok(())

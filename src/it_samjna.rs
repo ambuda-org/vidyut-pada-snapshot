@@ -141,8 +141,8 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
             if temp.strip_prefix(it).is_some() {
                 temp_slice = &temp_slice[it.len()..];
                 t.add_tag(tag);
+                matched = true;
             }
-            matched = true;
         }
         if matched {
             p.step("1.3.5");
