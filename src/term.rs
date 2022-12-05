@@ -3,6 +3,10 @@ use crate::sounds::Pattern;
 use compact_str::CompactString;
 use enumset::EnumSet;
 
+/// A term in the prakriya.
+///
+/// `Term` is a text string with additional metadata. It is a generalized version of an *upadesha*
+/// that also stores abhyAsas and other strings that don't have an upadesha associated with them.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Term {
     pub u: Option<CompactString>,
@@ -10,12 +14,11 @@ pub struct Term {
     pub tags: EnumSet<Tag>,
     pub gana: Option<i32>,
     pub number: Option<i32>,
-    pub lakshana: Vec<String>,
+    pub lakshana: Vec<CompactString>,
 }
 
 impl Term {
-    // Constructors
-
+    /// Creates a new upadesha.
     pub fn make_upadesha(s: &str) -> Self {
         Term {
             u: Some(CompactString::from(s)),
@@ -27,6 +30,7 @@ impl Term {
         }
     }
 
+    /// Creates a new text string. The upadesha is left unset.
     pub fn make_text(s: &str) -> Self {
         Term {
             u: None,
@@ -38,6 +42,7 @@ impl Term {
         }
     }
 
+    /// Creates a new dhatu.
     pub fn make_dhatu(s: &str, gana: i32, number: i32) -> Self {
         let mut t = Term::make_upadesha(s);
         t.gana = Some(gana);
@@ -45,6 +50,7 @@ impl Term {
         t
     }
 
+    /// Creates a new Agama.
     pub fn make_agama(s: &str) -> Self {
         let mut t = Term::make_upadesha(s);
         t.add_tag(Tag::Agama);
@@ -53,18 +59,22 @@ impl Term {
 
     // Sound selectors
 
+    /// Returns the first sound in the term if it exists.
     pub fn adi(&self) -> Option<char> {
         self.text.chars().next()
     }
 
+    /// Returns the last sound in the term if it exists.
     pub fn antya(&self) -> Option<char> {
         self.text.chars().rev().next()
     }
 
+    /// Returns the penultimate sound in the term if it exists.
     pub fn upadha(&self) -> Option<char> {
         self.text.chars().rev().nth(1)
     }
 
+    /// Returns the sound at index `i` if it exists.
     pub fn get(&self, i: usize) -> Option<char> {
         self.text.as_bytes().get(i).map(|x| *x as char)
     }
@@ -78,18 +88,22 @@ impl Term {
         }
     }
 
+    /// Returns whether the term has a first sound that matches the given pattern.
     pub fn has_adi(&self, p: impl Pattern) -> bool {
         self.matches_sound_pattern(self.adi(), p)
     }
 
+    /// Returns whether the term has a final sound that matches the given pattern.
     pub fn has_antya(&self, pattern: impl Pattern) -> bool {
         self.matches_sound_pattern(self.antya(), pattern)
     }
 
+    /// Returns whether the term has a penultimate sound that matches the given pattern.
     pub fn has_upadha(&self, pattern: impl Pattern) -> bool {
         self.matches_sound_pattern(self.upadha(), pattern)
     }
 
+    /// Returns whether the term has a specific upadesha.
     pub fn has_u(&self, s: &str) -> bool {
         match &self.u {
             Some(u) => u == &s,
@@ -97,6 +111,7 @@ impl Term {
         }
     }
 
+    /// Returns whether the term has an upadesha in the specified list.
     pub fn has_u_in(&self, items: &[&str]) -> bool {
         match &self.u {
             Some(u) => items.contains(&u.as_str()),
@@ -105,11 +120,11 @@ impl Term {
     }
 
     pub fn has_lakshana(&self, u: &str) -> bool {
-        self.lakshana.iter().any(|s| s == u)
+        self.lakshana.iter().any(|s| s == &u)
     }
 
-    pub fn has_lakshana_in(&self, u: &[&str]) -> bool {
-        self.lakshana.iter().any(|s| u.contains(&s.as_str()))
+    pub fn has_lakshana_in(&self, us: &[&str]) -> bool {
+        self.lakshana.iter().any(|s| us.contains(&s.as_str()))
     }
 
     pub fn has_text(&self, text: &str) -> bool {
@@ -124,24 +139,29 @@ impl Term {
         terms.iter().any(|t| self.text.starts_with(t))
     }
 
+    /// Returns whether the term has the given root gaNa. If the gaNa is undefined, returns false.
     pub fn has_gana(&self, gana: i32) -> bool {
         self.gana == Some(gana)
     }
 
+    /// Returns whethre the term's text is empty.
     pub fn is_empty(&self) -> bool {
         self.text.is_empty()
     }
 
     // Tags
 
+    /// Returns whether the term has all of the tags provided.
     pub fn all(&self, tags: &[Tag]) -> bool {
         tags.iter().all(|t| self.tags.contains(*t))
     }
 
+    /// Returns whether the term has any of the tags provided.
     pub fn has_tag_in(&self, tags: &[Tag]) -> bool {
         tags.iter().any(|t| self.tags.contains(*t))
     }
 
+    /// Returns whether the term has the given tag.
     pub fn has_tag(&self, tag: Tag) -> bool {
         self.tags.contains(tag)
     }
@@ -171,19 +191,26 @@ impl Term {
         }
     }
 
-    pub fn set_upadesha(&mut self, s: &str) {
+    /// Sets the term's upadesha to the given value.
+    pub fn set_u(&mut self, s: &str) {
         self.u = Some(CompactString::from(s));
-        self.text = CompactString::from(s);
     }
 
+    /// Sets the term's text to the given value.
     pub fn set_text(&mut self, s: &str) {
-        self.text = CompactString::from(s);
+        self.text.replace_range(.., s);
     }
 
     pub fn find_and_replace_text(&mut self, needle: &str, sub: &str) {
         // Ugly, but it works
         let alloc = self.text.replace(needle, sub);
         self.text = CompactString::from(&alloc);
+    }
+
+    pub fn save_lakshana(&mut self) {
+        if let Some(u) = &self.u {
+            self.lakshana.push(CompactString::new(u));
+        }
     }
 
     pub fn add_tag(&mut self, tag: Tag) {
@@ -207,6 +234,16 @@ impl Term {
     }
 }
 
+/// A `Term` with its Agamas.
+///
+/// `TermView` bundles a `Term` with its agamas.
+///
+/// # Construction rules
+/// TODO.
+///
+/// # Examples
+/// - isIDvam [i + sIyu~w + Dvam]
+/// - isya [i + sya]
 #[derive(Debug)]
 pub struct TermView<'a> {
     terms: &'a Vec<Term>,
@@ -260,10 +297,12 @@ impl<'a> TermView<'a> {
         self.is_empty() && self.ends_word()
     }
 
+    /// Returns whether this view has any text.
     pub fn is_empty(&self) -> bool {
         self.slice().iter().all(|t| t.text.is_empty())
     }
 
+    /// Returns whether this view is at the very end of the given word.
     pub fn ends_word(&self) -> bool {
         self.end == self.terms.len() - 1
     }
@@ -363,15 +402,15 @@ mod tests {
 
     fn gam() -> Term {
         let mut t = Term::make_upadesha("gamx~");
-        t.text = CompactString::from("gam");
+        t.set_text("gam");
         t
     }
 
     #[test]
     fn test_make_upadesha() {
-        let t = Term::make_upadesha("Satf");
-        assert!(t.has_u("Satf"));
-        assert!(t.has_text("Satf"));
+        let t = gam();
+        assert!(t.has_u("gamx~"));
+        assert!(t.has_text("gam"));
     }
 
     #[test]
@@ -402,13 +441,13 @@ mod tests {
     fn test_mutators() {
         let mut t = gam();
 
-        assert!(t.text == "gam");
+        assert!(t.has_text("gam"));
         t.set_adi("x");
         t.set_upadha("y");
         t.set_antya("z");
         assert!(t.has_adi('x'));
         assert!(t.has_upadha('y'));
         assert!(t.has_antya('z'));
-        assert!(t.text == "xyz");
+        assert!(t.has_text("xyz"));
     }
 }

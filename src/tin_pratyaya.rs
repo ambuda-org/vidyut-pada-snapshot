@@ -20,7 +20,6 @@ use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::term::Term;
-use compact_str::CompactString;
 use std::error::Error;
 
 const TIN_PARA: &[&str] = &["tip", "tas", "Ji", "sip", "Tas", "Ta", "mip", "vas", "mas"];
@@ -152,7 +151,8 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
             p.op(
                 "3.4.87",
                 op::t(i, |t| {
-                    t.set_upadesha("hi");
+                    t.set_u("hi");
+                    t.set_text("hi");
                     t.remove_tag(T::pit);
                 }),
             );

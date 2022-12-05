@@ -19,7 +19,6 @@ use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
 use crate::sup_adesha;
 use crate::term::{Term, TermView};
-use compact_str::CompactString;
 use lazy_static::lazy_static;
 
 lazy_static! {

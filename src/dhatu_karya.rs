@@ -5,7 +5,6 @@ use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::term::Term;
-use compact_str::CompactString;
 
 use std::error::Error;
 

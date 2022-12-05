@@ -26,7 +26,6 @@ use crate::it_samjna;
 use crate::prakriya::{Prakriya, Rule};
 use crate::sounds::is_ac;
 use crate::term::Term;
-use compact_str::CompactString;
 
 /// Wraps a `Term` operator and converts it to a `Prakriya` operator.
 pub fn t(i: usize, f: impl Fn(&mut Term)) -> impl Fn(&mut Prakriya) {
@@ -93,11 +92,9 @@ pub fn text2(rule: Rule, p: &mut Prakriya, i: usize, sub: &'static str) {
 
 pub fn upadesha_no_it(p: &mut Prakriya, i: usize, sub: &str) {
     if let Some(t) = p.get_mut(i) {
-        if let Some(u) = &t.u {
-            t.lakshana.push(u.to_string());
-        }
-        t.u = Some(CompactString::from(sub));
-        t.text = CompactString::from(sub);
+        t.save_lakshana();
+        t.set_u(sub);
+        t.set_text(sub);
     }
 }
 
@@ -111,24 +108,22 @@ pub fn insert_agama_after(p: &mut Prakriya, i: usize, u: &str) {
     p.insert_after(i, agama);
 }
 
+// legacy func that marks the rule after it-samjna-prakarana.
 pub fn upadesha(p: &mut Prakriya, i: usize, sub: &str) {
     if let Some(t) = p.get_mut(i) {
-        if let Some(u) = &t.u {
-            t.lakshana.push(u.to_string());
-        }
-        t.u = Some(CompactString::from(sub));
-        t.text = CompactString::from(sub);
+        t.save_lakshana();
+        t.set_u(sub);
+        t.set_text(sub);
         it_samjna::run(p, i).unwrap();
     }
 }
 
+// upgrade to `upadesha` that marks the rule before it-samjna-prakarana.
 pub fn upadesha_v2(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
     if let Some(t) = p.get_mut(i) {
-        if let Some(u) = &t.u {
-            t.lakshana.push(u.to_string());
-        }
-        t.u = Some(CompactString::from(sub));
-        t.text = CompactString::from(sub);
+        t.save_lakshana();
+        t.set_u(sub);
+        t.set_text(sub);
         p.step(rule);
         it_samjna::run(p, i).unwrap();
     }
@@ -145,11 +140,9 @@ pub fn append_agama(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
 /// Complex op
 pub fn adesha(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
     if let Some(t) = p.get_mut(i) {
-        if let Some(u) = &t.u {
-            t.lakshana.push(u.to_string());
-        }
-        t.u = Some(CompactString::from(sub));
-        t.text = CompactString::from(sub);
+        t.save_lakshana();
+        t.set_u(sub);
+        t.set_text(sub);
         p.step(rule);
         it_samjna::run(p, i).unwrap();
     }
@@ -167,27 +160,18 @@ pub fn yatha<'a>(needle: &str, old: &[&'a str], new: &[&'a str]) -> Option<&'a s
 pub fn upadesha_yatha(p: &mut Prakriya, i: usize, old: &[&str], new: &[&str]) {
     assert_eq!(old.len(), new.len());
     if let Some(t) = p.get_mut(i) {
-        if let Some(u) = &t.u {
-            t.lakshana.push(u.to_string());
+        if t.u.is_some() {
+            t.save_lakshana();
 
             for (i_entry, x) in old.iter().enumerate() {
-                if u == x {
-                    t.set_upadesha(new[i_entry]);
+                if t.has_u(x) {
+                    t.set_text(new[i_entry]);
+                    t.set_u(new[i_entry]);
                     it_samjna::run(p, i).unwrap();
                     return;
                 }
             }
             panic!("Should not have reached here {:?} {:?} {:?}", old, new, t.u);
-        }
-    }
-}
-
-pub fn text_yatha(term: &mut Term, old: &[&str], new: &[&str]) {
-    assert_eq!(old.len(), new.len());
-    for (i, o) in old.iter().enumerate() {
-        if term.text == *o {
-            term.text.replace_range(.., new[i]);
-            return;
         }
     }
 }

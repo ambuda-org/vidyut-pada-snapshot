@@ -24,7 +24,6 @@ use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
 use crate::term::Term;
-use compact_str::CompactString;
 use lazy_static::lazy_static;
 use std::error::Error;
 

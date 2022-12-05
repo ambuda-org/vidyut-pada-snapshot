@@ -40,9 +40,9 @@ fn do_dvitva(rule: Rule, p: &mut Prakriya, i: usize) -> Option<()> {
 
         // The structure here is workaround for a Rust compile issue.
         if ni.has_u("Ric") {
-            third.u = Some(CompactString::from("Ric"));
+            third.set_u("Ric");
         } else {
-            third.u = Some(CompactString::from("RiN"));
+            third.set_u("RiN");
         }
         third.add_tag(T::Dhatu);
 
