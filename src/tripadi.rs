@@ -71,28 +71,29 @@ fn try_na_lopa(p: &mut Prakriya) {
 /// Example: girati -> gilati.
 ///
 /// (8.2.18 - 8.2.20)
-fn try_change_r_to_l(p: &mut Prakriya) {
+fn try_change_r_to_l(p: &mut Prakriya) -> Option<()> {
     let do_ra_la = |t: &mut Term| {
         t.find_and_replace_text("f", "x");
         t.find_and_replace_text("r", "l");
     };
 
     for i in 0..p.terms().len() {
-        let n = i + 1;
-        if p.has(i, |t| {
-            t.has_u_in(&["kfpU~\\", "kfpa~\\"]) && !t.has_gana(10)
-        }) {
-            // HACK to exclude kfpa (cur-gana root).
-            // TODO: why is this needed?
+        let x = p.get(i)?;
+        let y = p.get(i + 1)?;
+
+        if x.has_u_in(&["kfpU~\\", "kfpa~\\", "kfpa~"]) {
             p.op("8.2.18", op::t(i, do_ra_la));
-        } else if p.has(i, f::u("gF")) && p.has(n, f::u("yaN")) {
-            p.op("8.2.20", op::t(i, do_ra_la));
-        } else if p.has(i, |t| t.has_u("gF") && t.gana == Some(6)) && p.has(n, |t| t.has_adi(&*AC))
-        {
-            // TODO: where is it specified that this is only for gF/girati?
-            p.op("8.2.21", op::t(i, do_ra_la));
+        } else if x.has_u("gF") {
+            if y.has_u("yaN") {
+                p.op("8.2.20", op::t(i, do_ra_la));
+            } else if x.has_gana(6) && x.has_adi(&*AC) {
+                // TODO: why only gana 6?
+                p.op_optional("8.2.21", op::t(i, do_ra_la));
+            }
         }
     }
+
+    Some(())
 }
 
 /// Runs rules that perform `lopa` for samyogas and `s`.
@@ -349,13 +350,11 @@ fn try_ch_to_s(p: &mut Prakriya) {
         }
 
         // HACK: ugly implementation.
-        if x.text.ends_with("tC") {
+        if let Some(prefix) = x.text.strip_suffix("tC") {
             // TODO: seems implied, not sure.
+            let n = prefix.len();
             p.op_term("8.2.36", i, |t| {
-                if let Some(prefix) = t.text.strip_prefix("tC") {
-                    t.text.truncate(prefix.len());
-                    t.text += "z";
-                }
+                t.text.replace_range(n.., "z");
             });
         } else {
             p.op_term("8.2.36", i, op::antya("z"));
