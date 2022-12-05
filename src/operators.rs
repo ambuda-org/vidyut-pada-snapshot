@@ -62,7 +62,7 @@ pub fn mit(sub: &'static str) -> impl Fn(&mut Term) {
     |t| {
         let text = &t.text;
         if let Some(i) = text.rfind(is_ac) {
-            t.text = CompactString::from(&text[..=i]) + sub + &text[i + 1..];
+            t.text.replace_range(i+1..i+1, sub);
         }
     }
 }
@@ -76,14 +76,14 @@ pub fn ti(sub: &'static str) -> impl Fn(&mut Term) {
     move |t| {
         let text = &t.text;
         if let Some(i) = text.rfind(is_ac) {
-            t.text = CompactString::from(&text[..i]) + sub;
+            t.text.replace_range(i.., sub);
         }
     }
 }
 
 /// Replaces all of the text of the given term.
 pub fn text(sub: &'static str) -> impl Fn(&mut Term) {
-    move |t| t.text = CompactString::from(sub)
+    move |t| t.text.replace_range(.., sub)
 }
 
 /// Replaces all of the text in the given term.
@@ -186,7 +186,7 @@ pub fn text_yatha(term: &mut Term, old: &[&str], new: &[&str]) {
     assert_eq!(old.len(), new.len());
     for (i, o) in old.iter().enumerate() {
         if term.text == *o {
-            term.text = CompactString::from(new[i]);
+            term.text.replace_range(.., new[i]);
             return;
         }
     }
@@ -197,7 +197,7 @@ pub fn text_yatha(term: &mut Term, old: &[&str], new: &[&str]) {
 
 /// Deletes all of the text in the given term.
 pub fn lopa(t: &mut Term) {
-    t.text = CompactString::from("");
+    t.text.clear();
 }
 
 /// Delete all of the text in the given term through *luk*.

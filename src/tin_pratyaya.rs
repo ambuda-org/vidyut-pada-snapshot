@@ -171,9 +171,9 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
                 p.set(i, |t| {
                     let n = t.text.len();
                     if t.text.ends_with("se") {
-                        t.text = CompactString::from(&t.text[..n - 2]) + "sva";
+                        t.text.replace_range(n-2.., "sva");
                     } else {
-                        t.text = CompactString::from(&t.text[..n - 2]) + "vam";
+                        t.text.replace_range(n-2.., "vam");
                     }
                 });
                 p.step("3.4.91")

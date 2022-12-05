@@ -334,8 +334,8 @@ fn try_shiti(p: &mut Prakriya) {
         // TODO: A-cam
         p.op_term("7.3.75", i, |t| {
             match t.text.as_str() {
-                "zWiv" => t.text = CompactString::from("zWIv"),
-                "klam" => t.text = CompactString::from("klAm"),
+                "zWiv" => t.text.replace_range(.., "zWIv"),
+                "klam" => t.text.replace_range(.., "klAm"),
                 _ => (),
             };
         });

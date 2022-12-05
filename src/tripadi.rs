@@ -349,7 +349,8 @@ fn try_ch_to_s(p: &mut Prakriya) {
             // TODO: seems implied, not sure.
             p.op_term("8.2.36", i, |t| {
                 if let Some(prefix) = t.text.strip_prefix("tC") {
-                    t.text = CompactString::from(prefix) + "z";
+                    t.text.truncate(prefix.len());
+                    t.text += "z";
                 }
             });
         } else {
@@ -556,9 +557,11 @@ fn try_ra_lopa(p: &mut Prakriya) {
         if has_ru && is_padanta {
             p.op_term("8.3.15", i, |t| {
                 if let Some(prefix) = t.text.strip_suffix("ru~") {
-                    t.text = CompactString::from(prefix) + "H";
+                    t.text.truncate(prefix.len());
+                    t.text += "H";
                 } else if let Some(prefix) = t.text.strip_suffix('r') {
-                    t.text = CompactString::from(prefix) + "H";
+                    t.text.truncate(prefix.len());
+                    t.text += "H";
                 }
             });
         }

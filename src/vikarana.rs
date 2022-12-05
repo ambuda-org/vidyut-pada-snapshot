@@ -500,7 +500,7 @@ pub fn run(p: &mut Prakriya) -> Result<(), Box<dyn Error>> {
         None => return Ok(()),
     };
     if p.has(i, |t| t.text == "gA") && p.has(i + 1, |t| t.text == "a") {
-        p.set(i + 1, |t| t.text = CompactString::from("".to_string()));
+        p.set(i + 1, |t| t.text.clear());
         p.step("6.1.101")
     }
 

@@ -74,9 +74,9 @@ fn satva_and_natva(p: &mut Prakriya, i: usize) -> Option<()> {
         } else if dhatu.has_prefix_in(&["zw", "zW", "zR"]) {
             // Varttika -- also change next sound
             match &dhatu.text[..2] {
-                "zw" => dhatu.text = CompactString::from("st") + &dhatu.text[2..],
-                "zW" => dhatu.text = CompactString::from("sT") + &dhatu.text[2..],
-                "zR" => dhatu.text = CompactString::from("sn") + &dhatu.text[2..],
+                "zw" => dhatu.text.replace_range(..2, "st"),
+                "zW" => dhatu.text.replace_range(..2, "sT"),
+                "zR" => dhatu.text.replace_range(..2, "sn"),
                 _ => (),
             };
             dhatu.add_tag(T::FlagAdeshadi);
