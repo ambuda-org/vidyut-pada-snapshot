@@ -576,7 +576,7 @@ fn try_change_dhatu_before_y(p: &mut Prakriya) -> Option<()> {
             if f::is_samyogadi(dhatu) || dhatu.has_text("f") {
                 // smaryate, aryate, ...
                 p.op_term("7.4.29", i, op::antya("ar"));
-            } else if is_sha_or_yak || is_ardhadhatuka_lin {
+            } else if n.has_adi('y') && (is_sha_or_yak || is_ardhadhatuka_lin) {
                 // kriyate, kriyAt, ...
                 p.op_term("7.4.28", i, op::antya("ri"));
             } else if n.has_adi('y') || n.has_u("cvi") {
@@ -941,10 +941,13 @@ fn try_cani_before_guna(p: &mut Prakriya) -> Option<()> {
 
     // 7.4.7 blocks guna.
     if dhatu.has_upadha(&*FF) && is_nici && is_cani {
-        p.op_term("7.4.7", i, |t| {
-            op::upadha("f")(t);
-            t.add_tag(T::FlagGunaApavada);
-        });
+        p.op_optional(
+            "7.4.7",
+            op::t(i, |t| {
+                t.set_upadha("f");
+                t.add_tag(T::FlagGunaApavada);
+            }),
+        );
     }
 
     let dhatu = p.get(i)?;
@@ -953,7 +956,7 @@ fn try_cani_before_guna(p: &mut Prakriya) -> Option<()> {
         p.op_optional(
             "7.4.12",
             op::t(i, |t| {
-                op::antya("f")(t);
+                t.set_antya("f");
                 t.add_tag(T::FlagGunaApavada);
             }),
         );

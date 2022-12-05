@@ -89,7 +89,8 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
             num_matches += 1;
         } else {
             let actual = padas.join(" | ");
-            println!("[ FAIL ]  {code:<10} {dhatu:<10} {pada} ({actual})");
+            let la = &r[4];
+            println!("[ FAIL ]  {code:<10} {dhatu:<10} {la:<10} {pada} ({actual})");
         }
 
         if n >= limit {

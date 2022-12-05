@@ -247,7 +247,8 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
         it = optional_set("7.2.45", p);
     } else if anga.has_u_in(ishu_saha) && n.has_adi('t') {
         it = optional_anit("7.2.48", p);
-    } else if anga.has_u_in(krta_crta) && se && !n.has_u("si~c") {
+    } else if anga.has_text_in(krta_crta) && se && !n.has_u("si~c") {
+        it = optional_anit("7.2.57", p);
     } else if anga.text == "gam" && antya_para && se {
         it = It::Set("7.2.58");
     } else if anga.has_u_in(gana::VRDBHYAH) && anga.has_gana(1) && antya_para && se {
