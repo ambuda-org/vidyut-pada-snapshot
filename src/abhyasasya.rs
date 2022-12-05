@@ -64,7 +64,7 @@ fn try_shar_purva(text: &str) -> CompactString {
 /// Constraints:
 /// - must follow 7.4.1 etc. which change the dhatu vowel before `caN`.
 /// - must follow guna of the dhatu vowel, which affects 7.4.1 etc. above.
-pub fn run_for_sani_cani(p: &mut Prakriya) -> Option<()> {
+pub fn run_for_sani_or_cani(p: &mut Prakriya) -> Option<()> {
     let i = p.find_first(T::Abhyasa)?;
     let i_abhyasta = p.find_last(T::Abhyasta)?;
 
@@ -83,7 +83,7 @@ pub fn run_for_sani_cani(p: &mut Prakriya) -> Option<()> {
 
     // Run rules that generally apply to san.
     if is_sanvat {
-        if anga.has_antya('a') {
+        if abhyasa.has_antya('a') {
             p.op_term("7.4.79", i, op::antya("i"));
         } else if abhyasa.has_antya(&*UU) && anga.has_adi(&*PU_YAN_J) && anga.get(1)? == 'a' {
             p.op_term("7.4.80", i, op::antya("i"));
@@ -106,10 +106,11 @@ pub fn run_for_sani_cani(p: &mut Prakriya) -> Option<()> {
         }
     }
 
+    let abhyasa = p.get(i)?;
     let anga = p.get(i_abhyasta)?;
     // TODO: scope of this? Sarvadhatuka only?
     if anga.has_u_in(gana::MAN_BADHA) {
-        let sub = al::to_dirgha(anga.antya()?)?;
+        let sub = al::to_dirgha(abhyasa.antya()?)?;
         p.op_term("3.1.6", i, op::antya(&sub.to_string()));
     }
 

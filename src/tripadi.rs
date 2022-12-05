@@ -762,7 +762,9 @@ fn try_to_savarna(p: &mut Prakriya) {
 
     char_rule(
         p,
-        xyz(|x, y, z| HAL.contains_char(x) && YAM.contains_char(y) && YAM.contains_char(z)),
+        xyz(|x, y, z| {
+            HAL.contains_char(x) && YAM.contains_char(y) && YAM.contains_char(z) && y == z
+        }),
         |p, _, i| p.op_optional("8.4.64", |p| set_at(p, i + 1, "")),
     );
 

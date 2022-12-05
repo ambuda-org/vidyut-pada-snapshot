@@ -54,7 +54,7 @@ pub fn derive_tinanta(
 
     // Create the dhatu.
     dhatu_karya::run(p, dhatu, code)?;
-    sanadi::run(p, la)?;
+    sanadi::run(p, la);
 
     // Add the lakAra and convert it to a basic tin ending.
     la_karya::run(p, la)?;

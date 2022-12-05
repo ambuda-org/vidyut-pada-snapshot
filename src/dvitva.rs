@@ -99,31 +99,22 @@ fn _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
         p.step("6.1.5")
 */
 
-pub fn run(p: &mut Prakriya) {
+pub fn run(p: &mut Prakriya) -> Option<()> {
     // Select !pratyaya to avoid sanAdi, which are also labeled as Dhatu.
-    let i = match p
-        .find_last_where(|t| t.has_tag(T::Dhatu) && !t.has_tag_in(&[T::Abhyasta, T::Pratyaya]))
-    {
-        Some(i) => i,
-        None => return,
-    };
-
-    let n = match p.find_next_where(i, |t| !t.has_tag(T::Dhatu)) {
-        Some(i) => p.view(i).unwrap(),
-        None => return,
-    };
-    let i_n = n.start();
+    let i =
+        p.find_last_where(|t| t.has_tag(T::Dhatu) && !t.has_tag_in(&[T::Abhyasta, T::Pratyaya]))?;
 
     let jaksh_adi = &["jakz", "jAgf", "daridrA", "cakAs", "SAs", "dIDI", "vevI"];
     if p.has(i, |t| t.has_text_in(jaksh_adi)) {
         // These are termed abhyasta, but they can still undergo dvitva because
-        // the rules below inherit "anabhyAsasya" from 6.1.8.
+        // the rules below are conditioned specifically on "anabhyAsasya" ("not having an abhyasa")
+        // from 6.1.8.
         p.op_term("6.1.6", i, op::add_tag(T::Abhyasta));
     }
 
-    let n = p.view(i_n).expect("");
-    if n.has_lakshana("li~w") {
-        let dhatu = &p.terms()[i];
+    let n = p.get(i + 1)?;
+    if p.terms().last()?.has_lakshana("li~w") {
+        let dhatu = p.get(i)?;
         // kAshikA:
         //   dayateḥ iti dīṅo grahaṇaṃ na tu daya dāne ityasya.
         //   digyādeśena dvirvacanasya bādhanam iṣyate.
@@ -134,9 +125,12 @@ pub fn run(p: &mut Prakriya) {
         }
     } else if n.has_u_in(&["san", "yaN"]) {
         do_dvitva("6.1.9", p, i);
-    } else if n.first().unwrap().has_tag(T::Slu) {
+    } else if n.has_tag(T::Slu) {
         do_dvitva("6.1.10", p, i);
-    } else if n.has_u("caN") {
+    } else if p.find_next_where(i, |t| t.has_u("caN")).is_some() {
+        // `last()` to avoid `it`.
         do_dvitva("6.1.11", p, i);
     }
+
+    Some(())
 }

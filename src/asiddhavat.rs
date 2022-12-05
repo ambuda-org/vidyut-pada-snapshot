@@ -20,7 +20,6 @@ use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
 use crate::term::{Term, TermView};
-use compact_str::CompactString;
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -57,14 +56,19 @@ fn is_anekac(p: &Prakriya, i: usize) -> bool {
 /// Returns whether the given slice ends in a samyoga.
 fn is_samyogapurva(p: &Prakriya, i: usize) -> bool {
     let mut num_hal = 0_u8;
-    for t in p.terms()[..i].iter().rev() {
+    let mut first = true;
+    for t in p.terms()[..=i].iter().rev() {
         for c in t.text.chars().rev() {
             if HAL.contains_char(c) {
                 num_hal += 1;
                 if num_hal >= 2 {
                     return true;
                 }
+            } else if first {
+                // First vowel is OK.
+                first = false
             } else {
+                // All other vowels should be skipped.
                 return false;
             }
         }
@@ -219,9 +223,9 @@ fn try_run_kniti_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
     }
 
     let anga = p.get(i)?;
-    if anga.has_u("Snam") {
+    if anga.has_tag(T::Snam) {
         p.op_term("6.4.111", i, |t| {
-            t.text = CompactString::from("n");
+            t.find_and_replace_text("na", "n");
         });
     } else if anga.has_u("asa~") {
         p.op_term("6.4.111", i, op::adi(""));
@@ -665,4 +669,28 @@ pub fn run_after_guna(p: &mut Prakriya, i: usize) -> Option<()> {
     }
 
     Some(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_samyogapurva() {
+        let mut p = Prakriya::new();
+        p.push(Term::make_text("ci"));
+        p.push(Term::make_text("kzi"));
+        p.push(Term::make_text("atus"));
+        assert!(is_samyogapurva(&p, 1));
+
+        let mut p = Prakriya::new();
+        p.push(Term::make_text("ji"));
+        p.push(Term::make_text("gi"));
+        p.push(Term::make_text("atus"));
+        assert!(!is_samyogapurva(&p, 1));
+
+        let mut p = Prakriya::new();
+        p.push(Term::make_text("Df"));
+        assert!(!is_samyogapurva(&p, 0));
+    }
 }

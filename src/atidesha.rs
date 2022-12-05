@@ -45,7 +45,8 @@ fn run_before_attva_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
     } else if n.has_tag(T::Sarvadhatuka) && !n.has_tag(T::pit) {
         let n = p.view(i + 1)?;
         p.op_term("1.2.4", n.end(), add_nit);
-    } else if dhatu.has_tag(T::Dhatu) && !f::is_samyoganta(dhatu)
+    } else if dhatu.has_tag(T::Dhatu)
+        && !f::is_samyoganta(dhatu)
         && n.has_lakshana("li~w")
         && !n.has_tag(T::pit)
     {

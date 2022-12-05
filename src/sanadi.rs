@@ -5,14 +5,8 @@ use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::{Prakriya, Rule};
 use crate::term::Term;
-use std::error::Error;
 
-fn add_sanadi(
-    rule: Rule,
-    p: &mut Prakriya,
-    i_dhatu: usize,
-    upadesha: &str,
-) -> Result<(), Box<dyn Error>> {
+fn add_sanadi(rule: Rule, p: &mut Prakriya, i_dhatu: usize, upadesha: &str) {
     p.op(rule, |p| {
         let mut pratyaya = Term::make_upadesha(upadesha);
         pratyaya.add_tags(&[T::Pratyaya]);
@@ -21,18 +15,14 @@ fn add_sanadi(
 
     let i_pratyaya = i_dhatu + 1;
     p.op_term("3.1.32", i_pratyaya, op::add_tag(T::Dhatu));
-    it_samjna::run(p, i_pratyaya)?;
-
-    Ok(())
+    it_samjna::run(p, i_pratyaya).ok().unwrap();
 }
 
 // TODO: 3.1.8 - 3.1.24
 // TODO: 3.1.26 - 3.1.27
-pub fn run(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
-    let i = match p.find_first(T::Dhatu) {
-        Some(i) => i,
-        None => return Ok(()),
-    };
+pub fn run(p: &mut Prakriya, la: La) -> Option<()> {
+    let i = p.find_first(T::Dhatu)?;
+    let dhatu = p.get(i)?;
 
     // These dhatus use their pratyaya optionally if followed by ArdhadhAtuka.
     const AYADAYA: &[&str] = &[
@@ -40,17 +30,16 @@ pub fn run(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
     ];
 
     // `gana` is required so that we can exclude "03.0021 kita~".
-    if p.has(i, |t| {
-        t.has_u_in(&["gupa~\\", "tija~\\", "kita~"]) && t.gana == Some(1)
-    }) {
-        add_sanadi("3.1.5", p, i, "san")?;
+    if dhatu.has_u_in(&["gupa~\\", "tija~\\", "kita~"]) && dhatu.has_gana(1) {
+        add_sanadi("3.1.5", p, i, "san");
         p.set(i + 1, |t| t.add_tag(T::FlagNoArdhadhatuka));
-    } else if p.has(i, |t| t.has_u_in(gana::MAN_BADHA)) {
-        add_sanadi("3.1.6", p, i, "san")?;
+    } else if dhatu.has_u_in(gana::MAN_BADHA) {
+        add_sanadi("3.1.6", p, i, "san");
+        // TODO: optional by extension of "vA" from 3.1.7 per Kashika?
         p.set(i + 1, |t| t.add_tag(T::FlagNoArdhadhatuka));
-    } else if p.has(i, |t| t.gana == Some(10)) {
-        add_sanadi("3.1.25", p, i, "Ric")?;
-    } else if p.has(i, |t| t.has_u_in(AYADAYA)) {
+    } else if dhatu.has_gana(10) {
+        add_sanadi("3.1.25", p, i, "Ric");
+    } else if dhatu.has_u_in(AYADAYA) {
         let mut add_pratyaya = true;
 
         if la.is_ardhadhatuka() {
@@ -63,19 +52,27 @@ pub fn run(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
         }
 
         if add_pratyaya {
-            if p.has(i, |t| {
-                t.has_u_in(&["gupU~", "DUpa~", "vicCa~", "paRa~\\", "pana~\\"])
-            }) {
-                add_sanadi("3.1.28", p, i, "Aya")?;
-            } else if p.has(i, |t| t.has_u("fti")) {
-                add_sanadi("3.1.29", p, i, "IyaN")?;
-            } else if p.has(i, |t| t.has_u("kamu~\\")) {
-                add_sanadi("3.1.30", p, i, "RiN")?;
+            let dhatu = p.get(i)?;
+            if dhatu.has_u_in(&["gupU~", "DUpa~", "vicCa~", "paRa~\\", "pana~\\"]) {
+                add_sanadi("3.1.28", p, i, "Aya");
+            } else if dhatu.has_u("fti") {
+                // ftIyate
+                //
+                // From the bAlamanorAma:
+                //
+                // takārānto dhāturayamikā nirdiṣṭo na tvikārāntaḥ । idantatva hi
+                // savarṇadīrgheṇaiva siddhe īyaṅiti īkāroccāraṇavaiyarthyāt । naca idantatve sati
+                // 'eranekācaḥ' iti yaṇ syāditi vācyam, evamapi 'ṛterṅyaḥ' iti ṅyapratyaye
+                // kṛte "akṛtsārvadhātukayordīrgha" iti dīrgheṇaiva siddhe iyaṅvidhivaiyarthyāt
+                p.set(i, |t| t.set_antya(""));
+                add_sanadi("3.1.29", p, i, "IyaN");
+            } else if dhatu.has_u("kamu~\\") {
+                add_sanadi("3.1.30", p, i, "RiN");
             }
         }
     }
 
-    Ok(())
+    Some(())
 }
 
 #[cfg(test)]
