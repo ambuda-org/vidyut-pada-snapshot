@@ -107,6 +107,7 @@ fn try_lit_it(p: &mut Prakriya, i: usize) -> bool {
     };
 
     if !n.has_lakshana("li~w") {
+        p.debug(format!("{:?}", p.terms()));
         return false;
     }
 

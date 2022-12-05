@@ -86,7 +86,7 @@ fn try_change_r_to_l(p: &mut Prakriya) -> Option<()> {
         } else if x.has_u("gF") {
             if y.has_u("yaN") {
                 p.op("8.2.20", op::t(i, do_ra_la));
-            } else if x.has_gana(6) && x.has_adi(&*AC) {
+            } else if x.has_gana(6) && y.has_adi(&*AC) {
                 // TODO: why only gana 6?
                 p.op_optional("8.2.21", op::t(i, do_ra_la));
             }
@@ -458,7 +458,7 @@ fn per_term_1c(p: &mut Prakriya) -> Option<()> {
 
     xy_rule(
         p,
-        |x, y| x.has_tag(T::Dhatu) && x.has_antya('m') && (y.has_adi('m') || y.has_adi('n')),
+        |x, y| x.has_tag(T::Dhatu) && x.has_antya('m') && (y.has_adi('m') || y.has_adi('v')),
         |p, i, _| {
             p.op_term("8.2.65", i, op::antya("n"));
         },
