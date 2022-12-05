@@ -89,9 +89,9 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) -> Option<()> {
     let to_ghasl = |p: &mut Prakriya| op::upadesha(p, i, "Gasx~");
     if dhatu.has_text("ad") {
         if n.has_lakshana_in(&["lu~N", "san"]) {
-            p.op("2.4.37", to_ghasl);
+            op::upadesha_v2("2.4.37", p, i, "Gasx~");
         } else if n.has_u_in(&["GaY", "ap"]) {
-            p.op("2.4.38", to_ghasl);
+            op::upadesha_v2("2.4.38", p, i, "Gasx~");
         } else if n.has_lakshana("li~w") {
             p.op_optional("2.4.40", to_ghasl);
         } else if n.has_u("lyap") || (n.has_adi('t') && n.has_tag(T::kit)) {
