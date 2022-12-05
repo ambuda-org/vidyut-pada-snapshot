@@ -97,7 +97,11 @@ fn try_general_anit(p: &mut Prakriya, i: usize) -> bool {
 
 /// Runs iT rules specific to liT. Returns whether the iT-Agama procedure is complete.
 fn try_lit_it(p: &mut Prakriya, i: usize) -> bool {
-    let n = match p.view(i + 1) {
+    let i_n = match p.find_next_where(i, |t| !t.is_empty()) {
+        Some(i) => i,
+        None => return false,
+    };
+    let n = match p.view(i_n) {
         Some(x) => x,
         None => return false,
     };

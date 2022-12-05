@@ -553,7 +553,8 @@ pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {
 // (6.4.77 - 6.4.100)
 fn run_for_final_i_or_u(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
-    let n = p.view(i + 1)?;
+    let j = p.find_next_where(i, |t| !t.is_empty())?;
+    let n = p.view(j)?;
 
     if !anga.has_antya(&*I_U) || !n.has_adi(&*AC) {
         return None;
@@ -569,7 +570,7 @@ fn run_for_final_i_or_u(p: &mut Prakriya, i: usize) -> Option<()> {
 
     let is_asamyogapurva = !is_samyogapurva(p, i);
     let anga = p.get(i)?;
-    let n = p.view(i + 1)?;
+    let n = p.view(j)?;
     if anga.has_text("strI") {
         if n.last()?.has_u_in(&["am", "Sas"]) {
             p.op_optional("6.4.80", op::t(i, op::antya("iy")));
@@ -598,7 +599,7 @@ fn run_for_final_i_or_u(p: &mut Prakriya, i: usize) -> Option<()> {
         p.op("6.4.77", |p| to_iy_uv(p, i));
     } else {
         let abhyasa = p.get(i)?;
-        let next = p.get(i + 1)?;
+        let next = p.get(j)?;
         let x = abhyasa.antya()?;
         let y = next.adi()?;
         // HACKY implementation of asavarna

@@ -28,7 +28,7 @@ lazy_static! {
     static ref AC: SoundSet = s("ac");
     static ref CU: SoundSet = s("cu~");
     static ref IN2: SoundSet = s("iR2");
-    static ref INKU: SoundSet = s("iR2 ku~");
+    static ref IN_KU: SoundSet = s("iR2 ku~");
     static ref JHAL: SoundSet = s("Jal");
     static ref JHAR: SoundSet = s("Jar");
     static ref JHASH: SoundSet = s("JaS");
@@ -195,7 +195,7 @@ fn try_lopa_of_samyoganta_and_s(p: &mut Prakriya) {
 /// Example: muh + ta -> mugdha.
 ///
 /// (8.2.31 - 8.2.35)
-fn try_ha_adesha(p: &mut Prakriya) {
+fn try_ha_adesha(p: &mut Prakriya) -> Option<()> {
     lazy_static! {
         static ref JHAL: SoundSet = s("Jal");
     }
@@ -206,12 +206,14 @@ fn try_ha_adesha(p: &mut Prakriya) {
 
     for i in 0..p.terms().len() {
         let is_dhatu = p.has(i, f::tag(T::Dhatu));
-        let jhali = p.has(i + 1, |t| JHAL.contains_opt(t.adi()));
+        let j = p.find_next_where(i, |t| !t.is_empty())?;
+
+        let jhali = p.has(j, |t| JHAL.contains_opt(t.adi()));
         let ante = i == p.terms().len() - 1;
 
         if jhali || ante {
             if is_dhatu {
-                let dhatu = &p.terms()[i];
+                let dhatu = p.get(i)?;
                 if dhatu.has_u_in(druha_muha) {
                     p.op_optional("8.2.33", |p| p.set(i, op::antya("G")));
                 } else if dhatu.has_u("Ra\\ha~^") {
@@ -228,6 +230,8 @@ fn try_ha_adesha(p: &mut Prakriya) {
             }
         }
     }
+
+    Some(())
 }
 
 fn try_add_final_r(p: &mut Prakriya) -> Option<()> {
@@ -426,7 +430,6 @@ fn xy_rule(
         let y = p.get(j)?;
         if filter(x, y) {
             op(p, i, j);
-            break;
         }
     }
     Some(())
@@ -569,20 +572,29 @@ fn try_ra_lopa(p: &mut Prakriya) {
 }
 
 fn try_murdhanya_for_s(p: &mut Prakriya) -> Option<()> {
-    for i in 0..p.terms().len() {
-        let j = i + 1;
-        let x = p.get(i)?;
-        let y = p.get(j)?;
-
-        let apadanta = !y.text.is_empty();
-        // HACK: don't include Agama.
-        let adesha_pratyaya = y.has_tag_in(&[T::Pratyaya, T::FlagAdeshadi, T::Agama]);
-        if x.has_antya(&*INKU) && y.has_adi('s') && adesha_pratyaya && apadanta {
+    xy_rule(
+        p,
+        |x, y| {
+            let apadanta = !y.text.is_empty();
+            // HACK: don't include Agama.
+            let adesha_pratyaya = y.has_tag_in(&[T::Pratyaya, T::FlagAdeshadi, T::Agama]);
+            x.has_antya(&*IN_KU) && apadanta && adesha_pratyaya && y.has_adi('s')
+        },
+        |p, _, j| {
             p.op_term("8.3.59", j, op::adi("z"));
-        } else if x.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && x.has_upadha(&*INKU) {
+        },
+    );
+
+    xy_rule(
+        p,
+        |x, _| {
+            x.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && x.has_upadha(&*IN_KU) && x.has_antya('s')
+        },
+        |p, i, _| {
             p.op_term("8.3.60", i, op::antya("z"));
-        }
-    }
+        },
+    );
+
     Some(())
 }
 
@@ -729,7 +741,7 @@ fn try_dha_lopa(p: &mut Prakriya) -> Option<()> {
             let x = p.get(i)?;
             // matches aN (no f, x)
             if x.has_antya(&*AN) {
-                if x.has_u_in(&["zaha~", "va\\ha~^"]) {
+                if x.has_u_in(&["zaha~\\", "va\\ha~^"]) {
                     p.op_term("6.3.112", i, op::antya("o"));
                 } else {
                     let sub = al::to_dirgha(x.antya()?)?;

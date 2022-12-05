@@ -61,7 +61,7 @@ pub fn mit(sub: &'static str) -> impl Fn(&mut Term) {
     |t| {
         let text = &t.text;
         if let Some(i) = text.rfind(is_ac) {
-            t.text.replace_range(i+1..i+1, sub);
+            t.text.replace_range(i + 1..i + 1, sub);
         }
     }
 }

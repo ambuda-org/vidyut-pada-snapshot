@@ -32,12 +32,14 @@ fn run_1_3_2(p: &mut Prakriya, i_term: usize, before: &mut CompactString) -> Opt
     let mut i = 0;
     let bytes = before.as_bytes();
     let mut after = CompactString::from("");
+    let mut should_mark_rule = false;
 
     while let Some(u) = bytes.get(i) {
         let c = *u as char;
 
         if AC.contains_char(c) {
             if let Some(b'~') = bytes.get(i + 1) {
+                should_mark_rule = true;
                 // Nasal vowel: parse as it.
                 term.add_tag(T::parse_it(c).ok()?);
                 let maybe_tag = match bytes.get(i + 2) {
@@ -76,9 +78,10 @@ fn run_1_3_2(p: &mut Prakriya, i_term: usize, before: &mut CompactString) -> Opt
     }
 
     if before != &after {
-        before.clear();
-        before.push_str(&after);
-        p.step("1.3.2");
+        before.replace_range(.., &after);
+        if should_mark_rule {
+            p.step("1.3.2");
+        }
     }
 
     Some(())
