@@ -79,6 +79,15 @@ impl La {
     }
 }
 
+/// An annotation on some `Term`.
+///
+/// `Tag` is a generalization of the traditional samjnA concept and models both traditional samjnas
+/// and other long-term dependencies that we need to track during the derivation, such as whether
+/// guna was performed in an earlier rule.
+///
+/// We use Rust's `enumset` crate to efficiently store tags in an unsigned 128-bit integer. The
+/// constraint of `enumset` is that we are allowed at most 128 tags. For now we are well under that
+/// limit, but if needed, we can explore other options.
 #[allow(non_camel_case_types)]
 #[derive(Debug, EnumSetType)]
 pub enum Tag {
@@ -102,50 +111,100 @@ pub enum Tag {
 
     // It
     adit,
+    /// (pratyaya) prevents it-agama for nisthA pratyayas per 7.2.16.
     Adit,
+    /// (dhatu) indicates the mandatory use of num-Agama (vidi~ -> vind).
     idit,
     Idit,
+    /// (pratyaya) optionally allows it-agama for ktvA-pratyaya per 7.2.56.
     udit,
+    /// (pratyaya) optionally allows it-agama per 7.2.44.
     Udit,
     fdit,
+    /// (dhatu) indicates the use of aN-pratyaya in luN-lakAra per 3.1.55. (gamx~ -> agamat)
     xdit,
     edit,
+    /// (dhatu) indicates replacement of the "t" of a nistha-pratyaya with "n" per 8.2.45 (lagta ->
+    /// lagna).
     odit,
+    /// (pratyaya) prevents guna and vrddhi. Causes samprasarana for vac-Adi roots (vac -> ukta)
+    /// per 6.1.15 and grah-Adi roots (grah -> gfhIta) per 6.1.16.
+    ///
+    /// (agama) indicates that the Agama should be added after the term, per 1.1.46.
     kit,
+    /// (taddhita) replaced with "In" per 7.1.2.
     Kit,
+    /// (pratyaya) causes a term's final cavarga sound to shift to kavarga per 7.3.52 (yuj ->
+    /// yoga).
     Git,
+    /// (pratyaya) prevents guna and vrddhi. Causes samprasarana for grah-Adi roots (grah ->
+    /// gfhIta) per 6.1.15.
+    ///
+    /// (dhatu) marks the dhAtu as taking only Atmanepada endings per 1.3.12.
     Nit,
     cit,
+    /// (taddhita) replaced with "Iy" per 7.1.2.
     Cit,
     jit,
+    /// (pratyaya) first letter of the bahuvacana-prathama-parasmaipada tinanta suffix. It is
+    /// replaced with "ant" or similar options per 7.1.3 - 7.1.5 and with "jus" by 3.4.108 -
+    /// 3.4.112.
     Jit,
+    /// (dhatu) marks the dhAtu as taking either parasamaipada or Atmanepada endings per 1.3.72.
+    ///
+    /// (pratyaya) causes vrddhi per 7.2.115.
     Yit,
+    /// (pratyaya) in a lakAra-pratyaya, indicates various transformations such as 3.4.79 and
+    /// 3.4.80.
     wit,
+    /// (adesha) indicates replacement of the "Ti" section of the previous term per 6.4.143.
     qit,
+    /// (taddhita) replaced with "ey" per 7.1.2.
     Qit,
+    /// (pratyaya) causes vrddhi per 7.2.115.
     Rit,
     nit,
+    /// (pratyaya) indicates anudatta accent per 3.1.4. For sarvadhatuka pratyayas, allows guna and
+    /// vrddhi; all other sarvadhatuka pratyayas are marked as `Nit` per 1.2.4 and are thus blocked
+    /// from causing guna and vrddhi changes per 1.1.5.
     pit,
+    /// (taddhita) replaced with "Ayan" per 7.1.2.
     Pit,
+    /// (adesha) indicates insertion after the term's last vowel per 1.1.47.
+    ///
+    /// (dhatu) indicates shortening of the dhatu's penultimate vowel when followed by a
+    /// `RI`-pratyaya per 6.4.92.
     mit,
     lit,
+    /// (adesha) indicates a total replacement per 1.1.55.
+    ///
+    /// (pratyaya) marks the pratyaya as sArvadhAtuka per 3.4.113.
     Sit,
     zit,
 
+    /// (dhatu) indicates the optional use of aN-pratyaya in luN-lakAra per 3.1.57.
     irit,
     YIt,
+    /// (dhatu) allows the krt-pratyaya "Tuc" per 3.1.90.
     wvit,
+    /// (dhatu) allows the krt-pratyaya "ktri" per 3.1.89.
     qvit,
 
-    // Lopa
+    /// Lopa
     Luk,
+    /// (pratyaya) indicates lopa that causes dvitva (hu -> juhoti)
     Slu,
     Lup,
 
-    // Accent
+    /// (dhatu) various functions:
+    /// - blocks it-agama per 7.2.10.
+    /// - causes deletion of a final nasal sound per 6.4.73.
+    /// - optionally allows insertion of "a" under certain conditions per 6.1.59.
     Anudatta,
     Svarita,
+    /// (dhatu) marks the dhatu as taking only Atmanepada endings per 1.3.12.
     anudattet,
+    /// (dhatu) marks the dhatu as taking either parasamaipada or Atmanepada endings per 1.3.72.
     svaritet,
 
     // Pada
@@ -229,6 +288,7 @@ pub enum Tag {
 }
 
 impl Tag {
+    /// Converts a sound representing an it to its corresponding `Tag`.
     pub fn parse_it(it: char) -> Result<Tag, Box<dyn Error>> {
         let res = match it {
             'a' => Tag::adit,
