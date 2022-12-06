@@ -222,7 +222,7 @@ fn try_aa_adesha(p: &mut Prakriya) -> Option<()> {
 
     // Substitution of A for root vowel
     if dhatu.has_antya(&*EC) && !n.has_tag(T::Sit) {
-        if dhatu.has_text("vye") && !n.has_lakshana("li~w") {
+        if dhatu.has_text("vye") && n.has_lakshana("li~w") {
             p.step("6.1.46");
         } else {
             p.op_term("6.1.45", i, op::antya("A"));
