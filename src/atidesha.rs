@@ -84,12 +84,14 @@ pub fn run_before_attva(p: &mut Prakriya) {
     }
 }
 
-/// Runs atidesha rules that must follow rule 6.1.45 (Adeca upadeze 'ziti).
+/// Runs atidesha rules that must follow rule 6.1.45 (Adeca upadeSe 'Siti).
 ///
 /// If we don't use a separate function for these rules, we have a dependency loop:
 ///
 /// 1. iT-Agama --> atidesha & samprasarana
+///    - Rules 1.2.2 ("vija iw") and 1.2.3 condition on `iw`.
 /// 2. atidesha & samprasarana --> Ad-Adesha
+///    - rule 6.1.50 (minAtiminotidINAM lyapi ca) conditions on
 /// 3. Ad-Adesha --> iT-Agama (sak ca)
 ///
 /// So we break the loop by doing the following:

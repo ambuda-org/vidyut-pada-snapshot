@@ -99,7 +99,7 @@ fn try_change_r_to_l(p: &mut Prakriya) -> Option<()> {
 /// Runs rules that perform `lopa` for samyogas and `s`.
 ///
 /// (8.2.23 - 8.2.29)
-fn try_lopa_of_samyoganta_and_s(p: &mut Prakriya) {
+fn try_lopa_of_samyoganta_and_s(p: &mut Prakriya) -> Option<()> {
     // Exception to 8.2.23.
     char_rule(
         p,
@@ -112,15 +112,16 @@ fn try_lopa_of_samyoganta_and_s(p: &mut Prakriya) {
     );
 
     for i in 0..p.terms().len() {
-        let n = i + 1;
-        if p.terms().get(n).is_none() {
-            break;
-        }
+        let n = match p.find_next_where(i, |t| !t.is_empty()) {
+            Some(i) => i,
+            None => break,
+        };
 
-        if p.has(i, |t| t.has_antya('r')) && p.has(n, |t| t.text == "s") && n == p.terms().len() - 1
-        {
+        let x = p.get(i)?;
+        let y = p.get(n)?;
+        if x.has_antya('r') && y.has_text("s") && n == p.terms().len() - 1 {
             p.op_term("8.2.24", i, op::adi(""));
-        } else if p.has(i, |t| t.has_antya('s')) && p.has(i + 1, |t| t.has_adi('D')) {
+        } else if x.has_antya('s') && y.has_adi('D') {
             // Per kAzikA, applies only to s of si~c. But this seems to cause
             // problems e.g. for tAs + Dve.
             p.op_term("8.2.25", i, op::antya(""));
@@ -190,6 +191,8 @@ fn try_lopa_of_samyoganta_and_s(p: &mut Prakriya) {
             true
         },
     );
+
+    Some(())
 }
 
 /// Runs rules that change the final "h" of a dhatu.
@@ -337,12 +340,13 @@ fn try_ch_to_s(p: &mut Prakriya) {
 
     iter_terms(p, |p, i| {
         let x = p.get(i)?;
+        let maybe_j = p.find_next_where(i, |t| !t.is_empty());
         if !(x.has_u_in(vrascha) || x.has_antya('C') || x.has_antya('S')) {
             return None;
         }
 
-        let jhali_ante = match p.get(i + 1) {
-            Some(n) => n.has_adi(&*JHAL),
+        let jhali_ante = match maybe_j {
+            Some(i) => p.get(i)?.has_adi(&*JHAL),
             None => true,
         };
         if !jhali_ante {

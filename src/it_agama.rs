@@ -107,7 +107,6 @@ fn try_lit_it(p: &mut Prakriya, i: usize) -> bool {
     };
 
     if !n.has_lakshana("li~w") {
-        p.debug(format!("{:?}", p.terms()));
         return false;
     }
 
@@ -216,7 +215,7 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
     } else if n.has_u("si~c") {
         if anga.text == "aYj" {
             it = It::Set("7.2.71");
-        } else if n.has_tag(T::Parasmaipada) {
+        } else if p.terms().last().unwrap().has_tag(T::Parasmaipada) {
             if anga.has_u_in(&["zwu\\Y", "zu\\Y", "DUY"]) {
                 it = It::Set("7.2.72");
             } else if anga.has_text_in(&["yam", "ram", "nam"]) {
@@ -239,6 +238,7 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
     }
 
     let anga = &p.terms()[i];
+    let n = p.view(i + 1).unwrap();
     let antya_para = p.terms().last().unwrap().has_tag(T::Parasmaipada);
     let se = n.has_adi('s');
 
@@ -412,24 +412,26 @@ pub fn run_before_attva(p: &mut Prakriya) {
 }
 
 pub fn run_after_attva(p: &mut Prakriya) -> Option<()> {
-    let i_it = p.find_last_where(f::is_it_agama)?;
-
-    if i_it == 0 {
+    if p.find_last_where(f::is_it_agama).is_some() {
         return None;
     }
-    let i = i_it - 1;
 
-    let dhatu = p.get(i)?;
-    let n = p.view(i_it)?;
+    let i = p.find_last(T::Dhatu)?;
+    let n = p.get(i + 1)?;
+
     if !n.has_tag(T::Ardhadhatuka) {
         return None;
     }
 
-    if n.has_u("si~c") {
+    let n = p.get(i + 1)?;
+
+    if n.has_u("si~c") && !n.has_tag(T::Luk) {
+        let dhatu = p.get(i)?;
+        let n = p.view(i + i)?;
         let is_para = p.terms().last()?.has_tag(T::Parasmaipada);
         if is_para && dhatu.has_antya('A') && n.has_adi(&*VAL) {
             p.op("7.2.23", |p| {
-                p.set(i, |t| t.text += "s");
+                p.set(i, |t| t.text.push('s'));
                 op::insert_agama_after(p, i, "iw");
                 it_samjna::run(p, i + 1).unwrap();
             });
