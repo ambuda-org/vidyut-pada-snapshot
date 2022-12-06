@@ -133,11 +133,10 @@ fn _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
         p.step("6.1.5")
 */
 
-pub fn run(p: &mut Prakriya) -> Option<()> {
-    // Select !pratyaya to avoid sanAdi, which are also labeled as Dhatu.
-    let i =
-        p.find_last_where(|t| t.has_tag(T::Dhatu) && !t.has_tag_in(&[T::Abhyasta, T::Pratyaya]))?;
-
+/// Runs dvitva at the given index.
+///
+/// - `i` should point to a dhatu.
+fn run_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
     let jaksh_adi = &["jakz", "jAgf", "daridrA", "cakAs", "SAs", "dIDI", "vevI"];
     if p.has(i, |t| t.has_text_in(jaksh_adi)) {
         // These are termed abhyasta, but they can still undergo dvitva because
@@ -146,8 +145,9 @@ pub fn run(p: &mut Prakriya) -> Option<()> {
         p.op_term("6.1.6", i, op::add_tag(T::Abhyasta));
     }
 
-    let n = p.get(i + 1)?;
-    if p.terms().last()?.has_lakshana("li~w") {
+    // Use a view to include `iw`-Agama.
+    let n = p.view(i + 1)?;
+    if n.has_lakshana("li~w") {
         let dhatu = p.get(i)?;
         // kAshikA:
         //   dayateḥ iti dīṅo grahaṇaṃ na tu daya dāne ityasya.
@@ -167,4 +167,22 @@ pub fn run(p: &mut Prakriya) -> Option<()> {
     }
 
     Some(())
+}
+
+pub fn run(p: &mut Prakriya) -> Option<()> {
+    // Select !pratyaya to avoid sanAdi, which are also labeled as Dhatu.
+    let filter = |t: &Term| t.has_tag(T::Dhatu) && !t.has_tag_in(&[T::Abhyasta, T::Pratyaya]);
+
+    let mut num_loops = 0;
+    let mut i = p.find_first_where(filter)?;
+    loop {
+        run_at_index(p, i);
+
+        num_loops += 1;
+        if num_loops > 10 {
+            panic!("Infinite loop {:?}", p.terms());
+        }
+
+        i = p.find_next_where(i, filter)?;
+    }
 }

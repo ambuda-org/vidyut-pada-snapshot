@@ -275,6 +275,7 @@ fn try_et_adesha_and_abhyasa_lopa_for_lit(p: &mut Prakriya, i: usize) -> Option<
     if dhatu.text == "daB" && dhatu.has_u("danBu~") {
         p.op("6.4.120.v1", op_et_abhyasa_lopa);
     } else if dhatu.has_u("tF") || dhatu.has_text_in(&["Pal", "Baj", "trap"]) {
+        // teratuH, PelatuH, BejatuH, trepatuH
         p.op("6.4.122", op_et_abhyasa_lopa);
     } else if dhatu.has_text("SraT") && dhatu.has_u("SranTa~") {
         p.op("6.4.122.v1", op_et_abhyasa_lopa);
@@ -303,10 +304,10 @@ fn try_et_adesha_and_abhyasa_lopa_for_lit(p: &mut Prakriya, i: usize) -> Option<
 
         if is_eka_hal_madhya && is_a && is_lit && is_anadeshadi {
             if kniti {
-                // `la laB e` -> `leBe`
+                // lalaBe -> leBex
                 p.op("6.4.120", op_et_abhyasa_lopa);
             } else {
-                // `Sa Sak i Ta` -> `SekiTa`
+                // SaSakiTa -> SekiTa
                 p.op("6.4.121", op_et_abhyasa_lopa);
             }
         }
@@ -361,8 +362,10 @@ pub fn run_dirgha(p: &mut Prakriya) -> Option<()> {
 
     if sup.has_text("Am") && has_num {
         if anga.has_text_in(&["tisf", "catasf"]) {
+            // No change.
             p.step("6.4.3")
         } else if anga.has_text("nf") {
+            // nfRAm, nFRAm
             let sub = al::to_dirgha(anga.antya()?)?;
             p.op_optional("6.4.4", op::t(i, op::antya(&sub.to_string())));
         } else if anga.has_antya('n') {
@@ -417,6 +420,7 @@ fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
             p.op_term("6.4.24", i, op::upadha(""));
         }
     } else if anga.has_text_in(&["danS", "sanj", "svanj"]) && n.has_u("Sap") {
+        // daSati
         p.op_term("6.4.25", i, op::upadha(""));
     } else if anga.has_text("ranj") {
         if n.has_u("Sap") {
@@ -429,6 +433,7 @@ fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
     } else if anga.has_text("SAs") && is_kniti && (n.has_u("aN") || n.has_adi(&*HAL)) {
         p.op_term("6.4.34", i, op::upadha("i"));
     } else if anga.has_text("SAs") && n.last()?.has_text("hi") {
+        // SAs + hi -> SAhi (-> SADi)
         p.op_term("6.4.35", i, op::text("SA"));
     }
 
@@ -453,6 +458,7 @@ fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
     let jhali_kniti = n.has_adi(&*JHAL) && is_knit(&n);
 
     if anga.has_text("han") && n.last()?.has_text("hi") {
+        // jahi
         p.op_term("6.4.36", i, op::text("ja"));
     } else if anga.has_text("gam") && n.has_u("kvip") {
         // TODO: other kvi-pratyayas?
@@ -469,6 +475,7 @@ fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
             p.op_term("6.4.42", i, op::antya("A"));
         }
     } else if anga.has_text("tan") && n.has_u("yak") {
+        // tanyate, tAyate
         p.op_optional("6.4.44", op::t(i, op::antya("A")));
     } else if anga.has_text("san") && n.has_u("ktic") {
         let used = p.op_optional("6.4.45.b", op::t(i, op::antya("")));
@@ -479,7 +486,6 @@ fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
         // General case
         //
         if n.has_u("lyap") {
-            p.step("check");
             p.op_optional("6.4.38", op::t(i, op::antya("")));
         } else if n.has_u("ktic") {
             // TODO: also prevent 6.4.15;
@@ -492,30 +498,23 @@ fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
     Some(())
 }
 
-fn try_add_a_agama(p: &mut Prakriya, i: usize) {
+fn try_add_a_agama(p: &mut Prakriya, i: usize) -> Option<()> {
     if p.find_last(T::Dhatu).is_none() {
-        return;
+        return None;
     };
-    let i_tin = match p.find_last(T::Tin) {
-        Some(i) => i,
-        None => return,
-    };
-
+    let i_tin = p.find_last(T::Tin)?;
     if !p.has(i_tin, f::lakshana_in(&["lu~N", "la~N", "lf~N"])) {
-        return;
+        return None;
     }
     // Dhatu may be multi-part, so insert before abhyasa.
     // But abhyasa may follow main dhatu (e.g. undidizati) --
     // So, use the first match we find.
-    let i_start = match p.find_first_where(|t| t.has_tag_in(&[T::Abhyasa, T::Dhatu])) {
-        Some(i) => i,
-        None => return,
-    };
+    let i_start = p.find_first_where(|t| t.has_tag_in(&[T::Abhyasa, T::Dhatu]))?;
 
     // Agama already added in a previous iteration, so return.
     // (To prevent infinite loops)
     if i_start > 0 && p.has(i_start - 1, f::tag(T::Agama)) {
-        return;
+        return None;
     }
 
     if p.has(i, |t| t.has_adi(&*AC)) {
@@ -529,6 +528,8 @@ fn try_add_a_agama(p: &mut Prakriya, i: usize) {
         p.step("6.4.71");
         it_samjna::run(p, i).unwrap();
     }
+
+    Some(())
 }
 
 pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {

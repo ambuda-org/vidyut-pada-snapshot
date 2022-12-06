@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::error::Error;
-use vidyut_prakriya::ashtadhyayi as A;
-use vidyut_prakriya::constants::{La, Prayoga, Purusha, Vacana};
+use vidyut_gen::ashtadhyayi as A;
+use vidyut_gen::constants::{La, Prayoga, Purusha, Vacana};
 
 #[derive(Parser)]
 #[command(author, version, about)]

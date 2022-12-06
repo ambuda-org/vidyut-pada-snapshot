@@ -1,8 +1,8 @@
 use std::error::Error;
 use std::path::Path;
-use vidyut_prakriya::ashtadhyayi as A;
-use vidyut_prakriya::constants::{La, Prayoga, Purusha, Vacana};
-use vidyut_prakriya::dhatupatha as D;
+use vidyut_gen::ashtadhyayi as A;
+use vidyut_gen::constants::{La, Prayoga, Purusha, Vacana};
+use vidyut_gen::dhatupatha as D;
 
 const LAKARA: &[La] = &[
     La::Lat,

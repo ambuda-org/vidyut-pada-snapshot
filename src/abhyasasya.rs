@@ -59,13 +59,8 @@ fn try_shar_purva(text: &str) -> CompactString {
     ret
 }
 
-/// Runs abhyasa rules conditioned on either `san` or `caN`.
-///
-/// Constraints:
-/// - must follow 7.4.1 etc. which change the dhatu vowel before `caN`.
-/// - must follow guna of the dhatu vowel, which affects 7.4.1 etc. above.
-pub fn run_for_sani_or_cani(p: &mut Prakriya) -> Option<()> {
-    let i = p.find_first(T::Abhyasa)?;
+/// `i` is the index of an abhyasa..
+fn run_for_sani_or_cani_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
     let i_abhyasta = p.find_last(T::Abhyasta)?;
 
     let abhyasa = p.get(i)?;
@@ -115,6 +110,19 @@ pub fn run_for_sani_or_cani(p: &mut Prakriya) -> Option<()> {
     }
 
     Some(())
+}
+
+/// Runs abhyasa rules conditioned on either `san` or `caN`.
+///
+/// Constraints:
+/// - must follow 7.4.1 etc. which change the dhatu vowel before `caN`.
+/// - must follow guna of the dhatu vowel, which affects 7.4.1 etc. above.
+pub fn run_for_sani_or_cani(p: &mut Prakriya) -> Option<()> {
+    let mut i = p.find_first(T::Abhyasa)?;
+    loop {
+        run_for_sani_or_cani_at_index(p, i);
+        i = p.find_next_where(i, |t| t.has_tag(T::Abhyasa))?;
+    }
 }
 
 /// Runs abhyasa rules that apply generally.
@@ -255,20 +263,29 @@ fn try_rules_for_slu(p: &mut Prakriya, i: usize) -> Option<()> {
     // TODO: 7.4.78 bahulaM chandasi
 }
 
-pub fn run(p: &mut Prakriya) -> Option<()> {
-    let i = p.find_first(T::Abhyasa)?;
-
+fn run_at_index(p: &mut Prakriya, i: usize) {
     // TODO: expand for abhyasa after dhatu.
     let i_dhatu = i + 1;
     if !p.has(i_dhatu, f::dhatu) {
-        return None;
+        return;
     }
 
     try_general_rules(p, i);
     try_rules_for_lit(p, i);
     try_rules_for_slu(p, i);
+}
 
-    Some(())
+/// Runs the abhyasa rules for all abhyasas in the prakriya.
+///
+/// Examples of words with multiple absyasas:
+/// - biBriyAYcakAra
+/// - jugupsAYcakre
+pub fn run(p: &mut Prakriya) -> Option<()> {
+    let mut i = p.find_first(T::Abhyasa)?;
+    loop {
+        run_at_index(p, i);
+        i = p.find_next_where(i, |t| t.has_tag(T::Abhyasa))?;
+    }
 }
 
 #[cfg(test)]
