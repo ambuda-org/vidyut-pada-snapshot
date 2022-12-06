@@ -1023,11 +1023,16 @@ fn liti(p: &mut Prakriya) -> Option<()> {
         op::antya("ar")(t);
     };
 
+    let anga = p.get(i)?;
     let can_guna = !tin.has_tag(T::Rit);
-    if p.has(i, |t| t.has_antya('f') && f::is_samyogadi(t)) && can_guna {
+    if anga.has_antya('f') && f::is_samyogadi(anga) && can_guna {
         p.op_term("7.4.10", i, do_ar_guna);
-    } else if p.has(i, |t| t.has_antya('F') || t.has_u_in(&["fCa~", "f\\"])) && can_guna {
-        p.op_term("7.4.11", i, do_ar_guna);
+    } else if (anga.has_antya('F') || anga.has_u_in(&["fCa~", "f\\"])) && can_guna {
+        if anga.has_u("fCa~") {
+            p.op_term("7.4.11", i, op::adi("ar"));
+        } else {
+            p.op_term("7.4.11", i, do_ar_guna);
+        }
     }
 
     Some(())
