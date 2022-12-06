@@ -94,6 +94,7 @@ fn run_kniti_ardhadhatuka(p: &mut Prakriya, i: usize) -> Option<()> {
 
     if kniti_ardha && dhatu.has_u("dI\\N") && n.has_adi(&*AC) {
         p.op("6.4.63", |p| op::insert_agama_after(p, i, "yu~w"));
+        it_samjna::run(p, i + 1).ok()?;
         // No change to `n` index (`i + 1`) needed since `yu~w` is an agama and will will be
         // included in `n`.
     } else if aat && n.has_adi(&*AC) && (kniti_ardha || f::is_it_agama(n.first()?)) {
@@ -498,14 +499,14 @@ fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
     Some(())
 }
 
-fn try_add_a_agama(p: &mut Prakriya, i: usize) -> Option<()> {
-    if p.find_last(T::Dhatu).is_none() {
-        return None;
-    };
-    let i_tin = p.find_last(T::Tin)?;
-    if !p.has(i_tin, f::lakshana_in(&["lu~N", "la~N", "lf~N"])) {
+fn try_add_a_agama(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_last(T::Dhatu)?;
+
+    let tin = p.terms().last()?;
+    if !tin.has_lakshana_in(&["lu~N", "la~N", "lf~N"]) {
         return None;
     }
+
     // Dhatu may be multi-part, so insert before abhyasa.
     // But abhyasa may follow main dhatu (e.g. undidizati) --
     // So, use the first match we find.
@@ -517,16 +518,14 @@ fn try_add_a_agama(p: &mut Prakriya, i: usize) -> Option<()> {
         return None;
     }
 
-    if p.has(i, |t| t.has_adi(&*AC)) {
-        let agama = Term::make_agama("Aw");
-        p.insert_before(i, agama);
+    if p.has(i_start, |t| t.has_adi(&*AC)) {
+        op::insert_agama_before(p, i_start, "Aw");
         p.step("6.4.72");
-        it_samjna::run(p, i).unwrap();
+        it_samjna::run(p, i_start).unwrap();
     } else {
-        let agama = Term::make_agama("aw");
-        p.insert_before(i, agama);
+        op::insert_agama_before(p, i_start, "aw");
         p.step("6.4.71");
-        it_samjna::run(p, i).unwrap();
+        it_samjna::run(p, i_start).unwrap();
     }
 
     Some(())
@@ -535,7 +534,9 @@ fn try_add_a_agama(p: &mut Prakriya, i: usize) -> Option<()> {
 pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {
     try_upadha_nalopa(p, i);
     try_antya_nalopa(p, i);
-    try_add_a_agama(p, i);
+    if i == 0 {
+        try_add_a_agama(p);
+    }
     try_ardhadhatuke(p, i);
 
     let j = p.find_next_where(i, |t| !t.is_empty())?;

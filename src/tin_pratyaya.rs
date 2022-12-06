@@ -98,20 +98,21 @@ fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) -> Option<()> 
     if matches!(la, La::AshirLin | La::VidhiLin) {
         op::adesha("3.4.108", p, i, "jus");
     } else if la.is_nit() {
-        p.step("isnit");
         let i_prev = p.find_prev_where(i, |t| !t.is_empty())?;
         let prev = p.get(i_prev)?;
 
         let is_vid = prev.has_text("vid") && prev.has_gana(2);
         if prev.has_u("si~c") || prev.has_tag(T::Abhyasta) || is_vid {
             op::adesha("3.4.109", p, i, "jus");
-        } else if prev.has_antya('A') {
-            op::adesha("3.4.110", p, i, "jus");
-        } else if la == La::Lan {
-            if prev.has_antya('A') {
-                op::optional_adesha("3.4.111", p, i, "jus");
-            } else if prev.has_text("dviz") {
-                op::optional_adesha("3.4.112", p, i, "jus");
+        } else if prev.has_tag(T::Dhatu) && prev.has_antya('A') {
+            if la == La::Lan {
+                if prev.has_antya('A') {
+                    op::optional_adesha("3.4.111", p, i, "jus");
+                } else if prev.has_text("dviz") {
+                    op::optional_adesha("3.4.112", p, i, "jus");
+                }
+            } else {
+                op::adesha("3.4.110", p, i, "jus");
             }
         }
     }

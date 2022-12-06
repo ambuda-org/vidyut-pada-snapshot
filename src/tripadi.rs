@@ -211,12 +211,14 @@ fn try_ha_adesha(p: &mut Prakriya) -> Option<()> {
 
     for i in 0..p.terms().len() {
         let is_dhatu = p.has(i, f::tag(T::Dhatu));
-        let j = p.find_next_where(i, |t| !t.is_empty())?;
 
-        let jhali = p.has(j, |t| JHAL.contains_opt(t.adi()));
-        let ante = i == p.terms().len() - 1;
+        let maybe_j = p.find_next_where(i, |t| !t.is_empty());
+        let jhali_or_ante = match maybe_j {
+            Some(j) => p.get(j)?.has_adi(&*JHAL),
+            None => true,
+        };
 
-        if jhali || ante {
+        if jhali_or_ante {
             if is_dhatu {
                 let dhatu = p.get(i)?;
                 if dhatu.has_u_in(druha_muha) {
@@ -370,18 +372,19 @@ fn try_ch_to_s(p: &mut Prakriya) {
 }
 
 fn per_term_1b(p: &mut Prakriya) -> Option<()> {
-    xy_rule(
-        p,
-        // TODO: also include end of pada.
-        |x, y| x.has_antya(&*CU) && y.has_adi(&*JHAL),
-        |p, i, _| {
-            let x = p.get(i).unwrap();
+    for i in 0..p.terms().len() {
+        let x = p.get(i)?;
+        let jhali_or_ante = match p.find_next_where(i, |t| !t.is_empty()) {
+            Some(j) => p.get(j)?.has_adi(&*JHAL),
+            None => true,
+        };
+        if x.has_antya(&*CU) && jhali_or_ante {
             if let Some(c) = x.antya() {
-                let sub = CU_TO_KU.get(c).unwrap();
+                let sub = CU_TO_KU.get(c)?;
                 p.op_term("8.2.30", i, op::antya(&sub.to_string()));
             }
-        },
-    );
+        }
+    }
 
     xy_rule(
         p,
@@ -406,13 +409,13 @@ fn per_term_1b(p: &mut Prakriya) -> Option<()> {
     // - s for 8.2.66 (sasajuSo ruH)
     // - h for 8.2.31 (ho QaH)
     for i in 0..p.terms().len() {
-        let c = &p.terms()[i];
-        let n = p.view(i + 1);
-        let is_padanta = n.map(|x| x.is_padanta()).unwrap_or(true);
+        let c = p.get(i)?;
+        let is_padanta = p.find_next_where(i, |t| !t.is_empty()).is_none();
         let has_exception = c.has_antya(&*JHAL_TO_JASH_EXCEPTIONS);
+
         if c.has_antya(&*JHAL) && !has_exception && is_padanta {
-            let key = c.antya().unwrap();
-            let sub = JHAL_TO_JASH.get(key).unwrap();
+            let key = c.antya()?;
+            let sub = JHAL_TO_JASH.get(key)?;
             p.op_term("8.2.39", i, op::antya(&sub.to_string()));
         }
     }
