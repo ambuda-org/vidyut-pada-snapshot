@@ -1,10 +1,10 @@
 [package]
-name = "vidyut-prakriya"
+name = "vidyut-gen"
 version = "0.1.0"
 authors = ["Arun Prasad <ambuda.library@gmail.com>"]
-description = "A lightning-fast Sanskrit word generator"
-homepage = "https://github.com/ambuda-org/vidyut-prakriya"
-repository = "https://github.com/ambuda-org/vidyut-prakriya"
+description = "A Sanskrit word generator"
+homepage = "https://github.com/ambuda-org/vidyut"
+repository = "https://github.com/ambuda-org/vidyut"
 categories = ["text-processing"]
 keywords = ["sanskrit"]
 license = "MIT"
