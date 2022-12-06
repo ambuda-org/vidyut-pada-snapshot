@@ -39,9 +39,8 @@ pub fn load_dhatus(path: &Path) -> Result<Vec<Dhatu>, Box<dyn Error>> {
 pub fn is_kutadi(t: &Term) -> bool {
     // Check number explicitly because some roots are duplicated within tudAdi
     // but outside this gana (e.g. juq).
-    let (gana, number) = match (t.gana, t.number) {
-        (Some(x), Some(y)) => (x, y),
-        _ => return false,
-    };
-    gana == 6 && (93..=137).contains(&number)
+    match t.number {
+        Some(n) => t.has_gana(6) && (93..=137).contains(&n),
+        _ => false,
+    }
 }

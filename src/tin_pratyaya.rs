@@ -89,38 +89,34 @@ pub fn adesha(p: &mut Prakriya, purusha: Purusha, vacana: Vacana) {
     }
 }
 
-fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) {
-    if !p.has(i, |t| t.has_u("Ji")) {
-        return;
+fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) -> Option<()> {
+    let tin = p.get(i)?;
+    if !tin.has_u("Ji") {
+        return None;
     }
 
     if matches!(la, La::AshirLin | La::VidhiLin) {
         op::adesha("3.4.108", p, i, "jus");
     } else if la.is_nit() {
-        let i_dhatu = match p.find_last(T::Dhatu) {
-            Some(i) => i,
-            None => return,
-        };
-        let i_prev = match p.find_prev_where(i, |t| !t.text.is_empty()) {
-            Some(i) => i,
-            None => return,
-        };
+        p.step("isnit");
+        let i_prev = p.find_prev_where(i, |t| !t.is_empty())?;
+        let prev = p.get(i_prev)?;
 
-        let is_vid = p.has(i_dhatu, |t: &Term| t.text == "vid" && t.gana == Some(2));
-        if p.has(i_prev, |t| {
-            t.has_u("si~c") || t.has_tag(T::Abhyasta) || is_vid
-        }) {
+        let is_vid = prev.has_text("vid") && prev.has_gana(2);
+        if prev.has_u("si~c") || prev.has_tag(T::Abhyasta) || is_vid {
             op::adesha("3.4.109", p, i, "jus");
-        } else if p.has(i_dhatu, |t| t.has_antya('A')) && p.has(i_prev, |t| t.has_u("si~c")) {
+        } else if prev.has_antya('A') {
             op::adesha("3.4.110", p, i, "jus");
         } else if la == La::Lan {
-            if p.has(i_prev, |t| t.has_antya('A') && t.has_tag(T::Dhatu)) {
-                p.op_optional("3.4.111", |p| op::upadesha(p, i, "jus"));
-            } else if p.has(i_dhatu, |t| t.text == "dviz") {
-                p.op_optional("3.4.112", |p| op::upadesha(p, i, "jus"));
+            if prev.has_antya('A') {
+                op::optional_adesha("3.4.111", p, i, "jus");
+            } else if prev.has_text("dviz") {
+                op::optional_adesha("3.4.112", p, i, "jus");
             }
         }
     }
+
+    Some(())
 }
 
 fn maybe_do_lut_siddhi(p: &mut Prakriya, i_la: usize, la: La) -> bool {
@@ -161,7 +157,7 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Er
                 p.op_optional("3.4.88", op::t(i, op::add_tag(T::Pit)));
             }
         } else if p.has(i, f::ends_with("mi")) {
-            op::upadesha_v2("3.4.89", p, i, "ni");
+            op::adesha("3.4.89", p, i, "ni");
         } else if p.has(i, f::ends_with("i")) {
             p.op_term("3.4.86", i, op::antya("u"));
         } else if p.has(i, f::ends_with("e")) {

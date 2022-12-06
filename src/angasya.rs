@@ -122,9 +122,10 @@ pub fn try_pratyaya_adesha(p: &mut Prakriya) -> Option<()> {
         p.op("7.1.2", op::t(i, op::adi(sub)));
     } else if last.has_adi('J') {
         maybe_do_jha_adesha(p, i);
+
+    // 7.1.34 (daDyA -> daDyO) happens later on after the dhatu's vowel change (DyE -> DyA)
+
     // -tAt substitution needs to occur early because it conditions samprasarana.
-    } else if p.has(i - 1, |t| t.has_antya('A')) && last.has_u("Ral") {
-        op::upadesha_v2("7.1.34", p, i, "O");
     } else if p.has(i, |t| t.has_tag(T::Tin) && t.has_text_in(&["tu", "hi"])) {
         // N is to block pit-guNa, not for replacement of the last letter.
         p.op_optional("7.1.35", |p| op::upadesha(p, i, "tAta~N"));
@@ -135,7 +136,7 @@ pub fn try_pratyaya_adesha(p: &mut Prakriya) -> Option<()> {
     if i > 2 {
         let t = p.get(i)?;
         if p.has(i - 2, |t| t.has_antya(&*HAL)) && p.has(i - 1, f::u("SnA")) && t.text == "hi" {
-            op::upadesha_v2("3.1.83", p, i - 1, "SAnac");
+            op::adesha("3.1.83", p, i - 1, "SAnac");
         }
     }
 
@@ -198,8 +199,11 @@ fn try_nnit_vrddhi(p: &mut Prakriya, i: usize) -> Option<()> {
         // The use of "acaH" in 7.2.115 indicates that we should ignore "iko guNavRddhI" which
         // ordinarily restricts vrddhi to ik vowels only. By ignoring this restriction, we can
         // correctly generate `vye -> vivyAya` etc.
-        let sub = al::to_vrddhi(anga.antya().unwrap()).unwrap();
-        p.op_term("7.2.115", i, op::antya(sub));
+        let antya = anga.antya()?;
+        if !al::is_vrddhi(antya) {
+            let sub = al::to_vrddhi(antya)?;
+            p.op_term("7.2.115", i, op::antya(sub));
+        }
     } else if anga.has_upadha('a') {
         p.op_term("7.2.116", i, op::upadha("A"));
     }
@@ -239,19 +243,23 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
     } else if is_ik && n.has_u("jus") {
         p.op_term("7.3.83", i, op_antya_guna);
     } else if is_sarva_ardha {
-        let vi_cin_nal = n.get(0)?.has_u_in(&["kvip", "ciN", "Ral"]);
         let anga = p.get(i)?;
-        let n = p.view(i + 1)?;
+        let n = p.view(j)?;
+        let vi_cin_nal = n.get(0)?.has_u_in(&["kvip", "ciN", "Ral"]);
 
         // Exceptions
         if anga.has_tag(T::Abhyasta) && piti_sarvadhatuke && n.has_adi(&*AC) {
             // e.g. nenijAma
-            p.step("7.3.87")
+            p.step("7.3.87");
+            return None;
         } else if anga.has_text_in(&["BU", "sU"]) && n.has_tag(T::Tin) && piti_sarvadhatuke {
             // e.g. aBUt
             // TODO: broken due to `vu~k`-Agama throwing off `n`.
             p.step("7.3.88");
+            return None;
         } else if anga.has_antya('u') && n.has_adi(&*HAL) && piti_sarvadhatuke {
+            let anga = p.get(i)?;
+            let n = p.view(j)?;
             let sub = al::to_vrddhi(anga.antya()?)?;
             if anga.has_u("UrRu") {
                 if f::is_aprkta(n.last()?) {
@@ -260,7 +268,7 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
                     // If vrddhi is declined, UrRu will take guna by 7.3.84 below.
                     p.op_optional("7.3.90", op::t(i, op::antya(sub)));
                 }
-            } else if n.has_tag(T::Luk) {
+            } else if p.get(i + 1)?.has_tag(T::Luk) {
                 p.op_term("7.3.89", i, op::antya(sub));
             };
         }
@@ -835,14 +843,11 @@ fn try_sic_vrddhi(p: &mut Prakriya) -> Option<()> {
     };
     let i_tin = p.terms().len() - 1;
 
-    let it = if i_it.is_none() {
-        None
-    } else {
-        p.get(i_it.unwrap())
-    };
+    let it = if let Some(x) = i_it { p.get(x) } else { None };
+
     let sic = p.get(i_sic)?;
     let tin = p.get(i_tin)?;
-    if !(sic.has_u("si~c") && tin.has_tag(T::Parasmaipada)) {
+    if !(sic.has_u("si~c") && !sic.has_tag(T::Luk) && tin.has_tag(T::Parasmaipada)) {
         return None;
     }
 
@@ -979,12 +984,8 @@ pub fn hacky_before_dvitva(p: &mut Prakriya) {
 /// (7.4.1 - 7.4.6)
 fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
     let i = p.find_first(T::Dhatu)?;
-    let i_ni = p.find_next_where(i, |t| t.has_u_in(&["Ric", "RiG"]))?;
-    let i_can = i_ni + 1;
-
-    if !p.has(i_can, f::u("caN")) {
-        return None;
-    }
+    let i_ni = p.find_next_where(i, |t| t.has_u_in(&["Ric", "RiN"]))?;
+    let _i_can = p.find_next_where(i_ni, |t| t.has_u("caN"))?;
 
     let dhatu = p.get(i)?;
 
@@ -993,7 +994,7 @@ fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
         let sub = al::to_hrasva(dhatu.upadha()?)?;
         if dhatu.has_tag_in(&[T::FlagAtLopa, T::fdit]) || dhatu.has_text("SAs") {
             p.step("7.4.2");
-        } else if dhatu.upadha()? != sub {
+        } else if !dhatu.has_upadha(sub) {
             p.op_term("7.4.1", i, op::upadha(&sub.to_string()));
         }
     } else if p.has(i + 1, f::tag(T::Agama)) && dhatu.has_antya(&*AC) {
@@ -1176,6 +1177,15 @@ fn try_anga_adesha_before_vibhakti(p: &mut Prakriya) -> Option<()> {
 
 pub fn run_remainder(p: &mut Prakriya) {
     sup_adesha::run(p);
+
+    // TODO: move this rule to a better place.
+    {
+        let i = p.terms().len() - 1;
+        let last = p.terms().last().unwrap();
+        if p.has(i - 1, |t| t.has_antya('A')) && last.has_u("Ral") {
+            op::adesha("7.1.34", p, i, "O");
+        }
+    }
 
     try_anga_adesha_before_vibhakti(p);
 

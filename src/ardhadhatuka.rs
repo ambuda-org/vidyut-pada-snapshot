@@ -86,48 +86,54 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) -> Option<()> {
     let dhatu = p.get(i)?;
     let n = p.get(i + 1)?;
 
-    let to_ghasl = |p: &mut Prakriya| op::upadesha(p, i, "Gasx~");
     if dhatu.has_text("ad") {
         if n.has_lakshana_in(&["lu~N", "san"]) {
-            op::upadesha_v2("2.4.37", p, i, "Gasx~");
+            // aGasat, jiGatsati
+            op::adesha("2.4.37", p, i, "Gasx~");
         } else if n.has_u_in(&["GaY", "ap"]) {
-            op::upadesha_v2("2.4.38", p, i, "Gasx~");
+            // GAsa, praGasa
+            op::adesha("2.4.38", p, i, "Gasx~");
         } else if n.has_lakshana("li~w") {
-            p.op_optional("2.4.40", to_ghasl);
+            // jaGAsa
+            op::optional_adesha("2.4.40", p, i, "Gasx~");
         } else if n.has_u("lyap") || (n.has_adi('t') && n.has_tag(T::kit)) {
+            // vijagDya
             p.op("2.4.36", |p| op::upadesha(p, i, "jagDi~"));
         }
         // Skip 2.4.39 (bahulaM chandasi).
     } else if dhatu.has_u("ve\\Y") && n.has_lakshana("li~w") {
         p.op_optional("2.4.41", |p| op::upadesha(p, i, "vayi~"));
     } else if dhatu.has_text("han") {
-        let to_vadha = |p: &mut Prakriya| op::upadesha(p, i, "vaDa");
-
         if n.has_lakshana("li~N") {
-            p.op("2.4.42", to_vadha);
+            // vaDyAt
+            op::adesha("2.4.42", p, i, "vaDa");
         } else if n.has_lakshana("lu~N") {
             if n.has_tag(T::Atmanepada) {
-                p.op_optional("2.4.44", to_vadha);
+                // Ahata, AvaDizwa,
+                op::optional_adesha("2.4.44", p, i, "vaDa");
             } else {
-                p.op("2.4.43", to_vadha);
+                // avaDIt
+                op::adesha("2.4.43", p, i, "vaDa");
             }
         }
     } else if dhatu.has_u_in(&["i\\R", "i\\k"]) {
-        let to_gami = |p: &mut Prakriya| op::upadesha(p, i, "gami~");
-
         if dhatu.has_u("i\\k") {
             p.step("2.4.45.v1");
         } else if n.has_lakshana("lu~N") {
-            p.op("2.4.45", |p| op::upadesha(p, i, "gA"));
+            // agAt
+            op::adesha("2.4.45", p, i, "gA");
         } else if n.has_u("Ric") {
-            p.op_optional("2.4.46", to_gami);
+            // gamayati
+            op::optional_adesha("2.4.46", p, i, "gami~");
         } else if n.has_u("san") {
-            p.op_optional("2.4.47", to_gami);
+            // jigamizati
+            op::optional_adesha("2.4.47", p, i, "gami~");
         }
     } else if dhatu.has_u("i\\N") {
         let to_gaa = |p: &mut Prakriya| op::upadesha(p, i, "gAN");
 
         if n.has_u("san") {
+            // aDijigAMsate
             p.op("2.4.48", |p| op::upadesha(p, i, "gami~"));
         } else if n.has_lakshana("li~w") {
             p.op("2.4.49", to_gaa);

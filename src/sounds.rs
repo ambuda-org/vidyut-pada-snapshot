@@ -1,11 +1,11 @@
 use lazy_static::lazy_static;
-use rustc_hash::FxHashMap;
+use std::collections::HashMap;
 
 type Sound = char;
 
 lazy_static! {
     static ref SUTRAS: Vec<Sutra> = create_shiva_sutras();
-    static ref SOUND_PROPS: FxHashMap<Sound, Uccarana> = create_sound_props();
+    static ref SOUND_PROPS: HashMap<Sound, Uccarana> = create_sound_props();
     static ref HAL: SoundSet = s("hal");
 }
 
@@ -130,9 +130,9 @@ fn create_shiva_sutras() -> Vec<Sutra> {
     ]
 }
 
-fn create_sound_props() -> FxHashMap<Sound, Uccarana> {
-    fn flatten_multi<T: Copy>(data: Vec<(SoundSet, T)>) -> FxHashMap<Sound, Vec<T>> {
-        let mut mapping = FxHashMap::default();
+fn create_sound_props() -> HashMap<Sound, Uccarana> {
+    fn flatten_multi<T: Copy>(data: Vec<(SoundSet, T)>) -> HashMap<Sound, Vec<T>> {
+        let mut mapping = HashMap::default();
         for (ks, v) in data {
             for k in ks.to_string().chars() {
                 mapping.entry(k).or_insert_with(Vec::new).push(v);
@@ -141,8 +141,8 @@ fn create_sound_props() -> FxHashMap<Sound, Uccarana> {
         mapping
     }
 
-    fn flatten<T: Copy>(data: Vec<(SoundSet, T)>) -> FxHashMap<Sound, T> {
-        let mut mapping = FxHashMap::default();
+    fn flatten<T: Copy>(data: Vec<(SoundSet, T)>) -> HashMap<Sound, T> {
+        let mut mapping = HashMap::default();
         for (ks, v) in data {
             for k in ks.to_string().chars() {
                 mapping.insert(k, v);
@@ -182,7 +182,7 @@ fn create_sound_props() -> FxHashMap<Sound, Uccarana> {
         (s("Yay"), Prayatna::Sprshta),
     ]);
 
-    let mut res = FxHashMap::default();
+    let mut res = HashMap::default();
     for k in s("al H M").to_string().chars() {
         let sthana = match sthana.get(&k) {
             Some(s) => s.clone(),
@@ -213,6 +213,10 @@ pub fn is_dirgha(c: Sound) -> bool {
 
 pub fn is_guna(c: Sound) -> bool {
     matches!(c, 'a' | 'e' | 'o')
+}
+
+pub fn is_vrddhi(c: Sound) -> bool {
+    matches!(c, 'A' | 'E' | 'O')
 }
 
 pub fn is_ac(c: Sound) -> bool {

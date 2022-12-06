@@ -118,17 +118,6 @@ pub fn upadesha(p: &mut Prakriya, i: usize, sub: &str) {
     }
 }
 
-// upgrade to `upadesha` that marks the rule before it-samjna-prakarana.
-pub fn upadesha_v2(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
-    if let Some(t) = p.get_mut(i) {
-        t.save_lakshana();
-        t.set_u(sub);
-        t.set_text(sub);
-        p.step(rule);
-        it_samjna::run(p, i).unwrap();
-    }
-}
-
 /// Complex op
 pub fn append_agama(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
     let agama = Term::make_agama(sub);
@@ -145,6 +134,14 @@ pub fn adesha(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
         t.set_text(sub);
         p.step(rule);
         it_samjna::run(p, i).unwrap();
+    }
+}
+
+pub fn optional_adesha(rule: Rule, p: &mut Prakriya, i: usize, sub: &str) {
+    if p.is_allowed(rule) {
+        adesha(rule, p, i, sub);
+    } else {
+        p.decline(rule);
     }
 }
 

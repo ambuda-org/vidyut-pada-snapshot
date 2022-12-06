@@ -17,7 +17,4 @@ clap = { version = "4.0.12", features = ["derive"] }
 compact_str = "0.6.1"
 csv = "1.1.6"
 enumset = "1.0.12"
-env_logger = "0.9.1"
 lazy_static = "1.4.0"
-log = "0.4.17"
-rustc-hash = "1.1.0"

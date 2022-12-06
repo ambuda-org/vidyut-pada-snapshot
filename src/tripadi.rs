@@ -78,8 +78,9 @@ fn try_change_r_to_l(p: &mut Prakriya) -> Option<()> {
     };
 
     for i in 0..p.terms().len() {
+        let j = p.find_next_where(i, |t| !t.is_empty())?;
         let x = p.get(i)?;
-        let y = p.get(i + 1)?;
+        let y = p.get(j)?;
 
         if x.has_u_in(&["kfpU~\\", "kfpa~\\", "kfpa~"]) {
             p.op("8.2.18", op::t(i, do_ra_la));
@@ -602,34 +603,23 @@ fn try_murdhanya_for_s(p: &mut Prakriya) -> Option<()> {
 }
 
 fn try_murdhanya_for_dha_in_tinanta(p: &mut Prakriya) -> Option<()> {
-    let n = p.terms().len();
-    for i in 0..n {
-        let anga = p.get(i)?;
-        if anga.has_tag(T::Agama) {
-            continue;
-        }
-        let anga = p.get(i)?;
-        if anga.has_antya(&*IN2) && !anga.has_tag(T::Agama) {
-            let last = p.get(n - 1)?;
-            let lun_lit = last.has_lakshana_in(&["lu~N", "li~w"]);
+    let i = p.terms().len() - 1;
+    let tin = p.get(i)?;
 
-            let next = p.view(i + 1)?;
-            if !next.has_tag(T::Pratyaya) {
-                continue;
-            }
-            let dha = p.terms().last()?.has_adi('D');
-            let is_shidhvam = next.text().ends_with("zIDvam");
+    let dha = tin.has_adi('D');
+    let shidhvam_lun_lit = p.get(i - 1)?.has_text("zI") || tin.has_lakshana_in(&["lu~N", "li~w"]);
 
-            if (lun_lit && dha) || is_shidhvam {
-                let next = p.view(i + 1)?;
-                if f::is_it_agama(next.first()?) {
-                    p.op_optional("8.3.79", op::t(n - 1, op::adi("Q")));
-                } else {
-                    p.op_term("8.3.78", n - 1, op::adi("Q"));
-                }
-            }
+    let i_prev = p.find_prev_where(i, |t| !t.is_empty() && !t.has_u("sIyu~w"))?;
+    let prev = p.get(i_prev)?;
+
+    if prev.has_antya(&*IN2) && shidhvam_lun_lit && dha {
+        if f::is_it_agama(prev) {
+            p.op_optional("8.3.79", op::t(i, op::adi("Q")));
+        } else {
+            p.op_term("8.3.78", i, op::adi("Q"));
         }
     }
+
     Some(())
 }
 
@@ -900,7 +890,6 @@ pub fn run(p: &mut Prakriya) {
     try_natva(p);
     try_change_stu_to_parasavarna(p);
     try_dha_lopa(p);
-
     try_jhal_adesha(p);
     try_to_savarna(p);
 }

@@ -12,7 +12,7 @@ pub struct Term {
     pub u: Option<CompactString>,
     pub text: CompactString,
     pub tags: EnumSet<Tag>,
-    pub gana: Option<i32>,
+    gana: Option<i32>,
     pub number: Option<i32>,
     pub lakshana: Vec<CompactString>,
 }

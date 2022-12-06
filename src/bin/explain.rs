@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::path::Path;
 use vidyut_prakriya::ashtadhyayi as A;
@@ -55,12 +56,13 @@ const PURUSHA_VACANA: &[(Purusha, Vacana)] = &[
 fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let dhatus = D::load_dhatus(Path::new("data/dhatupatha.tsv"));
 
-    let mut words = vec![];
+    let mut ordered_words = BTreeMap::new();
     for dhatu in dhatus?.iter() {
         if dhatu.code() != args.code {
             continue;
         }
-        for la in LAKARA {
+        for (i, la) in LAKARA.iter().enumerate() {
+            let mut words = vec![];
             for (purusha, vacana) in PURUSHA_VACANA {
                 let ps = A::derive_tinantas(
                     &dhatu.upadesha,
@@ -79,10 +81,15 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
                     }
                 }
             }
+            ordered_words.insert(i, words);
         }
     }
 
-    println!("{}", words.join(", "));
+    for (i, padas) in ordered_words.iter() {
+        let la = LAKARA[*i];
+        let data = padas.join(", ");
+        println!("{la:?}: {data}");
+    }
     Ok(())
 }
 

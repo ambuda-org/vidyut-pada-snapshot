@@ -66,7 +66,10 @@ pub fn is_guru(t: &Term) -> bool {
 }
 
 pub fn is_hrasva(t: &Term) -> bool {
-    !is_dirgha(t)
+    match t.antya() {
+        Some(c) => al::is_hrasva(c),
+        None => false,
+    }
 }
 
 pub fn is_dirgha(t: &Term) -> bool {

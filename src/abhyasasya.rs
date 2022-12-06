@@ -213,11 +213,11 @@ fn try_rules_for_lit(p: &mut Prakriya, i: usize) {
                     add_nut_agama("7.4.71", p, i + 1);
                 }
             // For aSnoti only, not aSnAti
-            } else if dhatu.text == "aS" && dhatu.gana == Some(5) {
+            } else if dhatu.text == "aS" && dhatu.has_gana(5) {
                 add_nut_agama("7.4.72", p, i + 1);
             }
         } else if p.has(i_dhatu, |t| {
-            t.text == "BU" && (t.gana == Some(1) || t.gana == Some(2))
+            t.text == "BU" && (t.has_gana(1) || t.has_gana(2))
         }) {
             // gana 1 for `BU`, gana 2 for `as` replaced by `BU`.
             op::text2("7.4.73", p, i, "ba");

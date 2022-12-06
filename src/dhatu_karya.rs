@@ -36,7 +36,11 @@ fn add_samjnas(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
 
 fn gana_sutras(p: &mut Prakriya, i: usize) {
     let d = p.get(i).unwrap();
-    if let (Some(10), Some(num)) = (d.gana, d.number) {
+    if !d.has_gana(10) {
+        return;
+    };
+
+    if let Some(num) = d.number {
         if p.has(i, f::u_in(gana::CUR_MIT)) {
             p.op("cur-mit", op::t(i, op::add_tag(T::mit)));
         }

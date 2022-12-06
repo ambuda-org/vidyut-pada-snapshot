@@ -97,6 +97,15 @@ impl Prakriya {
         self.terms.get_mut(i)
     }
 
+    pub fn get_if(&self, i: usize, filter: impl Fn(&Term) -> bool) -> Option<&Term> {
+        if let Some(t) = self.get(i) {
+            if filter(t) {
+                return Some(t);
+            }
+        }
+        None
+    }
+
     pub fn view(&self, i: usize) -> Option<TermView> {
         TermView::new(self.terms(), i)
     }

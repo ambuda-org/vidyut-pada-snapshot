@@ -98,8 +98,8 @@ fn maybe_replace_cli_with_ksa(p: &mut Prakriya, i: usize) {
     };
 
     let pushadi_dyutadi_ldit = |t: &Term| {
-        (t.has_u_in(PUSH_ADI) && t.gana == Some(4))
-            || (t.has_u_in(DYUT_ADI) && t.gana == Some(1))
+        (t.has_u_in(PUSH_ADI) && t.has_gana(4))
+            || (t.has_u_in(DYUT_ADI) && t.has_gana(1))
             || t.has_tag(T::xdit)
     };
 
@@ -113,7 +113,7 @@ fn maybe_replace_cli_with_ksa(p: &mut Prakriya, i: usize) {
     } else if p.has(i, shal_igupadha_anit) {
         if p.has(i, |t| t.text == "dfS") {
             p.step("3.1.47")
-        } else if p.has(i, |t| t.text == "Sliz" && t.gana == Some(4)) {
+        } else if p.has(i, |t| t.text == "Sliz" && t.has_gana(4)) {
             p.op_optional("3.1.46", to_ksa);
         } else if p.has(i, |t| t.has_tag(T::Udit)) {
             p.op_optional("3.1.45", |p| {
@@ -293,7 +293,7 @@ fn maybe_add_am_pratyaya_for_lot(p: &mut Prakriya) {
         None => false,
     };
 
-    if p.has(i, |t| t.text == "vid" && t.gana == Some(2) && is_lot) {
+    if p.has(i, |t| t.text == "vid" && t.has_gana(2) && is_lot) {
         let added_am = p.op_optional("3.1.41", add_aam);
 
         if added_am {
@@ -326,7 +326,7 @@ fn add_sarvadhatuka_vikarana(p: &mut Prakriya) {
         let applied = p.op_optional("3.1.70", add_vikarana("Syan"));
 
         // Needed to make 3.1.69 available to roots like Bram
-        if !applied && p.has(i, |t| t.gana == Some(4)) {
+        if !applied && p.has(i, |t| t.has_gana(4)) {
             gana_4_declined = true;
         }
     // TODO: anupasarga
@@ -344,30 +344,30 @@ fn add_sarvadhatuka_vikarana(p: &mut Prakriya) {
         return;
     }
 
-    if p.has(i, |t| t.gana == Some(4) && !gana_4_declined) {
+    if p.has(i, |t| t.has_gana(4) && !gana_4_declined) {
         p.op("3.1.69", add_vikarana("Syan"));
-    } else if p.has(i, |t| t.gana == Some(5)) {
+    } else if p.has(i, |t| t.has_gana(5)) {
         p.op("3.1.73", add_vikarana("Snu"));
     } else if p.has(i, |t| t.text == "Sru") {
         p.op("3.1.74", |p| {
             p.set(i, |t| t.set_text("Sf"));
             add_vikarana("Snu")(p);
         });
-    } else if p.has(i, |t| t.gana == Some(6)) {
+    } else if p.has(i, |t| t.has_gana(6)) {
         p.op("3.1.77", add_vikarana("Sa"));
-    } else if p.has(i, |t| t.gana == Some(7)) {
+    } else if p.has(i, |t| t.has_gana(7)) {
         p.op("3.1.78", |p| {
             p.set(i, |t| t.add_tag(T::Snam));
             p.set(i, op::mit("na"));
         });
-    } else if p.has(i, |t| t.gana == Some(8) || t.has_u("qukf\\Y")) {
+    } else if p.has(i, |t| t.has_gana(8) || t.has_u("qukf\\Y")) {
         p.op("3.1.79", add_vikarana("u"));
     } else if p.has(i, |t| t.has_u_in(&["Divi~", "kfvi~"])) {
         p.op("3.1.80", |p| {
             p.set(i, op::antya("a"));
             add_vikarana("u")(p);
         });
-    } else if p.has(i, |t| t.gana == Some(9)) {
+    } else if p.has(i, |t| t.has_gana(9)) {
         p.op("3.1.81", add_vikarana("SnA"));
     } else {
         p.op("3.1.68", add_vikarana("Sap"));
@@ -402,10 +402,10 @@ fn maybe_sic_lopa_before_parasmaipada(p: &mut Prakriya, i: usize, i_vikarana: us
     }
 
     let gati_stha = |t: &Term| {
-        (t.text == "gA" && t.gana == Some(2))
+        (t.text == "gA" && t.has_gana(2))
             || t.text == "sTA"
             || t.has_tag(T::Ghu)
-            || (t.text == "pA" && t.gana == Some(1))
+            || (t.text == "pA" && t.has_gana(1))
             || t.text == "BU"
     };
 
@@ -449,9 +449,9 @@ fn vikarana_lopa(p: &mut Prakriya) {
     let vikarana_u = p.get(i_vikarana).unwrap().text.to_string();
 
     if vikarana_u == "Sap" {
-        if p.has(i, |t| t.gana == Some(2)) {
+        if p.has(i, |t| t.has_gana(2)) {
             p.op("2.4.72", op::t(i_vikarana, op::luk));
-        } else if p.has(i, |t| t.gana == Some(3)) {
+        } else if p.has(i, |t| t.has_gana(3)) {
             p.op("2.4.75", op::t(i_vikarana, op::slu));
         }
     } else if vikarana_u == "si~c" {
