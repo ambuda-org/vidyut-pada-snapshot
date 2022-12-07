@@ -702,7 +702,8 @@ fn try_add_tuk_agama_to_ch(p: &mut Prakriya) {
 /// TODO: add missing rules.
 fn try_change_cu_to_ku(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
-    let n = p.view(i + 1)?;
+    let i_n = p.find_next_where(i, |t| !t.is_empty())?;
+    let n = p.view(i_n)?;
 
     fn convert(c: char) -> Option<&'static str> {
         let ret = match c {
@@ -731,8 +732,8 @@ fn try_change_cu_to_ku(p: &mut Prakriya, i: usize) -> Option<()> {
     if (anga.has_antya('c') || anga.has_antya('j')) && (n.has_tag(T::Git) || n.has_u("Ryat")) {
         let sub = convert(anga.antya()?)?;
         p.op_term("7.3.52", i, op::antya(sub));
-    } else if anga.has_text("han") {
-        if n.any(&[T::Yit, T::Rit]) || n.has_adi('n') {
+    } else if anga.has_text_in(&["han", "hn"]) {
+        if n.any(&[T::Yit, T::Rit]) || anga.has_text("hn") {
             p.op_term("7.3.54", i, op::adi("G"));
         } else if anga.has_tag(T::Abhyasta) {
             p.op_term("7.3.55", i, op::adi("G"));
@@ -742,7 +743,7 @@ fn try_change_cu_to_ku(p: &mut Prakriya, i: usize) -> Option<()> {
     }
 
     let anga = p.get(i)?;
-    let n = p.view(i + 1)?;
+    let n = p.view(i_n)?;
     if anga.has_tag(T::Abhyasta) && n.has_u("san") || n.has_lakshana("li~w") {
         if anga.has_text("ji") && anga.has_gana(1) {
             p.op_term("7.3.56", i, op::adi("g"));

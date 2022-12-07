@@ -19,6 +19,7 @@ use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
+use crate::term::Term;
 use crate::term::TermView;
 use lazy_static::lazy_static;
 
@@ -150,7 +151,7 @@ fn try_run_kniti(p: &mut Prakriya, i: usize) -> Option<()> {
         p.op_term("6.4.101", n.start(), op::text("Di"));
     } else if anga.has_u("ciR") {
         p.op_term("6.4.104", n.start(), op::luk);
-    } else if anga.has_antya('a') && n.first()?.has_text("hi") {
+    } else if has_antya_a_asiddhavat(anga) && n.first()?.has_text("hi") {
         // Bavahi -> Bava
         p.op_term("6.4.105", n.start(), op::luk);
     } else if anga.has_antya('u') && anga.has_tag(T::Pratyaya) {
@@ -317,6 +318,10 @@ fn try_et_adesha_and_abhyasa_lopa_for_lit(p: &mut Prakriya, i: usize) -> Option<
     Some(())
 }
 
+fn has_antya_a_asiddhavat(t: &Term) -> bool {
+    t.has_antya('a') && !t.has_tag(T::FlagNaLopa)
+}
+
 /// Runs rules conditioned on a following ardhadhatuka suffix.
 ///
 /// (6.4.46 - 6.4.70)
@@ -334,7 +339,7 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
 
     if anga.has_text("Brasj") {
         p.op_optional("6.4.47", op::t(i, op::text("Barj")));
-    } else if anga.has_antya('a') {
+    } else if has_antya_a_asiddhavat(&anga) {
         p.op("6.4.48", |p| {
             p.set(i, op::antya(""));
             p.set(i, op::add_tag(T::FlagAtLopa));
@@ -443,8 +448,6 @@ fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
 
 /// Runs rules that delete the final n of a term.
 ///
-/// Returns `Some(())` if na-lopa was applied.
-///
 /// (6.4.36 - 6.4.44)
 /// TODO: 6.4.41
 fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
@@ -464,7 +467,7 @@ fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
 
     let jhali_kniti = n.has_adi(&*JHAL) && is_knit(&n);
 
-    if anga.has_text("han") && n.last()?.has_text("hi") {
+    if anga.has_u("ha\\na~") && n.last()?.has_text("hi") {
         // jahi
         p.op_term("6.4.36", i, op::text("ja"));
     } else if anga.has_text("gam") && n.has_u("kvip") {
@@ -502,16 +505,15 @@ fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
         }
     }
 
-    let anga = p.get(i)?;
+    let anga = p.get_mut(i)?;
     if had_n != anga.has_antya('n') {
-        Some(())
-    } else {
-        None
+        anga.add_tag(T::FlagNaLopa);
     }
+    Some(())
 }
 
 fn try_add_a_agama(p: &mut Prakriya) -> Option<()> {
-    let i = p.find_last(T::Dhatu)?;
+    let _i = p.find_last(T::Dhatu)?;
 
     let tin = p.terms().last()?;
     if !tin.has_lakshana_in(&["lu~N", "la~N", "lf~N"]) {
@@ -544,14 +546,12 @@ fn try_add_a_agama(p: &mut Prakriya) -> Option<()> {
 
 pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {
     try_upadha_nalopa(p, i);
-    let has_na_lopa = try_antya_nalopa(p, i).is_some();
+    try_antya_nalopa(p, i);
 
     if i == 0 {
         try_add_a_agama(p);
     }
-    if !has_na_lopa {
-        try_ardhadhatuke(p, i);
-    }
+    try_ardhadhatuke(p, i);
 
     let j = p.find_next_where(i, |t| !t.is_empty())?;
 

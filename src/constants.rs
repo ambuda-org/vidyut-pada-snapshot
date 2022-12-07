@@ -282,6 +282,7 @@ pub enum Tag {
     FlagSetSic,
     FlagAtAgama,
     FlagAtLopa,
+    FlagNaLopa,
 
     Sat,
     Snam,

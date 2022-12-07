@@ -106,7 +106,7 @@ pub fn run(p: &mut Prakriya) -> Option<()> {
     }
 
     // Exclude "san" per 1.3.62.
-    // TODO: handle this bette.t
+    // TODO: handle this better.
     let i = p.find_last_where(|t| t.has_tag(T::Dhatu) && !t.has_u("san"))?;
 
     if p.has_tag(T::Atmanepada) {
