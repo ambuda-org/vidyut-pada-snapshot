@@ -121,7 +121,10 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) -> Option<()> {
     } else if dhatu.has_u_in(&["i\\R", "i\\k"]) {
         if dhatu.has_u("i\\k") {
             p.step("2.4.45.v1");
-        } else if n.has_lakshana("lu~N") {
+        }
+
+        let n = p.view(j)?;
+        if n.has_lakshana("lu~N") {
             // agAt
             op::adesha("2.4.45", p, i, "gA");
         } else if n.has_u("Ric") {

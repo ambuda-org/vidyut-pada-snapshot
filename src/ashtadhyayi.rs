@@ -66,7 +66,7 @@ pub fn derive_tinanta(
     // Do lit-siddhi and AzIrlin-siddhi first to support the valAdi vArttika for aj -> vi.
     let is_lit_or_ashirlin = matches!(la, La::Lit | La::AshirLin);
     if is_lit_or_ashirlin {
-        tin_pratyaya::siddhi(p, la)?;
+        tin_pratyaya::siddhi(p, la);
     }
 
     // Add necessary vikaranas.
@@ -85,7 +85,7 @@ pub fn derive_tinanta(
     samprasarana::run_for_abhyasa(p);
 
     if !is_lit_or_ashirlin {
-        tin_pratyaya::siddhi(p, la)?;
+        tin_pratyaya::siddhi(p, la);
     }
 
     if la.is_sarvadhatuka() {

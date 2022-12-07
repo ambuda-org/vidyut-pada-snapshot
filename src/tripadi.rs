@@ -280,6 +280,7 @@ fn try_add_final_r(p: &mut Prakriya) -> Option<()> {
 /// (8.2.76 - 8.2.79)
 fn try_lengthen_dhatu_vowel(p: &mut Prakriya) -> Option<()> {
     let i = p.find_first_where(|t| t.has_tag(T::Dhatu))?;
+    let i_n = p.find_next_where(i, |t| !t.is_empty())?;
     let dhatu = p.get(i)?;
 
     let is_rv = |opt| match opt {
@@ -301,7 +302,7 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya) -> Option<()> {
         p.step("8.2.79");
     } else if is_ik(dhatu.upadha()) && is_rv(dhatu.antya()) {
         let sub = al::to_dirgha(dhatu.upadha()?)?;
-        if p.has(i + 1, |t| HAL.contains_opt(t.adi())) {
+        if p.has(i_n, |t| HAL.contains_opt(t.adi())) {
             p.op_term("8.2.77", i, op::upadha(&sub.to_string()));
         } else {
             // TODO: only applies to padas.

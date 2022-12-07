@@ -267,31 +267,26 @@ fn maybe_do_lot_and_nit_siddhi(p: &mut Prakriya, la: La) {
 ///
 /// Due to rule 3.4.109 ("sic-abhyasta-vidibhyaH ca"), this should run after dvitva and the
 /// insertion of vikaraNas.
-pub fn siddhi(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
-    let i_dhatu = match p.find_last(T::Dhatu) {
-        Some(i) => i,
-        None => return Ok(()),
-    };
-    let i = match p.find_last(T::Tin) {
-        Some(i) => i,
-        None => return Ok(()),
-    };
+pub fn siddhi(p: &mut Prakriya, la: La) -> Option<()> {
+    let i_dhatu = p.find_last(T::Dhatu)?;
+    let i = p.find_last(T::Tin)?;
 
     // Special case: handle lut_siddhi first.
     if maybe_do_lut_siddhi(p, i, la) {
-        return Ok(());
+        return None;
     }
 
-    let tin = p.get(i).unwrap();
+    let dhatu = p.get(i_dhatu)?;
+    let tin = p.get(i)?;
     // Matching for "w" will cause errors because the ending 'iw' has 'w' as an
     // anubandha. So, match the wit-lakAras by name so we can exclude 'iw':
     let wits = &["la~w", "li~w", "lu~w", "lf~w", "le~w", "lo~w"];
     if tin.has_tag(T::Atmanepada) && tin.has_lakshana_in(wits) {
         let ta_jha = &["ta", "Ja"];
         let es_irec = &["eS", "irec"];
-        if p.has(i, |t| t.has_lakshana("li~w") && t.has_text_in(ta_jha)) {
+        if tin.has_lakshana("li~w") && tin.has_text_in(ta_jha) {
             p.op("3.4.81", |p| op::upadesha_yatha(p, i, ta_jha, es_irec));
-        } else if p.has(i, |t| t.text == "TAs") {
+        } else if tin.has_text("TAs") {
             op::adesha("3.4.80", p, i, "se");
         } else {
             p.op_term("3.4.79", i, op::ti("e"));
@@ -299,25 +294,24 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
     } else if tin.has_lakshana("li~w") && tin.has_tag(T::Parasmaipada) {
         p.op("3.4.82", |p| op::upadesha_yatha(p, i, TIN_PARA, NAL_PARA));
     } else if tin.has_lakshana("la~w") && tin.has_tag(T::Parasmaipada) {
-        if p.has(i_dhatu, f::u("vida~")) && p.has(i, f::text_in(TIN_PARA)) {
+        if dhatu.has_u("vida~") && tin.has_u_in(TIN_PARA) {
             p.op_optional("3.4.83", |p| op::upadesha_yatha(p, i, TIN_PARA, NAL_PARA));
-        } else if p.has(i_dhatu, |t| t.text == "brU")
-            && p.has(i, |t| TIN_PARA[..5].contains(&t.text.as_str()))
-        {
+        } else if dhatu.has_text("brU") && tin.has_u_in(&TIN_PARA[..5]) {
             p.op_optional("3.4.84", |p| {
                 p.set(i_dhatu, |t| t.set_text("Ah"));
                 op::upadesha_yatha(p, i, TIN_PARA, NAL_PARA);
             });
         }
+        p.step("lato va");
     }
 
     // TODO: 3.4.94 - 3.4.98
 
-    maybe_do_lot_only_siddhi(p, i)?;
+    maybe_do_lot_only_siddhi(p, i).ok()?;
     // Must occur before 3.4.100 in loT/nit siddhi.
     maybe_replace_jhi_with_jus(p, i, la);
     maybe_do_lot_and_nit_siddhi(p, la);
-    maybe_do_lin_siddhi(p, i, la)?;
+    maybe_do_lin_siddhi(p, i, la).ok()?;
 
     // The 'S' of 'eS' is just for sarva-Adeza (1.1.55). If it is kept, it will
     // cause many problems when deriving li~T. So, remove it here.
@@ -325,5 +319,5 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
         p.set(i, |t| t.remove_tag(T::Sit));
     }
 
-    Ok(())
+    Some(())
 }

@@ -184,6 +184,7 @@ pub enum Tag {
 
     /// (dhatu) indicates the optional use of aN-pratyaya in luN-lakAra per 3.1.57.
     irit,
+    /// (dhatu) indicates that kta-pratyaya denotes the present tense as opposed to the past tense.
     YIt,
     /// (dhatu) allows the krt-pratyaya "Tuc" per 3.1.90.
     wvit,
@@ -282,9 +283,11 @@ pub enum Tag {
     FlagSetSic,
     FlagAtAgama,
     FlagAtLopa,
+    /// Indicates deletion of a term's final "n" in the asiddhavat section.
     FlagNaLopa,
 
     Sat,
+    /// Indicates the insertion of `na` through the Snam-vikarana.
     Snam,
 }
 

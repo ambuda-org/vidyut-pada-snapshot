@@ -261,7 +261,7 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
             let anga = p.get(i)?;
             let n = p.view(j)?;
             let sub = al::to_vrddhi(anga.antya()?)?;
-            if anga.has_u("UrRu") {
+            if anga.has_u("UrRuY") {
                 if f::is_aprkta(n.last()?) {
                     p.op_term("7.3.91", i, op_antya_guna);
                 } else {
