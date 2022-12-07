@@ -199,7 +199,7 @@ fn apply_ac_sandhi_at_term_boundary(p: &mut Prakriya, i: usize) -> Option<()> {
     let y = p.get(j)?;
     if (x.has_antya('a') || x.has_antya('A')) && y.has_text("us") {
         p.op_term("6.1.96", i, op::antya(""));
-    } else if x.has_u("Aw") && y.has_adi(&*IK) {
+    } else if x.has_u("Aw") && y.has_adi(&*AC) {
         let sub = al::to_vrddhi(y.adi()?)?;
         p.op("6.1.90", |p| {
             // ekaH pUrvapara (6.1.84)

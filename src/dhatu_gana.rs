@@ -30,6 +30,7 @@ pub const GARVADI: &[&str] = &[
 /// these out as I've noticed them, but I'm sure there are more that should be.
 ///
 /// For usage, see 1.2.1.
+#[allow(unused)]
 pub const KUT_ADI: &[&str] = &[
     "kuwa~", "puwa~", "kuca~", "guja~", "guqa~", "qipa~", "Cura~", "sPuwa~", "muwa~", "truwa~",
     "tuwa~", "cuwa~", "Cuwa~", "juqa~", "juwa~", "kaqa~", "luwa~", "luWa~", "luqa~", "kfqa~",

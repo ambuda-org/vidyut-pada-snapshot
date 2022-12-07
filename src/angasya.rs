@@ -553,6 +553,8 @@ fn try_change_dhatu_before_y(p: &mut Prakriya) -> Option<()> {
     let dhatu = p.get(i)?;
     let n = p.view(i_n)?;
 
+    let akrt_sarva = !n.any(&[T::Sarvadhatuka, T::Krt]);
+
     if dhatu.has_u("SIN") && n.has_tag(T::Sarvadhatuka) {
         p.op_term("7.4.21", i, op::text("Se"));
     } else if dhatu.has_u("SIN") && n.has_adi('y') && n.is_knit() {
@@ -565,34 +567,32 @@ fn try_change_dhatu_before_y(p: &mut Prakriya) -> Option<()> {
             // Example: ud[i]yAt
             p.op_term("7.4.24", i, op::adi("i"));
         }
-    } else if !n.any(&[T::Sarvadhatuka, T::Krt]) {
-        if dhatu.has_antya('f') {
-            let is_sha_or_yak = n.has_u_in(&["Sa", "yak"]);
-            let is_ardhadhatuka_lin = n.has_lakshana("li~N") && n.has_tag(T::Ardhadhatuka);
+    } else if dhatu.has_antya('f') {
+        let is_sha_or_yak = n.has_u_in(&["Sa", "yak"]);
+        let is_ardhadhatuka_lin = n.has_lakshana("li~N") && n.has_tag(T::Ardhadhatuka);
 
-            // nyAsa on 7.4.29:
-            //
-            //     `ṛ gatiprāpaṇayoḥ` (dhātupāṭhaḥ-936), `ṛ sṛ gatau`
-            //     (dhātupāṭhaḥ-1098,1099) - ityetayor bhauvādika-
-            //     jauhotyādikayor grahaṇam
-            if f::is_samyogadi(dhatu) || dhatu.has_text("f") {
-                // smaryate, aryate, ...
-                p.op_term("7.4.29", i, op::antya("ar"));
-            } else if n.has_adi('y') && (is_sha_or_yak || is_ardhadhatuka_lin) {
-                // kriyate, kriyAt, ...
-                p.op_term("7.4.28", i, op::antya("ri"));
-            } else if n.has_adi('y') || n.has_u("cvi") {
-                // mantrIyati
-                p.op_term("7.4.27", i, op::antya("rI"));
-            }
-        } else if n.has_adi('y') {
-            let sub = al::to_dirgha(dhatu.antya()?)?;
-            if n.has_u("cvi") {
-                p.op_term("7.4.26", i, op::antya(&sub.to_string()));
-            } else if n.is_knit() {
-                // suKAyate
-                p.op_term("7.4.25", i, op::antya(&sub.to_string()));
-            }
+        // nyAsa on 7.4.29:
+        //
+        //     `ṛ gatiprāpaṇayoḥ` (dhātupāṭhaḥ-936), `ṛ sṛ gatau`
+        //     (dhātupāṭhaḥ-1098,1099) - ityetayor bhauvādika-
+        //     jauhotyādikayor grahaṇam
+        if akrt_sarva && (f::is_samyogadi(dhatu) || dhatu.has_text("f")) {
+            // smaryate, aryate, ...
+            p.op_term("7.4.29", i, op::antya("ar"));
+        } else if is_sha_or_yak || (n.has_adi('y') && is_ardhadhatuka_lin) {
+            // kriyate, kriyAt, ...
+            p.op_term("7.4.28", i, op::antya("ri"));
+        } else if akrt_sarva && (n.has_adi('y') || n.has_u("cvi")) {
+            // mantrIyati
+            p.op_term("7.4.27", i, op::antya("rI"));
+        }
+    } else if n.has_adi('y') {
+        let sub = al::to_dirgha(dhatu.antya()?)?;
+        if n.has_u("cvi") {
+            p.op_term("7.4.26", i, op::antya(&sub.to_string()));
+        } else if akrt_sarva && n.is_knit() {
+            // suKAyate
+            p.op_term("7.4.25", i, op::antya(&sub.to_string()));
         }
     }
 

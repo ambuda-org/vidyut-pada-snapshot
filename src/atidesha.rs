@@ -4,12 +4,11 @@ atidesha (1.2.1 - 1.2.17)
 */
 
 use crate::constants::Tag as T;
-use crate::dhatu_gana as gana;
+use crate::dhatupatha::is_kutadi;
 use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
-use crate::term::Term;
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -17,12 +16,6 @@ lazy_static! {
     static ref IK: SoundSet = s("ik");
     static ref JHAL: SoundSet = s("Jal");
     static ref HAL: SoundSet = s("hal");
-}
-
-pub fn is_kutadi(t: &Term) -> bool {
-    // Check number explicitly because some roots are duplicated within tudAdi
-    // but outside this gana (e.g. juq).
-    t.has_gana(6) && t.has_u_in(gana::KUT_ADI)
 }
 
 fn run_before_attva_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
