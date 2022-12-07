@@ -160,20 +160,18 @@ fn can_use_guna_or_vrddhi(anga: &Term, n: &TermView) -> bool {
 
 /// Runs rules that replace an anga's vowel with its corresponding vrddhi.
 /// Example: kf + i + ta -> kArita
-fn try_vrddhi_adesha(p: &mut Prakriya, i: usize) {
-    if p.has(i, f::tag(T::FlagGunaApavada)) {
-        return;
-    }
-    let n = match p.view(i + 1) {
-        Some(v) => v,
-        None => return,
-    };
+fn try_vrddhi_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
+    let dhatu = p.get_if(i, |t| !t.has_tag(T::FlagGunaApavada))?;
+    let i_n = p.find_next_where(i, |t| !t.is_empty())?;
+    let n = p.view(i_n)?;
 
-    if p.has(i, f::text("mfj")) && !n.any(&[T::kit, T::Nit]) {
+    if dhatu.has_text("mfj") && !n.is_knit() {
         p.op_term("7.2.114", i, op::text("mArj"));
     } else {
         try_nnit_vrddhi(p, i);
     }
+
+    Some(())
 }
 
 /// Runs rules for vrddhi conditioned on following Nit-Yit.
