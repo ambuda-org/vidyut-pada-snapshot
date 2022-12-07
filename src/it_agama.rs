@@ -344,6 +344,7 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
 /// Runs rules that introduce iw-Agama before a sArvadhAtuka-pratyaya.
 /// (7.2.76 - 7.2.78)
 fn try_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
+    p.step("try_sarva");
     let anga = p.get(i)?;
     let i_n = p.find_next_where(i, |t| !t.is_empty())?;
     let n = p.view(i_n)?;

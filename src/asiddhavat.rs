@@ -11,6 +11,7 @@ defined within this section.
 see the `angasya` module.
 */
 
+use crate::ac_sandhi;
 use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
 use crate::filters as f;
@@ -250,6 +251,9 @@ fn try_run_kniti_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
 /// Run rules that replace the dhatu's vowel with e and apply abhyasa-lopa.
 /// Example: `la + laB + e` -> `leBe`
 fn try_et_adesha_and_abhyasa_lopa_for_lit(p: &mut Prakriya, i: usize) -> Option<()> {
+    if i == 0 {
+        return None;
+    }
     let dhatu = p.get(i)?;
     if !dhatu.all(&[T::Dhatu, T::Abhyasta]) {
         return None;
@@ -661,7 +665,7 @@ pub fn run_for_ni(p: &mut Prakriya) -> Option<()> {
             // Apply ac_sandhi before lopa, since later rules depend on this
             // being done (e.g. cayyAt)
             // TODO: implement this.
-            // ac_sandhi.general_vowel_sandhi(p, p.terms[index - 1 : index + 1])
+            ac_sandhi::apply_general_ac_sandhi(p);
             p.op_term("6.4.51", i_ni, op::antya(""));
         }
     }

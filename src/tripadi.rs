@@ -392,8 +392,8 @@ fn per_term_1b(p: &mut Prakriya) -> Option<()> {
             Some(i_y) => {
                 let y = p.get(i_y)?;
                 y.has_adi('s') || (y.has_tag(T::Pratyaya) && y.text.starts_with("Dv"))
-            },
-            None => true
+            }
+            None => true,
         };
 
         if x.has_adi(&*BASH) && x.has_antya(&*JHAZ) && if_y {
@@ -598,8 +598,8 @@ fn try_murdhanya_for_s(p: &mut Prakriya) -> Option<()> {
     xy_rule(
         p,
         |x, _| {
-            x.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && (
-                (x.has_upadha(&*IN_KU) && x.has_antya('s'))
+            x.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"])
+                && ((x.has_upadha(&*IN_KU) && x.has_antya('s'))
                 // HACK for UsatuH (U + s + atuH)
                 || x.has_text("s"))
         },

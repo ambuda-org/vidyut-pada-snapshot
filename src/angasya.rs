@@ -984,6 +984,7 @@ pub fn hacky_before_dvitva(p: &mut Prakriya) {
 ///
 /// (7.4.1 - 7.4.6)
 fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
+    p.step("TEMP: check cani after guna");
     let i = p.find_first(T::Dhatu)?;
     let i_ni = p.find_next_where(i, |t| t.has_u_in(&["Ric", "RiN"]))?;
     let _i_can = p.find_next_where(i_ni, |t| t.has_u("caN"))?;

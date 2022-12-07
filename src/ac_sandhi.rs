@@ -24,7 +24,7 @@ lazy_static! {
 }
 
 /// Runs various general rules of vowel sandhi.
-fn apply_general_ac_sandhi(p: &mut Prakriya) {
+pub fn apply_general_ac_sandhi(p: &mut Prakriya) {
     char_rule(
         p,
         |p, text, i| {

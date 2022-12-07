@@ -61,7 +61,7 @@ fn try_shar_purva(text: &str) -> CompactString {
 
 /// `i` is the index of an abhyasa..
 fn run_for_sani_or_cani_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
-    p.step("check laghu cani");
+    p.step("TEMP: check laghu cani");
     let i_abhyasta = p.find_next_where(i, |t| t.has_tag(T::Abhyasta))?;
 
     let abhyasa = p.get(i)?;
