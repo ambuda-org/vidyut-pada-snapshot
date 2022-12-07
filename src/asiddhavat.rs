@@ -655,8 +655,9 @@ pub fn run_for_ni(p: &mut Prakriya) -> Option<()> {
     let dhatu = p.get(i_dhatu)?;
     let ni = p.get(i_ni)?;
     if dhatu.has_tag(T::mit) && ni.has_u("Ric") && dhatu.has_upadha(&*AC) {
+        let dhatu = p.get(i_dhatu)?;
         if let Some(sub) = al::to_hrasva(dhatu.upadha()?) {
-            p.op_term("6.4.92", i_ni, op::upadha(&sub.to_string()));
+            p.op_term("6.4.92", i_dhatu, op::upadha(&sub.to_string()));
         }
     }
 

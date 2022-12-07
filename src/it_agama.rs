@@ -225,16 +225,12 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
                 // Handle this after running Attva. See the run_after_attva function for details.
                 return false;
             }
+        } else if anga.has_u_in(&["zmi\\N", "pUN", "f\\", "anjU~", "asU~\\"]) && n.has_u("san") {
+            it = It::Set("7.2.74");
         }
-    } else if anga.text == "IS" && n.adi() == Some('s') {
-        add_it("7.2.77", p, i);
-        return false;
-    } else if anga.has_text_in(&["Is", "Iq", "jan"])
-        && (n.adi() == Some('s') || n.last().unwrap().has_u("Dvam"))
-    {
-        // See kAshika on 7.2.78 for inclusion of IS here.
-        add_it("7.2.78", p, i);
-        return false;
+    } else if anga.has_u_in(&["kF", "gF", "df\\N", "Df\\N", "pra\\Ca~"]) && n.has_u("san") {
+        // cikarizati, jigarizati, didarizate, diDarizate, papracCizati
+        it = It::Set("7.2.75");
     }
 
     let anga = &p.terms()[i];
@@ -339,20 +335,33 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
     }
 }
 
-fn try_sarvadhatuke(p: &mut Prakriya, i: usize) -> bool {
-    let n = match p.view(i) {
-        Some(x) => x,
-        None => return false,
-    };
+/// Runs rules that introduce iw-Agama before a sArvadhAtuka-pratyaya.
+/// (7.2.76 - 7.2.78)
+fn try_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
+    let anga = p.get(i)?;
+    let i_n = p.find_next_where(i, |t| !t.is_empty())?;
+    let n = p.view(i_n)?;
 
-    let anga = &p.terms()[i];
-    let rudh_adi = &["rudi~r", "Yizva\\pa~", "Svasa~", "ana~", "jakza~"];
-    if VAL.contains_opt(n.adi()) && n.has_tag(T::Sarvadhatuka) && anga.has_u_in(rudh_adi) {
-        add_it("7.2.76", p, i);
-        true
-    } else {
-        false
+    if !(n.has_adi(&*VAL) && n.has_tag(T::Sarvadhatuka)) {
+        return None;
     }
+
+    let rudh_adi = &["rudi~r", "Yizva\\pa~", "Svasa~", "ana~", "jakza~"];
+    if anga.has_u_in(rudh_adi) {
+        // roditi, svapiti, Svasiti, aniti, jakziti
+        add_it("7.2.76", p, i);
+    } else if anga.has_text("IS") && n.has_adi('s') {
+        // ISize, ISizva
+        add_it("7.2.77", p, i);
+    } else if anga.has_text_in(&["Iq", "jan", "IS"]) && (n.has_adi('s') || n.last()?.has_u("Dvam"))
+    {
+        // IqiDve, janiDve
+        //
+        // See kAshika on 7.2.78 for inclusion of IS here.
+        add_it("7.2.78", p, i);
+    }
+
+    Some(())
 }
 
 /// Runs rules that lengthen the iṭ.
@@ -402,9 +411,7 @@ pub fn run_before_attva(p: &mut Prakriya) {
     if try_ardhadhatuke(p, i) {
         return;
     }
-    if try_sarvadhatuke(p, i) {
-        return;
-    }
+    try_sarvadhatuke(p, i);
 
     if let Some(i) = p.find_first_where(f::is_it_agama) {
         try_lengthen_it_agama(p, i);

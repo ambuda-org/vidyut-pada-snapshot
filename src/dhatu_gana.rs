@@ -1,5 +1,6 @@
 //! Miscellaneous verb lists that are used by various rules.
 
+/// Roots that are `mit`, meaning that they will use a hrasva vowel per 6.4.92.
 pub const CUR_MIT: &[&str] = &["jYapa~", "yama~", "caha~", "capa~", "raha~", "bala~", "ciY"];
 
 pub const KUSMADI: &[&str] = &[
