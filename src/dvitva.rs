@@ -14,7 +14,54 @@ lazy_static! {
     static ref NDR: SoundSet = s("n d r");
 }
 
-fn do_dvitva(rule: Rule, p: &mut Prakriya, i: usize) -> Option<()> {
+/// Runs dvitva rules for roots that begin with vowels, e.g. UrRu.
+fn try_dvitva_for_ajadi_dhatu(rule: Rule, p: &mut Prakriya, i: usize) -> Option<()> {
+    // Create 3 terms:
+    // 1. the dhatu without the abhyasa
+    // 2. the abhyasa
+    // 3. the doubled portion
+    //
+    // 6.1.2 ajAder dvitIyasya
+    // 6.1.3 na ndrAH saMyogAdayaH
+    let dhatu = p.get(i)?;
+
+    let temp = match &dhatu.u {
+        Some(u) => u.clone(),
+        None => return None,
+    };
+    let mut third = Term::make_upadesha(&temp);
+    third.set_text(&dhatu.text[1..]);
+
+    // 6.1.3 na ndrAH saMyogAdayaH
+    while f::is_samyogadi(&third) && NDR.contains_char(third.adi()?) {
+        third.set_adi("");
+    }
+    third.add_tags(&[T::Dhatu]);
+
+    let abhyasa = Term::make_text(&third.text);
+    p.set(i, |t| t.text.truncate(t.text.len() - abhyasa.text.len()));
+    if p.has(i, |t| t.has_u("UrRuY")) {
+        third.set_text("nu");
+    }
+
+    p.insert_after(i, abhyasa);
+    p.insert_after(i + 1, third);
+    p.step(rule);
+    p.op_term("6.1.4", i + 1, op::add_tag(T::Abhyasa));
+
+    p.set(i, |t| t.add_tag(T::Abhyasta));
+    p.set(i + 1, |t| t.add_tag(T::Abhyasta));
+    p.set(i + 2, |t| t.add_tag(T::Abhyasta));
+    if p.has(i + 3, |t| t.has_u_in(&["Ric", "RiN"])) {
+        p.set(i + 3, |t| t.add_tag(T::Abhyasta));
+    }
+    p.step("6.1.5");
+    p.debug(format!("{:?}", p.terms()));
+
+    Some(())
+}
+
+fn try_dvitva(rule: Rule, p: &mut Prakriya, i: usize) -> Option<()> {
     let dhatu = p.get(i)?;
     let next = p.get(i + 1)?;
 
@@ -80,6 +127,7 @@ fn do_dvitva(rule: Rule, p: &mut Prakriya, i: usize) -> Option<()> {
         }
         p.step("6.1.5")
     } else {
+        try_dvitva_for_ajadi_dhatu(rule, p, i);
     }
 
     Some(())
@@ -100,37 +148,6 @@ fn _double(rule: str, p: Prakriya, dhatu: Term, i: int) -> Term:
             p.terms[i + 2].add_tags(T.ABHYASTA)
         p.step("6.1.5")
     else:
-        // Create 3 terms:
-        // 1. the dhatu without the abhyasa
-        // 2. the abhyasa
-        // 3. the doubled portion
-
-        // 6.1.2 ajAder dvitIyasya
-        // 6.1.3 na ndrAH saMyogAdayaH
-        third = Term.make_term(dhatu.text[1:])
-        while f.samyogadi(third) and third.adi in {"n", "d", "r"}:
-            third.text = third.text[1:]
-        third.u = dhatu.u
-        third.add_tags(T.DHATU)
-
-        // Ru -> nu for UrRu
-        if dhatu.text == "UrRu":
-            third.text = "nu"
-
-        abhyasa = Term.make_term(third.text)
-        abhyasa.add_tags(T.ABHYASA)
-        dhatu.text = dhatu.text[: -len(third.text)]
-
-        op.insert_after(None, p, dhatu, abhyasa)
-        op.insert_after(rule, p, abhyasa, third)
-        op.samjna("6.1.4", p, abhyasa, T.ABHYASA)
-
-        dhatu.add_tags(T.ABHYASTA)
-        third.add_tags(T.ABHYASTA)
-        abhyasa.add_tags(T.ABHYASTA)
-        if p.terms[i + 3].u in ("Ric", "RiN"):
-            p.terms[i + 3].add_tags(T.ABHYASTA)
-        p.step("6.1.5")
 */
 
 /// Runs dvitva at the given index.
@@ -155,15 +172,15 @@ fn run_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
         if dhatu.has_u("de\\N") {
             p.op_term("7.4.9", i, op::text("digi"));
         } else {
-            do_dvitva("6.1.8", p, i);
+            try_dvitva("6.1.8", p, i);
         }
     } else if n.has_u_in(&["san", "yaN"]) {
-        do_dvitva("6.1.9", p, i);
+        try_dvitva("6.1.9", p, i);
     } else if n.has_tag(T::Slu) {
-        do_dvitva("6.1.10", p, i);
+        try_dvitva("6.1.10", p, i);
     } else if p.find_next_where(i, |t| t.has_u("caN")).is_some() {
         // `last()` to avoid `it`.
-        do_dvitva("6.1.11", p, i);
+        try_dvitva("6.1.11", p, i);
     }
 
     Some(())
