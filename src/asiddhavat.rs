@@ -682,6 +682,22 @@ pub fn run_for_ni(p: &mut Prakriya) -> Option<()> {
     Some(())
 }
 
+fn try_kr_rule(p: &mut Prakriya, i: usize) -> Option<()> {
+    p.step("TEMP: check kr rule");
+    let i_n = p.find_next_where(i, |t| !t.is_empty())?;
+
+    let anga = p.get(i)?;
+    let n = p.view(i_n)?;
+    let last = p.terms().last()?;
+
+    let sarva_kniti = last.has_tag(T::Sarvadhatuka) && last.has_tag_in(&[T::kit, T::Nit]);
+    if anga.has_u("qukf\\Y") && anga.has_text("kar") && n.has_adi('u') && sarva_kniti {
+        p.op_term("6.4.110", i, op::text("kur"));
+    }
+
+    Some(())
+}
+
 pub fn run_after_guna(p: &mut Prakriya, i: usize) -> Option<()> {
     run_kniti_ardhadhatuka(p, i);
     run_for_final_i_or_u(p, i);
@@ -690,13 +706,7 @@ pub fn run_after_guna(p: &mut Prakriya, i: usize) -> Option<()> {
     // TODO: fails kniti check because this depends on the last affix, and
     // term view includes only "u" here. So the rule is awkwardly placed
     // here.
-    let last = p.terms().last()?;
-    let anga = p.get(i)?;
-    let n = p.view(i + 1)?;
-    let sarva_kniti = last.has_tag(T::Sarvadhatuka) && !last.has_tag_in(&[T::kit, T::Nit]);
-    if anga.has_u("qukf\\Y") && anga.has_text("kar") && n.has_adi('u') && sarva_kniti {
-        p.op_term("6.4.110", i, op::text("kur"));
-    }
+    try_kr_rule(p, i);
 
     try_et_adesha_and_abhyasa_lopa_for_lit(p, i);
 
