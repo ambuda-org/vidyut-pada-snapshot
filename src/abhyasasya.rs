@@ -61,15 +61,16 @@ fn try_shar_purva(text: &str) -> CompactString {
 
 /// `i` is the index of an abhyasa..
 fn run_for_sani_or_cani_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
-    let i_abhyasta = p.find_last(T::Abhyasta)?;
+    p.step("check laghu cani");
+    let i_abhyasta = p.find_next_where(i, |t| t.has_tag(T::Abhyasta))?;
 
     let abhyasa = p.get(i)?;
     let anga = p.get(i_abhyasta)?;
 
-    let is_ni = anga.has_u_in(&["Ric", "RiN"]);
-    let is_laghu = p.has(i_abhyasta - 1, f::is_laghu);
-    let is_cani = p.has(i_abhyasta + 1, f::u("caN"));
-    let has_at_lopa = p.has(i_abhyasta - 1, f::tag(T::FlagAtLopa));
+    let is_laghu = f::is_laghu(anga);
+    let has_at_lopa = p.has(i_abhyasta, f::tag(T::FlagAtLopa));
+    let is_ni = p.has(i_abhyasta + 1, |t| t.has_u_in(&["Ric", "RiN"]));
+    let is_cani = p.has(i_abhyasta + 2, f::u("caN"));
     let is_laghu_cani = is_ni && is_laghu && is_cani && !has_at_lopa;
 
     let is_sanvat = is_laghu_cani || p.find_next_where(i, f::u("san")).is_some();
