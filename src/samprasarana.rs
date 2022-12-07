@@ -62,17 +62,13 @@ fn try_grahi_jya_samprasarana(rule: Rule, p: &mut Prakriya, i: usize) {
     }
 }
 
-pub fn run_for_dhatu(p: &mut Prakriya) {
-    let i = match p.find_first(T::Dhatu) {
-        Some(i) => i,
-        None => return,
-    };
-    let n = match p.view(i + 1) {
-        Some(n) => n,
-        None => return,
-    };
+pub fn run_for_dhatu(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_first(T::Dhatu)?;
+    let i_n = p.find_next_where(i, |t| !t.is_empty())?;
 
-    let dhatu = &p.terms()[i];
+    let dhatu = p.get(i)?;
+    let n = p.view(i_n)?;
+
     if is_vaci_svapi(dhatu) && n.has_tag(T::kit) {
         if dhatu.has_u("ve\\Y") && n.has_lakshana("li~w") {
             p.step("6.1.40");
@@ -81,24 +77,26 @@ pub fn run_for_dhatu(p: &mut Prakriya) {
         }
     } else if is_grahi_jya(dhatu) && n.any(&[T::kit, T::Nit]) {
         try_grahi_jya_samprasarana("6.1.16", p, i);
-        if p.has(i, |t| t.text == "uy" && t.has_u("vayi~")) {
+        if p.has(i, |t| t.has_text("uy") && t.has_u("vayi~")) {
             p.op_optional("6.1.39", op::t(i, op::text("uv")));
         }
     }
 
-    let dhatu = &p.terms()[i];
-    let n = p.view(i + 1).unwrap();
+    let dhatu = p.get(i)?;
+    let n = p.view(i_n)?;
     let next_is_lit = n.has_lakshana("li~w");
     let next_is_lit_or_yan = next_is_lit || n.has_u("yaN");
     let next_will_be_abhyasta = next_is_lit || n.has_u_in(&["san", "yaN", "Slu", "caN"]);
 
-    if dhatu.text == "pyAy" && next_is_lit_or_yan {
+    if dhatu.has_text("pyAy") && next_is_lit_or_yan {
         p.op_term("6.1.29", i, op::text("pI"));
-    } else if dhatu.text == "Svi" && next_is_lit_or_yan {
+    } else if dhatu.has_text("Svi") && next_is_lit_or_yan {
         p.op_optional("6.1.30", op::t(i, op::text("Su")));
-    } else if dhatu.text == "hve" && next_will_be_abhyasta {
+    } else if dhatu.has_text("hve") && next_will_be_abhyasta {
         p.op_term("6.1.33", i, op::text("hu"));
     }
+
+    Some(())
 }
 
 pub fn run_for_abhyasa(p: &mut Prakriya) {
