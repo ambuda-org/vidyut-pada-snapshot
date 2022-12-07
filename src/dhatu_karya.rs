@@ -111,17 +111,25 @@ fn maybe_add_num_agama(p: &mut Prakriya, i: usize) {
     }
 }
 
-fn maybe_add_upasarga(p: &mut Prakriya, i: usize) {
-    // These two roots are always used with the upasarga `adhi-`:
-    p.rule(
-        "1.4.80",
-        |p| p.has(i, |t| t.has_u_in(&["i\\N", "i\\k"])),
-        |p| {
-            let mut upa = Term::make_upadesha("aDi");
-            upa.add_tag(T::Upasarga);
-            p.insert_before(0, upa);
-        },
-    );
+fn maybe_add_upasarga(p: &mut Prakriya, i: usize) -> Option<()> {
+    let dhatu = p.get(i)?;
+
+    if dhatu.has_u_in(&["i\\N", "i\\k"]) {
+        // These two roots are always used with the upasarga `adhi-`:
+        let mut upa = Term::make_upadesha("aDi");
+        upa.add_tag(T::Upasarga);
+        p.insert_before(0, upa);
+        p.step("1.4.80");
+    } else if dhatu.has_u("SAsu~\\") {
+        // This root is nearly alwayd used with the upasarga `A-`:
+        let mut upa = Term::make_upadesha("AN");
+        upa.add_tag(T::Upasarga);
+        p.insert_before(0, upa);
+        p.step("1.4.80");
+        it_samjna::run(p, 0).ok()?;
+    }
+
+    Some(())
 }
 
 pub fn run(p: &mut Prakriya, dhatu: &str, code: &str) -> Result<(), Box<dyn Error>> {

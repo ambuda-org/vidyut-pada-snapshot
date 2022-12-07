@@ -462,10 +462,11 @@ fn try_add_num_agama(p: &mut Prakriya) -> Option<()> {
 /// TODO: 7.3.99 - 100
 pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
     let i_last = p.terms().len() - 1;
-    let i = p.find_prev_where(i_last, |t| !t.is_empty())?;
+    let i_anga = p.find_prev_where(i_last, |t| !t.is_empty() && !t.has_tag(T::Agama))?;
+    let i_pratyaya_start = p.find_next_where(i_anga, |t| !t.is_empty())?;
 
-    let anga = p.get(i)?;
-    let n = p.get(i_last)?;
+    let anga = p.get(i_anga)?;
+    let n = p.view(i_pratyaya_start)?;
 
     if n.has_adi(&*HAL) && n.has_tag(T::Sarvadhatuka) {
         let piti = n.has_tag(T::pit);
@@ -476,7 +477,7 @@ pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
             rule = maybe_rule(p, "7.3.94");
         } else if anga.has_u_in(&["tu\\", "ru", "zwu\\Y", "Sam", "ama~"]) {
             rule = maybe_rule(p, "7.3.95");
-        } else if f::is_aprkta(n) {
+        } else if f::is_aprkta(p.get(i_last)?) {
             if anga.has_u_in(&["asa~", "si~c"]) {
                 rule = Some("7.3.96");
             } else if anga.has_u_in(&["rud", "svap", "Svas", "praR", "jakz"]) {
@@ -485,8 +486,8 @@ pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
         }
 
         if let Some(rule) = rule {
-            p.op(rule, |p| op::insert_agama_after(p, i, "Iw"));
-            it_samjna::run(p, i + 1).ok()?;
+            p.op(rule, |p| op::insert_agama_before(p, i_pratyaya_start, "Iw"));
+            it_samjna::run(p, i_pratyaya_start).ok()?;
         }
     }
 

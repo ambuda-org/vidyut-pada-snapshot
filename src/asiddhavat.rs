@@ -440,9 +440,10 @@ fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
         }
     } else if anga.has_text("syad") && n.has_u("GaY") {
         p.op_optional("6.4.28", op::t(i, op::upadha("")));
-    } else if anga.has_text("SAs") && is_kniti && (n.has_u("aN") || n.has_adi(&*HAL)) {
+    } else if anga.has_u("SAsu~") && is_kniti && (n.has_u("aN") || n.has_adi(&*HAL)) {
+        // "āṅaḥ śāsu icchāyām iti asya na bhavati" -- kashika
         p.op_term("6.4.34", i, op::upadha("i"));
-    } else if anga.has_text("SAs") && n.last()?.has_text("hi") {
+    } else if anga.has_u("SAsu~") && n.last()?.has_text("hi") {
         // SAs + hi -> SAhi (-> SADi)
         p.op_term("6.4.35", i, op::text("SA"));
     }
