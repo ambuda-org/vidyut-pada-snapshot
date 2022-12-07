@@ -45,6 +45,10 @@ pub fn run(p: &mut Prakriya, la: La) -> Option<()> {
         if la.is_ardhadhatuka() {
             if p.is_allowed("3.1.31") {
                 add_pratyaya = false;
+                // TODO: not sure where to do this.
+                if p.has(i, |t| t.has_u("fti")) {
+                    p.set(i, |t| t.set_text("ft"));
+                }
                 p.step("3.1.31");
             } else {
                 p.decline("3.1.31");

@@ -131,10 +131,6 @@ pub fn lakshana(text: &'static str) -> impl Fn(&Term) -> bool {
     move |t| t.has_lakshana(text)
 }
 
-pub fn lakshana_in(xs: &'static [&str]) -> impl Fn(&Term) -> bool {
-    move |t| t.has_lakshana_in(xs)
-}
-
 /// Returns whether the term's upadesha is exactly `x`.
 pub fn u(u: &'static str) -> impl Fn(&Term) -> bool {
     move |t| t.has_u(u)

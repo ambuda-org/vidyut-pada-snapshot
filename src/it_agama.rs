@@ -324,11 +324,11 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
         It::Set(code) => {
             if add_sak {
                 p.op(code, |p| {
-                    op::insert_agama_after(p, i, "sa~k");
-                    op::insert_agama_after(p, i + 1, "iw");
+                    // TODO: properly set sak-Agama.
+                    p.set(i, |t| t.text += "s");
+                    op::insert_agama_after(p, i, "iw");
                     p.step(code);
                     it_samjna::run(p, i + 1).unwrap();
-                    it_samjna::run(p, i + 2).unwrap();
                 });
             } else {
                 add_it(code, p, i);

@@ -105,8 +105,9 @@ pub fn run(p: &mut Prakriya) -> Option<()> {
         }
     }
 
-    // Use first because of "pUrvavat sanaH"
-    let i = p.find_first(T::Dhatu)?;
+    // Exclude "san" per 1.3.62.
+    // TODO: handle this bette.t
+    let i = p.find_last_where(|t| t.has_tag(T::Dhatu) && !t.has_u("san"))?;
 
     if p.has_tag(T::Atmanepada) {
         // E.g. if set by gana sutra (see `dhatu_karya`)
