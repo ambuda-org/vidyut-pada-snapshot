@@ -83,8 +83,9 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) -> Option<()> {
     }
 
     let i = p.find_first(T::Dhatu)?;
+    let j = p.find_next_where(i, |t| !t.is_empty())?;
     let dhatu = p.get(i)?;
-    let n = p.get(i + 1)?;
+    let n = p.view(j)?;
 
     if dhatu.has_text("ad") {
         if n.has_lakshana_in(&["lu~N", "san"]) {
@@ -116,6 +117,7 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) -> Option<()> {
                 op::adesha("2.4.43", p, i, "vaDa");
             }
         }
+        p.step("han but failed");
     } else if dhatu.has_u_in(&["i\\R", "i\\k"]) {
         if dhatu.has_u("i\\k") {
             p.step("2.4.45.v1");
@@ -170,7 +172,7 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) -> Option<()> {
         //
         // As a crude fix, just check for endings that we expect will start with
         // vowels.
-        let n = p.get(i + 1)?;
+        let n = p.get(j)?;
         let will_yasut = la == La::AshirLin && p.has_tag(T::Parasmaipada);
         let is_lit_ajadi = la == La::Lit && p.terms().last().unwrap().has_adi(&*AC);
         let will_have_valadi = !(will_yasut || is_lit_ajadi);

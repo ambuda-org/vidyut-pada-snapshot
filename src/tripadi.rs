@@ -595,10 +595,18 @@ fn try_murdhanya_for_s(p: &mut Prakriya) -> Option<()> {
     xy_rule(
         p,
         |x, _| {
-            x.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && x.has_upadha(&*IN_KU) && x.has_antya('s')
+            x.has_u_in(&["va\\sa~", "SAsu~", "Gasx~"]) && (
+                (x.has_upadha(&*IN_KU) && x.has_antya('s'))
+                // HACK for UsatuH (U + s + atuH)
+                || x.has_text("s"))
         },
         |p, i, _| {
-            p.op_term("8.3.60", i, op::antya("z"));
+            let x = p.get(i).unwrap();
+            if x.has_text("s") {
+                p.op_term("8.3.60", i, op::text("z"));
+            } else {
+                p.op_term("8.3.60", i, op::antya("z"));
+            }
         },
     );
 
