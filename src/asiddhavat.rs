@@ -43,7 +43,7 @@ fn is_anekac(p: &Prakriya, i: usize) -> bool {
     for t in p.terms()[..=i].iter().rev() {
         // HACK to skip aw/Aw-Agama (a-gacchat) which should not be counted because it, too, is added
         // in the asiddhavat section. (6.4.71 - 6.4.72).
-        if t.has_tag(T::Agama) && t.has_u_in(&["aw", "Aw"]) {
+        if t.has_tag_in(&[T::Agama, T::Upasarga]) && t.has_u_in(&["aw", "Aw"]) {
             continue;
         }
 
@@ -573,7 +573,7 @@ fn run_for_final_i_or_u(p: &mut Prakriya, i: usize) -> Option<()> {
     let j = p.find_next_where(i, |t| !t.is_empty())?;
     let n = p.view(j)?;
 
-    if !anga.has_antya(&*I_U) || !n.has_adi(&*AC) {
+    if !anga.has_antya(&*I_U) || !n.has_adi(&*AC) || anga.has_tag(T::Upasarga) {
         return None;
     }
 
