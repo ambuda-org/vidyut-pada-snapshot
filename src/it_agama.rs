@@ -334,6 +334,7 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
                 });
             } else {
                 add_it(code, p, i);
+                p.debug(format!("added {i} {:?}", p.terms()));
             }
             false
         }

@@ -74,14 +74,14 @@ fn maybe_do_jha_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
 
     let base = p.get(i_base)?;
     if p.has(i, f::atmanepada) {
-        let add_rut = |p: &mut Prakriya| op::insert_agama_after(p, i_base, "ru~w");
+        let add_rut = |p: &mut Prakriya| op::insert_agama_before(p, i, "ru~w");
         if base.has_u("SIN") {
             p.op("7.1.6", add_rut);
-            it_samjna::run(p, i_base + 1).ok()?;
+            it_samjna::run(p, i).ok()?;
         } else if base.has_u("vida~") && base.has_gana(2) {
             // e.g. vidrate
             if p.op_optional("7.1.7", add_rut) {
-                it_samjna::run(p, i_base + 1).ok()?;
+                it_samjna::run(p, i).ok()?;
             }
         }
     }
@@ -549,8 +549,9 @@ fn try_sarvadhatuke(p: &mut Prakriya) {
 /// (7.4.21 - 7.4.29)
 fn try_change_dhatu_before_y(p: &mut Prakriya) -> Option<()> {
     let i = p.find_last(T::Dhatu)?;
+    let i_n = p.find_next_where(i, |t| !t.is_empty())?;
     let dhatu = p.get(i)?;
-    let n = p.view(i + 1)?;
+    let n = p.view(i_n)?;
 
     if dhatu.has_u("SIN") && n.has_tag(T::Sarvadhatuka) {
         p.op_term("7.4.21", i, op::text("Se"));
