@@ -461,17 +461,11 @@ fn try_add_num_agama(p: &mut Prakriya) -> Option<()> {
 /// Skipped: 7.3.97 ("bahulam chandasi")
 /// TODO: 7.3.99 - 100
 pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
-    let i_sarva = p.find_last(T::Sarvadhatuka)?;
-    if i_sarva == 0 {
-        return None;
-    };
-    let i = i_sarva - 1;
+    let i_last = p.terms().len() - 1;
+    let i = p.find_prev_where(i_last, |t| !t.is_empty())?;
 
     let anga = p.get(i)?;
-    if anga.text.is_empty() {
-        return None;
-    }
-    let n = p.view(i_sarva)?;
+    let n = p.get(i_last)?;
 
     if n.has_adi(&*HAL) && n.has_tag(T::Sarvadhatuka) {
         let piti = n.has_tag(T::pit);
@@ -482,7 +476,7 @@ pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
             rule = maybe_rule(p, "7.3.94");
         } else if anga.has_u_in(&["tu\\", "ru", "zwu\\Y", "Sam", "ama~"]) {
             rule = maybe_rule(p, "7.3.95");
-        } else if f::is_aprkta(n.last()?) {
+        } else if f::is_aprkta(n) {
             if anga.has_u_in(&["asa~", "si~c"]) {
                 rule = Some("7.3.96");
             } else if anga.has_u_in(&["rud", "svap", "Svas", "praR", "jakz"]) {
