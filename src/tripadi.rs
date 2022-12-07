@@ -386,21 +386,24 @@ fn per_term_1b(p: &mut Prakriya) -> Option<()> {
         }
     }
 
-    xy_rule(
-        p,
-        |x, y| {
-            x.has_adi(&*BASH)
-                && x.has_antya(&*JHAZ)
-                && (y.has_adi('s') || (y.has_tag(T::Pratyaya) && y.text.starts_with("Dv")))
-        },
-        |p, i, _| {
+    for i in 0..p.terms().len() {
+        let x = p.get(i)?;
+        let if_y = match p.find_next_where(i, |t| !t.is_empty()) {
+            Some(i_y) => {
+                let y = p.get(i_y)?;
+                y.has_adi('s') || (y.has_tag(T::Pratyaya) && y.text.starts_with("Dv"))
+            },
+            None => true
+        };
+
+        if x.has_adi(&*BASH) && x.has_antya(&*JHAZ) && if_y {
             p.op_term("8.2.37", i, |t| {
                 let key = t.adi().unwrap();
                 let sub = BASH_TO_BHAZ.get(key).unwrap();
                 t.set_adi(&sub.to_string());
             });
-        },
-    );
+        }
+    }
 
     // Exclude the following from 8.2.39 so that the corresponding rules aren't
     // vyartha:

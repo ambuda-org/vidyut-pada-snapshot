@@ -583,7 +583,7 @@ pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {
 //
 // (6.4.77 - 6.4.100)
 fn run_for_final_i_or_u(p: &mut Prakriya, i: usize) -> Option<()> {
-    let anga = p.get(i)?;
+    let anga = p.get_if(i, |t| !t.has_tag(T::Agama))?;
     let j = p.find_next_where(i, |t| !t.is_empty())?;
     let n = p.view(j)?;
 
