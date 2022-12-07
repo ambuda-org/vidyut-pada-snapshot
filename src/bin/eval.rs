@@ -98,8 +98,9 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         }
     }
 
+    let remaining = n - num_matches;
     let pct = 100_f32 * (num_matches as f32) / (n as f32);
-    println!("Results: {num_matches} / {n} ({pct:.2}%)");
+    println!("Results: {num_matches} / {n} ({pct:.2}%, {remaining} remain)");
     Ok(())
 }
 
