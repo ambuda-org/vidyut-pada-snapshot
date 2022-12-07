@@ -443,15 +443,21 @@ fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
 
 /// Runs rules that delete the final n of a term.
 ///
+/// Returns `Some(())` if na-lopa was applied.
+///
 /// (6.4.36 - 6.4.44)
 /// TODO: 6.4.41
 fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
-    let n = p.view(i + 1)?;
+    let i_n = p.find_next_where(i, |t| !t.is_empty())?;
+    let n = p.view(i_n)?;
 
     if !(anga.has_antya('n') || anga.has_antya('m')) {
         return None;
     }
+
+    // Used to check if na-lopa was applied.
+    let had_n = anga.has_antya('n');
 
     let is_anudatta = anga.has_tag(T::Anudatta);
     let is_tanadi = anga.has_u_in(gana::TAN_ADI);
@@ -496,7 +502,12 @@ fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
         }
     }
 
-    Some(())
+    let anga = p.get(i)?;
+    if had_n != anga.has_antya('n') {
+        Some(())
+    } else {
+        None
+    }
 }
 
 fn try_add_a_agama(p: &mut Prakriya) -> Option<()> {
@@ -533,11 +544,14 @@ fn try_add_a_agama(p: &mut Prakriya) -> Option<()> {
 
 pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {
     try_upadha_nalopa(p, i);
-    try_antya_nalopa(p, i);
+    let has_na_lopa = try_antya_nalopa(p, i).is_some();
+
     if i == 0 {
         try_add_a_agama(p);
     }
-    try_ardhadhatuke(p, i);
+    if !has_na_lopa {
+        try_ardhadhatuke(p, i);
+    }
 
     let j = p.find_next_where(i, |t| !t.is_empty())?;
 
