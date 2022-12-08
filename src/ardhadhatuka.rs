@@ -177,7 +177,7 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) -> Option<()> {
         // vowels.
         let n = p.get(j)?;
         let will_yasut = la == La::AshirLin && p.has_tag(T::Parasmaipada);
-        let is_lit_ajadi = la == La::Lit && p.terms().last().unwrap().has_adi(&*AC);
+        let is_lit_ajadi = la == La::Lit && p.terms().last()?.has_adi(&*AC);
         let will_have_valadi = !(will_yasut || is_lit_ajadi);
         if n.has_adi(&*VAL) && will_have_valadi {
             if p.is_allowed("2.4.56.v2") {

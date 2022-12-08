@@ -218,8 +218,9 @@ fn try_run_kniti_sarvadhatuke_for_shna_and_abhyasta(p: &mut Prakriya, i: usize) 
 }
 
 fn try_run_kniti_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
+    let i_n = p.find_next_where(i, |t| !t.is_empty())?;
     let anga = p.get(i)?;
-    let n = p.view(i + 1)?;
+    let n = p.view(i_n)?;
 
     if !n.has_tag(T::Sarvadhatuka) {
         return None;

@@ -631,17 +631,20 @@ fn try_add_or_remove_nit(p: &mut Prakriya) -> Option<()> {
 /// Runs rules that modify the `tAs` vikarana that follows `as` in `luw`-lakAra.
 ///
 /// (7.4.50 - 7.4.52)
-fn try_tas_asti_lopa(p: &mut Prakriya, i: usize) {
+fn try_tas_asti_lopa(p: &mut Prakriya, i: usize) -> Option<()> {
     if p.has(i, |t| t.text == "tAs" || f::is_asti(t)) {
-        let n = i + 1;
-        if p.has(n, |t| t.has_adi('s')) {
+        let i_n = p.find_next_where(i, |t| !t.is_empty())?;
+        let n = p.get(i_n)?;
+        if n.has_adi('s') {
             p.op_term("7.4.50", i, op::antya(""));
-        } else if p.has(n, |t| t.has_adi('r')) {
+        } else if n.has_adi('r') {
             p.op_term("7.4.51", i, op::antya(""));
-        } else if p.has(n, |t| t.has_adi('e')) {
+        } else if n.has_adi('e') {
             p.op_term("7.4.52", i, op::antya("h"));
         }
     }
+
+    Some(())
 }
 
 /// A miscellaneous function that needs to be refactored.
@@ -832,7 +835,7 @@ fn try_ato_dirgha(p: &mut Prakriya, i: usize) {
 fn try_sic_vrddhi(p: &mut Prakriya) -> Option<()> {
     let i = p.find_last(T::Dhatu)?;
 
-    let vikarana = p.view(i + 1).unwrap();
+    let vikarana = p.view(i + 1)?;
     let (i_it, i_sic) = match vikarana.slice().len() {
         1 => (None, vikarana.start()),
         2 => (Some(vikarana.start()), vikarana.end()),
@@ -874,11 +877,7 @@ fn try_sic_vrddhi(p: &mut Prakriya) -> Option<()> {
     let mut block = None;
 
     let dhatu = p.get(i)?;
-    let it = if i_it.is_none() {
-        None
-    } else {
-        p.get(i_it.unwrap())
-    };
+    let it = if let Some(x) = i_it { p.get(x) } else { None };
     // TODO: don't add hack for tug-Agama. Should reorder.
     if it.is_some() {
         // TODO: other cases
