@@ -261,8 +261,10 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
             let sub = al::to_vrddhi(anga.antya()?)?;
             if anga.has_u("UrRuY") {
                 if f::is_aprkta(n.last()?) {
+                    // prOrRot
                     p.op_term("7.3.91", i, op_antya_guna);
                 } else {
+                    // UrROti, UrRoti
                     // If vrddhi is declined, UrRu will take guna by 7.3.84 below.
                     p.op_optional("7.3.90", op::t(i, op::antya(sub)));
                 }

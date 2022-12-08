@@ -59,6 +59,13 @@ fn add_it(rule: Rule, p: &mut Prakriya, i: usize) {
     it_samjna::run(p, i + 1).unwrap();
 }
 
+fn add_it_before(rule: Rule, p: &mut Prakriya, i: usize) {
+    let agama = Term::make_agama("iw");
+    p.insert_before(i, agama);
+    p.step(rule);
+    it_samjna::run(p, i).unwrap();
+}
+
 /// Runs general rules that prevent iT-Agama. Returns whether the iT-Agama procedure is complete.
 ///
 /// (7.2.8 - 7.2.34)
@@ -356,16 +363,16 @@ fn try_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
     let rudh_adi = &["rudi~r", "Yizva\\pa~", "Svasa~", "ana~", "jakza~"];
     if anga.has_u_in(rudh_adi) {
         // roditi, svapiti, Svasiti, aniti, jakziti
-        add_it("7.2.76", p, i);
+        add_it_before("7.2.76", p, i_n);
     } else if anga.has_text("IS") && n.has_adi('s') {
         // ISize, ISizva
-        add_it("7.2.77", p, i);
+        add_it_before("7.2.77", p, i_n);
     } else if anga.has_text_in(&["Iq", "jan", "IS"]) && (n.has_adi('s') || n.last()?.has_u("Dvam"))
     {
         // IqiDve, janiDve
         //
         // See kAshika on 7.2.78 for inclusion of IS here.
-        add_it("7.2.78", p, i);
+        add_it_before("7.2.78", p, i_n);
     }
 
     Some(())
