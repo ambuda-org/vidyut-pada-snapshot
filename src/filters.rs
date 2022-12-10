@@ -107,11 +107,6 @@ pub fn atmanepada(t: &Term) -> bool {
     t.has_tag(T::Atmanepada)
 }
 
-/// Returns whether the term is a Sarvadhatuka pratyaya.
-pub fn sarvadhatuka(t: &Term) -> bool {
-    t.has_tag(T::Sarvadhatuka)
-}
-
 /// Returns whether the term is a sup pratyaya.
 pub fn sup(t: &Term) -> bool {
     t.has_tag(T::Sup)
@@ -125,10 +120,6 @@ pub fn text(x: &'static str) -> impl Fn(&Term) -> bool {
 /// Returns whether the term's text is contained in `xs`.
 pub fn text_in(xs: &'static [&str]) -> impl Fn(&Term) -> bool {
     move |t| t.has_text_in(xs)
-}
-
-pub fn lakshana(text: &'static str) -> impl Fn(&Term) -> bool {
-    move |t| t.has_lakshana(text)
 }
 
 /// Returns whether the term's upadesha is exactly `x`.

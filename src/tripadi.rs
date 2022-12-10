@@ -11,7 +11,7 @@ rest of the text selects rules based on their priority and allows a rule to appl
 the tripādi applies rules in order and will never "go back" to apply an earlier rule.
 */
 
-use crate::char_view::{char_at, char_rule, set_at, xy, xyz};
+use crate::char_view::{char_at, char_rule, get_at, set_at, xy, xyz};
 use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operators as op;
@@ -113,15 +113,16 @@ fn try_lopa_of_samyoganta_and_s(p: &mut Prakriya) -> Option<()> {
     );
 
     for i in 0..p.terms().len() {
-        let n = match p.find_next_where(i, |t| !t.is_empty()) {
+        let j = match p.find_next_where(i, |t| !t.is_empty()) {
             Some(i) => i,
             None => break,
         };
 
         let x = p.get(i)?;
-        let y = p.get(n)?;
-        if x.has_antya('r') && y.has_text("s") && n == p.terms().len() - 1 {
-            p.op_term("8.2.24", i, op::adi(""));
+        let y = p.get(j)?;
+        if x.has_antya('r') && y.has_text("s") && j == p.terms().len() - 1 {
+            // Urj -> Urk
+            p.op_term("8.2.24", j, op::adi(""));
         } else if x.has_antya('s') && y.has_adi('D') {
             // Per kAzikA, applies only to s of si~c. But this seems to cause
             // problems e.g. for tAs + Dve.
@@ -144,19 +145,45 @@ fn try_lopa_of_samyoganta_and_s(p: &mut Prakriya) -> Option<()> {
         }
     }
 
-    // saMst can be handled only with difficulty. For details, see the
-    // commentary in the mAdhavIya-dhAtuvRtti:
-    //
-    // https://archive.org/details/237131938MadhaviyaDhatuVrtti/page/n434/mode/1up
-    // TODO: re-add support for samst
     char_rule(
         p,
-        |_, text, i| {
+        |p, text, i| {
             let bytes = text.as_bytes();
             if let (Some(x), Some(y)) = (bytes.get(i), bytes.get(i + 1)) {
                 let x = *x as char;
                 let y = *y as char;
-                let sku_samyoga = (x == 's' || x == 'k') && HAL.contains_char(y);
+
+                // Check that this is the start of a samyoga as opposed to a portion of a larger
+                // samyoga. This check is necessary to prevent `saMstti -> santti`.
+                //
+                // > "'skoḥ' iti salopo'tra na bhavati, bahūnāṃ samavāye dvayossaṃyogasaṃjñābhāvāt"
+                // > iti ātreyamaitreyau."
+                // -- Madhaviya-dhatuvrtti [1].
+                //
+                // But, we should still allow mantkzyati -> maNksyati:
+                //
+                // > 'masjerantyātpūrvaṃ numamicchantyanuṣaṅgasaṃyogādilopārtham' ityantyātpūrvam,
+                // > numi 'skoḥ saṃyogādyoḥ' iti salopaḥ.
+                // -- Madhaviya-dhatuvrtti [2].
+                //
+                // So as a quick hack, w should be (empty OR a vowel) AND not "samst".
+                //
+                // [1]: https://archive.org/details/237131938MadhaviyaDhatuVrtti/page/n434/mode/1up
+                // [2]: as above, but `n540` instead of `n434` in the URL.
+                let is_start_of_samyoga = if i > 0 {
+                    match bytes.get(i - 1) {
+                        Some(w) => {
+                            let w = *w as char;
+                            (AC.contains_char(w) || w == 'n')
+                                && !get_at(p, i).unwrap().has_text("sanst")
+                        }
+                        None => true,
+                    }
+                } else {
+                    false
+                };
+                let sku_samyoga =
+                    (x == 's' || x == 'k') && HAL.contains_char(y) && is_start_of_samyoga;
                 if let Some(z) = bytes.get(i + 2) {
                     let z = *z as char;
                     sku_samyoga && JHAL.contains_char(z)
@@ -562,8 +589,7 @@ fn try_mn_to_anusvara(p: &mut Prakriya) {
 
 fn try_ra_lopa(p: &mut Prakriya) {
     for i in 0..p.terms().len() {
-        let n = p.view(i + 1);
-        let is_padanta = n.map(|x| x.is_padanta()).unwrap_or(true);
+        let is_padanta = p.find_next_where(i, |t| !t.is_empty()).is_none();
 
         // 8.3.15
         // TODO: next pada

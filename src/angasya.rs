@@ -467,6 +467,7 @@ pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
 
     let anga = p.get(i_anga)?;
     let n = p.view(i_pratyaya_start)?;
+    let is_aprkta = n.slice().iter().map(|t| t.text.len()).sum::<usize>() == 1;
 
     if n.has_adi(&*HAL) && n.has_tag(T::Sarvadhatuka) {
         let piti = n.has_tag(T::pit);
@@ -477,7 +478,7 @@ pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
             rule = maybe_rule(p, "7.3.94");
         } else if anga.has_u_in(&["tu\\", "ru", "zwu\\Y", "Sam", "ama~"]) {
             rule = maybe_rule(p, "7.3.95");
-        } else if f::is_aprkta(p.get(i_last)?) {
+        } else if is_aprkta {
             if anga.has_u_in(&["asa~", "si~c"]) {
                 rule = Some("7.3.96");
             } else if anga.has_u_in(&["rud", "svap", "Svas", "praR", "jakz"]) {
@@ -499,33 +500,25 @@ pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
 /// Example: `labh + Ate -> labh + Iyte (-> labhete)`
 ///
 /// (7.2.76 - 7.2.81)
-fn try_sarvadhatuke(p: &mut Prakriya) {
-    let i = match p.find_last(T::Tin) {
-        Some(i) => i,
-        None => return,
-    };
+fn try_sarvadhatuke(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_last(T::Tin)?;
 
-    if !p.has(i, f::sarvadhatuka) {
-        return;
-    }
+    let tin = p.get_if(i, |t| t.has_tag(T::Sarvadhatuka))?;
 
-    if p.has(i, f::lakshana("li~N")) {
+    if tin.has_lakshana("li~N") {
         // At this stage, all liN verbs will have an Agama (such as yAsu~w) between the
         // dhatu/vikarana and the tin-pratyaya.
         let i_anga = i - 2;
         let i_agama = i - 1;
-
-        if !p.has(i_agama, f::tag(T::Agama)) {
-            return;
-        }
+        let agama = p.get_if(i_agama, |t| t.has_tag(T::Agama))?;
 
         let contains_s = |t: &Term| t.text.contains('s');
-        if p.has(i_agama, contains_s) || p.has(i, contains_s) {
+        if contains_s(agama) || contains_s(tin) {
             p.op("7.2.79", |p| {
-                let agama = &mut p.terms_mut()[i_agama];
+                let agama = p.get_mut(i_agama).expect("present");
                 agama.text.retain(|c| c != 's');
 
-                let tin = &mut p.terms_mut()[i];
+                let tin = p.get_mut(i).expect("present");
                 if tin.has_antya('s') {
                     tin.text.retain(|c| c != 's');
                     tin.text += "s";
@@ -536,7 +529,9 @@ fn try_sarvadhatuke(p: &mut Prakriya) {
         }
 
         // yAs -> yA due to 7.2.79 above.
-        if p.has(i_anga, |t| t.has_antya('a')) && p.has(i_agama, f::text("yA")) {
+        let anga = p.get(i_anga)?;
+        let agama = p.get(i_agama)?;
+        if anga.has_antya('a') && agama.has_text("yA") {
             p.op_term("7.2.80", i_agama, op::text("Iy"));
         }
     }
@@ -545,6 +540,8 @@ fn try_sarvadhatuke(p: &mut Prakriya) {
     if p.has(i - 1, |t| t.has_antya('a')) && p.has(i, |t| t.has_adi('A') && t.has_tag(T::Nit)) {
         p.op_term("7.2.81", i, op::adi("Iy"));
     }
+
+    Some(())
 }
 
 /// (7.4.21 - 7.4.29)
@@ -1177,6 +1174,18 @@ fn try_anga_adesha_before_vibhakti(p: &mut Prakriya) -> Option<()> {
     Some(())
 }
 
+fn try_didhi_vevi_lopa(p: &mut Prakriya, i: usize) -> Option<()> {
+    let i_n = p.find_next_where(i, |t| !t.is_empty())?;
+
+    let anga = p.get(i)?;
+    let n = p.view(i_n)?;
+    if anga.has_u_in(&["dIDIN", "vevIN"]) && n.has_adi(&*I_U) {
+        p.op_term("7.4.53", i, op::antya(""));
+    }
+
+    Some(())
+}
+
 pub fn run_remainder(p: &mut Prakriya) {
     sup_adesha::run(p);
 
@@ -1218,11 +1227,7 @@ pub fn run_remainder(p: &mut Prakriya) {
         unknown(p, i);
         try_tas_asti_lopa(p, i);
 
-        if let Some(n) = p.view(i + 1) {
-            if p.has(i, f::u_in(&["dIDIN", "vevIN"])) && n.has_adi(&*I_U) {
-                p.op_term("7.4.53", i, op::antya(""));
-            }
-        };
+        try_didhi_vevi_lopa(p, i);
     }
 
     // Must occur before guna and after 7.3.77 (gam -> gacC).
