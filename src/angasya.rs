@@ -212,36 +212,31 @@ fn try_nnit_vrddhi(p: &mut Prakriya, i: usize) -> Option<()> {
 /// Runs rules that replace an anga's vowel with its corresponding guna.
 /// Example: buD + a + ti -> boDati
 fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
-    p.step("TEMP try guna");
-    let anga = p.get(i)?;
-    if anga.has_tag(T::Agama) {
-        return None;
-    }
-
     let j = p.find_next_where(i, |t| !t.is_empty())?;
-    let n = p.view(j)?;
-    if !can_use_guna_or_vrddhi(anga, &n) {
-        return None;
-    }
 
+    let anga = p.get_if(i, |t| !t.has_tag(T::Agama))?;
+    let n = p.view(j)?;
+
+    let can_use_guna = can_use_guna_or_vrddhi(anga, &n);
     let is_sarva_ardha = n.any(&[T::Sarvadhatuka, T::Ardhadhatuka]);
     let piti_sarvadhatuke = n.all(&[T::pit, T::Sarvadhatuka]);
     let is_ik = anga.has_antya(&*IK);
 
     // HACK: Asiddhavat, but this blocks guna.
     // TODO: move this to asiddhavat && add no_guna tag.
-    if anga.has_text("guh") && n.has_adi(&*AC) {
+    if anga.has_text("guh") && n.has_adi(&*AC) && can_use_guna {
+        // gUhati, agUhat -- but jugohatuH due to Nit on the pratyaya.
         p.op_term("6.4.89", i, op::upadha("U"));
     } else if anga.has_u_in(&["Divi~", "kfvi~"]) {
-        // Per commentary on 3.1.81, make an exception for dhinv and kRNv.
-    } else if anga.has_u("mid") && n.has_tag(T::Sit) {
+        // Per commentary on 3.1.81, these roots don't take guna.
+    } else if anga.has_text("mid") && n.has_tag(T::Sit) {
         p.op_term("7.3.82", i, |t| {
             t.text.replace_range(.., "med");
             t.add_tag(T::FlagGuna);
         });
     } else if is_ik && n.has_u("jus") {
         p.op_term("7.3.83", i, op_antya_guna);
-    } else if is_sarva_ardha {
+    } else if is_sarva_ardha && can_use_guna {
         let anga = p.get(i)?;
         let n = p.view(j)?;
         let vi_cin_nal = n.get(0)?.has_u_in(&["kvip", "ciN", "Ral"]);
@@ -743,9 +738,9 @@ fn try_change_cu_to_ku(p: &mut Prakriya, i: usize) -> Option<()> {
     let n = p.view(i_n)?;
     if anga.has_tag(T::Abhyasta) && n.has_u("san") || n.has_lakshana("li~w") {
         if anga.has_text("ji") && anga.has_gana(1) {
-            p.op_term("7.3.56", i, op::adi("g"));
+            p.op_term("7.3.57", i, op::adi("g"));
         } else if anga.has_text("ci") {
-            p.op_term("7.3.56", i, op::adi("k"));
+            p.op_optional("7.3.58", op::t(i, op::adi("k")));
         }
     }
 

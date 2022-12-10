@@ -420,12 +420,14 @@ fn maybe_sic_lopa_for_tanadi_atmanepada(
     i: usize,
     i_vikarana: usize,
     i_tin: usize,
-) {
-    let tanadi = p.has(i, |t| t.has_text_in(TAN_ADI));
-    let tathasoh = p.has(i_tin, |t| t.has_text_in(&["ta", "TAs"]));
-    if tanadi && tathasoh {
+) -> Option<()> {
+    let dhatu = p.get(i)?;
+    let tin = p.get(i_tin)?;
+    if dhatu.has_u_in(TAN_ADI) && tin.has_text_in(&["ta", "TAs"]) {
         p.op_optional("2.4.79", op::t(i_vikarana, op::luk));
     }
+
+    Some(())
 }
 
 /// For certain roots && gaNas, delete the vikaraNa.
@@ -498,7 +500,7 @@ pub fn run(p: &mut Prakriya) -> Result<(), Box<dyn Error>> {
         Some(i) => i,
         None => return Ok(()),
     };
-    if p.has(i, |t| t.text == "gA") && p.has(i + 1, |t| t.text == "a") {
+    if p.has(i, |t| t.has_u("gA\\N")) && p.has(i + 1, |t| t.text == "a") {
         p.set(i + 1, |t| t.text.clear());
         p.step("6.1.101")
     }
