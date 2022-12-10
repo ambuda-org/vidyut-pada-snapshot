@@ -133,9 +133,9 @@ pub fn try_pratyaya_adesha(p: &mut Prakriya) -> Option<()> {
 
     // Run 3.1.83 here because it has no clear place otherwise.
     // TODO: is there a better place for this?
-    if i > 2 {
+    if len > 2 {
         let t = p.get(i)?;
-        if p.has(i - 2, |t| t.has_antya(&*HAL)) && p.has(i - 1, f::u("SnA")) && t.text == "hi" {
+        if p.has(i - 2, |t| t.has_antya(&*HAL)) && p.has(i - 1, f::u("SnA")) && t.has_text("hi") {
             op::adesha("3.1.83", p, i - 1, "SAnac");
         }
     }
@@ -212,6 +212,7 @@ fn try_nnit_vrddhi(p: &mut Prakriya, i: usize) -> Option<()> {
 /// Runs rules that replace an anga's vowel with its corresponding guna.
 /// Example: buD + a + ti -> boDati
 fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
+    p.step("TEMP try guna");
     let anga = p.get(i)?;
     if anga.has_tag(T::Agama) {
         return None;
@@ -246,11 +247,7 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
         let vi_cin_nal = n.get(0)?.has_u_in(&["kvip", "ciN", "Ral"]);
 
         // Exceptions
-        if anga.has_tag(T::Abhyasta) && piti_sarvadhatuke && n.has_adi(&*AC) {
-            // e.g. nenijAma
-            p.step("7.3.87");
-            return None;
-        } else if anga.has_text_in(&["BU", "sU"]) && n.has_tag(T::Tin) && piti_sarvadhatuke {
+        if anga.has_text_in(&["BU", "sU"]) && n.has_tag(T::Tin) && piti_sarvadhatuke {
             // e.g. aBUt
             // TODO: broken due to `vu~k`-Agama throwing off `n`.
             p.step("7.3.88");
@@ -275,20 +272,24 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
 
         // Main guna rules.
         let anga = p.get(i)?;
-        let n = p.get(i + 1)?;
+        let n = p.get(j)?;
         if anga.has_text("jAgf") && !vi_cin_nal && !n.has_tag(T::Nit) {
             p.op_term("7.3.85", i, |t| {
                 op::antya("ar")(t);
                 t.add_tag(T::FlagGuna);
             });
         } else if anga.has_upadha(&*HRASVA) {
-            // Main rules.
-            // TODO: puganta
-            let sub = al::to_guna(anga.upadha()?)?;
-            p.op_term("7.3.86", i, |t| {
-                t.set_upadha(sub);
-                t.add_tag(T::FlagGuna);
-            });
+            // TODO: add puganta as part of the condition.
+            if anga.has_tag(T::Abhyasta) && piti_sarvadhatuke && n.has_adi(&*AC) {
+                // e.g. nenijAma
+                p.step("7.3.87");
+            } else {
+                let sub = al::to_guna(anga.upadha()?)?;
+                p.op_term("7.3.86", i, |t| {
+                    t.set_upadha(sub);
+                    t.add_tag(T::FlagGuna);
+                });
+            }
         } else if is_ik {
             p.op_term("7.3.84", i, op_antya_guna);
         }

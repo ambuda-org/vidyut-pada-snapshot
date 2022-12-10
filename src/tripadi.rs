@@ -857,15 +857,23 @@ fn try_jhal_adesha(p: &mut Prakriya) {
         }
     }
 
-    /*
     // 8.2.38, but indicated here by use of "dadhas" in the rule.
-    sdhvoh = n and (n.adi == "s" or n.all(T.PRATYAYA) and n.u.startswith("Dv"))
-    if c.u == "quDA\\Y" and c.text == "D" and (n.adi in s("t T") or sdhvoh):
-        prev = p.terms[index - 1]
-        prev.text = "Da"
-        c.text = "d"
-        p.step("8.2.38")
-    */
+    xy_rule(
+        p,
+        |x, y| {
+            x.has_u("quDA\\Y")
+                && x.has_text("D")
+                && (y.has_adi('t')
+                    || y.has_adi('T')
+                    || y.has_adi('s')
+                    || (y.has_tag(T::Pratyaya) && y.text.starts_with("Dv")))
+        },
+        |p, i, _| {
+            p.set(i - 1, |t| t.text.replace_range(.., "Da"));
+            p.set(i, |t| t.text.replace_range(.., "d"));
+            p.step("8.2.38")
+        },
+    );
 
     char_rule(
         p,
