@@ -1,5 +1,4 @@
 use serde::Serialize;
-use std::error::Error;
 use std::io;
 use std::path::Path;
 use vidyut_gen::ashtadhyayi as A;
@@ -44,11 +43,10 @@ struct Row<'a> {
     vacana: &'static str,
 }
 
-fn run() -> Result<(), Box<dyn Error>> {
+fn run(dhatus: Vec<D::Dhatu>) -> Result<(), io::Error> {
     let mut wtr = csv::Writer::from_writer(io::stdout());
 
-    let dhatus = D::load_dhatus(Path::new("data/dhatupatha.tsv"));
-    for dhatu in dhatus?.iter() {
+    for dhatu in dhatus {
         for la in LAKARA {
             for (purusha, vacana) in TIN_SEMANTICS {
                 let prayoga = Prayoga::Kartari;
@@ -80,15 +78,26 @@ fn run() -> Result<(), Box<dyn Error>> {
             }
         }
     }
+
     wtr.flush()?;
     Ok(())
 }
 
 fn main() {
-    match run() {
-        Ok(()) => (),
+    let dhatus = match D::load_dhatus(Path::new("data/dhatupatha.tsv")) {
+        Ok(res) => res,
         Err(err) => {
             println!("{}", err);
+            std::process::exit(1);
+        }
+    };
+
+    match run(dhatus) {
+        Ok(()) => (),
+        // FIXME: match doesn't seem to work on osx?
+        Err(err) if err.kind() == std::io::ErrorKind::BrokenPipe => (),
+        Err(err) => {
+            eprintln!("{}", err);
             std::process::exit(1);
         }
     }
