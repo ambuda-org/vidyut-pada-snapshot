@@ -70,7 +70,7 @@ fn try_na_lopa(p: &mut Prakriya) {
 /// Runs rules that change r to l.
 /// Example: girati -> gilati.
 ///
-/// (8.2.18 - 8.2.20)
+/// (8.2.18 - 8.2.21)
 fn try_change_r_to_l(p: &mut Prakriya) -> Option<()> {
     let do_ra_la = |t: &mut Term| {
         t.find_and_replace_text("f", "x");
@@ -215,7 +215,7 @@ fn try_lopa_of_samyoganta_and_s(p: &mut Prakriya) -> Option<()> {
         |_, text, i| al::is_samyoganta(text) && i == text.len() - 1,
         |p, _, i| {
             set_at(p, i, "");
-            p.step("8.3.24");
+            p.step("8.2.23");
             true
         },
     );
@@ -399,7 +399,7 @@ fn try_ch_to_s(p: &mut Prakriya) {
     });
 }
 
-fn per_term_1b(p: &mut Prakriya) -> Option<()> {
+fn per_term_1a(p: &mut Prakriya) -> Option<()> {
     for i in 0..p.terms().len() {
         let x = p.get(i)?;
         let jhali_or_ante = match p.find_next_where(i, |t| !t.is_empty()) {
@@ -414,6 +414,10 @@ fn per_term_1b(p: &mut Prakriya) -> Option<()> {
         }
     }
 
+    Some(())
+}
+
+fn per_term_1b(p: &mut Prakriya) -> Option<()> {
     for i in 0..p.terms().len() {
         let x = p.get(i)?;
         let if_y = match p.find_next_where(i, |t| !t.is_empty()) {
@@ -919,15 +923,18 @@ fn try_jhal_adesha(p: &mut Prakriya) {
 
 pub fn run(p: &mut Prakriya) {
     // Ashtadhyayi 8.2
-    try_na_lopa(p);
-    try_change_r_to_l(p);
-    try_lopa_of_samyoganta_and_s(p);
-    try_ha_adesha(p);
-    try_add_final_r(p);
-    try_lengthen_dhatu_vowel(p);
-    try_ch_to_s(p);
+    try_na_lopa(p); // 8.2.8 - 8.2.8
+    try_change_r_to_l(p); // 8.2.18 - 8.2.21
+    try_lopa_of_samyoganta_and_s(p); // 8.2.23 - 8.2.29
+                                     //
+    try_ha_adesha(p); // 8.2.31 - 8.2.35
+    try_ch_to_s(p); // 8.2.36
+    per_term_1a(p); // 8.2.30 -- general rule for ha and ch_s
+    per_term_1b(p); // 8.2.37 - 8.2.39
 
-    per_term_1b(p);
+    try_add_final_r(p); // 8.2.66 -- 8.2.75
+    try_lengthen_dhatu_vowel(p); // 8.2.77 - 8.2.79
+
     per_term_1c(p);
 
     // Ashtadhyayi 8.3

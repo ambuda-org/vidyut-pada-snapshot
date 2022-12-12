@@ -236,6 +236,9 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
         });
     } else if is_ik && n.has_u("jus") {
         p.op_term("7.3.83", i, op_antya_guna);
+    } else if anga.has_text("tfnah") && n.has_adi(&*HAL) && piti_sarvadhatuke {
+        // tfneQi; otherwise, tfRahAni, tfRQaH.
+        p.op_term("7.3.92", i, op::mit("i"));
     } else if is_sarva_ardha && can_use_guna {
         let anga = p.get(i)?;
         let n = p.view(j)?;
@@ -565,17 +568,19 @@ fn try_change_dhatu_before_y(p: &mut Prakriya) -> Option<()> {
         let is_sha_or_yak = n.has_u_in(&["Sa", "yak"]);
         let is_ardhadhatuka_lin = n.has_lakshana("li~N") && n.has_tag(T::Ardhadhatuka);
 
-        // nyAsa on 7.4.29:
-        //
-        //     `ṛ gatiprāpaṇayoḥ` (dhātupāṭhaḥ-936), `ṛ sṛ gatau`
-        //     (dhātupāṭhaḥ-1098,1099) - ityetayor bhauvādika-
-        //     jauhotyādikayor grahaṇam
-        if akrt_sarva && (f::is_samyogadi(dhatu) || dhatu.has_text("f")) {
-            // smaryate, aryate, ...
-            p.op_term("7.4.29", i, op::antya("ar"));
-        } else if is_sha_or_yak || (n.has_adi('y') && is_ardhadhatuka_lin) {
-            // kriyate, kriyAt, ...
-            p.op_term("7.4.28", i, op::antya("ri"));
+        if is_sha_or_yak || (n.has_adi('y') && is_ardhadhatuka_lin) {
+            // nyAsa on 7.4.29:
+            //
+            //     `ṛ gatiprāpaṇayoḥ` (dhātupāṭhaḥ-936), `ṛ sṛ gatau`
+            //     (dhātupāṭhaḥ-1098,1099) - ityetayor bhauvādika-
+            //     jauhotyādikayor grahaṇam
+            if f::is_samyogadi(dhatu) || dhatu.has_text("f") {
+                // smaryate, aryate, ...
+                p.op_term("7.4.29", i, op::antya("ar"));
+            } else {
+                // kriyate, kriyAt, ...
+                p.op_term("7.4.28", i, op::antya("ri"));
+            }
         } else if akrt_sarva && (n.has_adi('y') || n.has_u("cvi")) {
             // mantrIyati
             p.op_term("7.4.27", i, op::antya("rI"));
@@ -972,7 +977,6 @@ pub fn hacky_before_dvitva(p: &mut Prakriya) {
 ///
 /// (7.4.1 - 7.4.6)
 fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
-    p.step("TEMP: check cani after guna");
     let i = p.find_first(T::Dhatu)?;
     let i_ni = p.find_next_where(i, |t| t.has_u_in(&["Ric", "RiN"]))?;
     let _i_can = p.find_next_where(i_ni, |t| t.has_u("caN"))?;
@@ -988,10 +992,11 @@ fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
             p.op_term("7.4.1", i, op::upadha(&sub.to_string()));
         }
     } else if p.has(i + 1, f::tag(T::Agama)) && dhatu.has_antya(&*AC) {
-        // TODO: not sure what this rule is meant to be.
-        // let sub = al::to_hrasva(dhatu.antya()?)?;
-        // op.antya("7.4.1", p, c, res)
-        // p.op_term("7.4.1", i, op::antya(&sub.to_string()));
+        // HACK for puk-agama.
+        let sub = al::to_hrasva(dhatu.antya()?)?;
+        if !dhatu.has_antya(sub) {
+            p.op_term("7.4.1", i, op::antya(&sub.to_string()));
+        }
     };
 
     Some(())
@@ -999,9 +1004,13 @@ fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
 
 /// Run rules that condition on a following liT-pratyaya.
 ///
+/// Constraints:
+/// - must run after guna/vrddhi have been tried.
+///
 /// (7.4.9 - 7.4.12)
-fn liti(p: &mut Prakriya) -> Option<()> {
+fn try_r_guna_before_lit(p: &mut Prakriya) -> Option<()> {
     let i = p.find_first(T::Dhatu)?;
+    p.debug(format!("try r-lit-guna, {i}"));
 
     let tin = p.terms().last()?;
     if !tin.has_lakshana("li~w") {
@@ -1014,10 +1023,9 @@ fn liti(p: &mut Prakriya) -> Option<()> {
     };
 
     let anga = p.get(i)?;
-    let can_guna = !tin.has_tag(T::Rit);
-    if anga.has_antya('f') && f::is_samyogadi(anga) && can_guna {
+    if anga.has_antya('f') && f::is_samyogadi(anga) {
         p.op_term("7.4.10", i, do_ar_guna);
-    } else if (anga.has_antya('F') || anga.has_u_in(&["fCa~", "f\\"])) && can_guna {
+    } else if anga.has_antya('F') || anga.has_u_in(&["fCa~", "f\\"]) {
         if anga.has_u("fCa~") {
             p.op_term("7.4.11", i, op::adi("ar"));
         } else {
@@ -1238,7 +1246,7 @@ pub fn run_remainder(p: &mut Prakriya) {
     }
 
     try_change_dhatu_before_y(p);
-    liti(p);
+    try_r_guna_before_lit(p);
     // Rules for various lun-vikaranas.
     try_change_anga_before_an(p);
 

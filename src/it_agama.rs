@@ -235,7 +235,7 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
                 add_sak = true;
                 it = It::Set("7.2.73");
             } else if anga.has_antya('A') {
-                // Handle this after running Attva. See the run_after_attva function for details.
+                // Handle this after running Attva. See `run_after_attva` for details.
                 return false;
             }
         } else if anga.has_u_in(&["zmi\\N", "pUN", "f\\", "anjU~", "asU~\\"]) && n.has_u("san") {
@@ -440,15 +440,8 @@ pub fn run_after_attva(p: &mut Prakriya) -> Option<()> {
     let i = p.find_last(T::Dhatu)?;
     let n = p.get(i + 1)?;
 
-    if !n.has_tag(T::Ardhadhatuka) {
-        return None;
-    }
-
-    let n = p.get(i + 1)?;
-
-    if n.has_u("si~c") && !n.has_tag(T::Luk) {
+    if n.has_tag(T::Ardhadhatuka) && n.has_u("si~c") && !n.has_tag(T::Luk) {
         let dhatu = p.get(i)?;
-        let n = p.view(i + i)?;
         let is_para = p.terms().last()?.has_tag(T::Parasmaipada);
         if is_para && dhatu.has_antya('A') && n.has_adi(&*VAL) {
             p.op("7.2.23", |p| {

@@ -237,7 +237,8 @@ pub fn is_samyogadi(text: &str) -> bool {
 
 pub fn is_samyoganta(text: &str) -> bool {
     let mut chars = text.chars().rev();
-    HAL.contains_opt(chars.next()) && HAL.contains_opt(chars.next())
+    let last = chars.next();
+    HAL.contains_opt(last) && HAL.contains_opt(chars.next()) || last == Some('C')
 }
 
 pub fn to_guna(s: Sound) -> Option<&'static str> {
@@ -545,5 +546,13 @@ mod tests {
         assert_eq!(expected, actual);
 
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_is_samyoganta() {
+        assert!(is_samyoganta("praC"));
+        assert!(is_samyoganta("vind"));
+        assert!(!is_samyoganta("kf"));
+        assert!(!is_samyoganta("BU"));
     }
 }

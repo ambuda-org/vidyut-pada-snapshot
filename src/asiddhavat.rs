@@ -33,6 +33,7 @@ lazy_static! {
     static ref HAL: SoundSet = s("hal");
     static ref JHAL: SoundSet = s("Jal");
     static ref MAHAPRANA: SoundSet = s("K G C J W Q T D P B");
+    static ref ANUNASIKA: SoundSet = s("N Y R n m M");
 }
 
 fn is_knit(n: &TermView) -> bool {
@@ -458,16 +459,13 @@ fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
 /// (6.4.36 - 6.4.44)
 /// TODO: 6.4.41
 fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
-    let anga = p.get(i)?;
     let i_n = p.find_next_where(i, |t| !t.is_empty())?;
+
+    let anga = p.get_if(i, |t| t.has_antya(&*ANUNASIKA))?;
     let n = p.view(i_n)?;
 
-    if !(anga.has_antya('n') || anga.has_antya('m')) {
-        return None;
-    }
-
     // Used to check if na-lopa was applied.
-    let had_n = anga.has_antya('n');
+    let old_antya = anga.antya()?;
 
     let is_anudatta = anga.has_tag(T::Anudatta);
     let is_tanadi = anga.has_u_in(gana::TAN_ADI);
@@ -513,7 +511,7 @@ fn try_antya_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
     }
 
     let anga = p.get_mut(i)?;
-    if had_n != anga.has_antya('n') {
+    if old_antya != anga.antya()? {
         anga.add_tag(T::FlagNaLopa);
     }
     Some(())
@@ -615,8 +613,24 @@ fn run_for_final_i_or_u(p: &mut Prakriya, i: usize) -> Option<()> {
         } else {
             p.op_term("6.4.79", i, op::antya("iy"));
         }
-    } else if anga.has_u("i\\R") {
-        p.op_term("6.4.81", i, op::antya("y"));
+    } else if anga.has_u_in(&["i\\R", "i\\k"]) {
+        // Also applies to 'ik' according to some:
+        //
+        // > 'iṇvadikaḥ' iti vacanād 'iṇo yaṇ' 'iṇo gā luṅi' ityasyāpi bhavati. ātreyastu
+        // > yaṇamuktvā "kecittu 'iṇo gā luṅi' ityatideśakāryārthameva 'iṇvadika'
+        // > ityatideśamicchanti, tanmate iyaṅi adhīyanti" iti pakṣāntaramāha. ...
+        // -- Madhaviya-dhatuvrtti [1].
+        //
+        // [1]: https://archive.org/details/237131938MadhaviyaDhatuVrtti/page/n412/mode/1up
+        if anga.has_u("i\\k") {
+            let used = p.op_optional("6.4.81", op::t(i, op::antya("y")));
+            if !used {
+                // Copied from below for better control flow.
+                p.op("6.4.77", |p| to_iy_uv(p, i));
+            }
+        } else {
+            p.op_term("6.4.81", i, op::antya("y"));
+        }
     } else if anga.has_antya(&*II) && is_anekac(p, i) && is_asamyogapurva {
         if anga.has_text("suDI") {
             p.step("6.4.85");
@@ -667,7 +681,7 @@ pub fn run_for_ni(p: &mut Prakriya) -> Option<()> {
         } else {
             // Apply ac_sandhi before lopa, since later rules depend on this
             // being done (e.g. cayyAt)
-            // TODO: implement this.
+            // TODO: implement this excluding "ni" from the sandhi rules.
             ac_sandhi::apply_general_ac_sandhi(p);
             p.op_term("6.4.51", i_ni, op::antya(""));
         }
@@ -686,7 +700,6 @@ pub fn run_for_ni(p: &mut Prakriya) -> Option<()> {
 }
 
 fn try_kr_rule(p: &mut Prakriya, i: usize) -> Option<()> {
-    p.step("TEMP: check kr rule");
     let i_n = p.find_next_where(i, |t| !t.is_empty())?;
 
     let anga = p.get(i)?;
