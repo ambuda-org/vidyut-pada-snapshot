@@ -13,8 +13,8 @@
 //!
 //! All of these rules are found at the end of section 3.4 of the Ashtadhyayi.
 
+use crate::arguments::{La, Purusha, Vacana};
 use crate::constants::Tag as T;
-use crate::constants::{La, Purusha, Vacana};
 use crate::filters as f;
 use crate::it_samjna;
 use crate::operators as op;

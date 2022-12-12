@@ -1,5 +1,5 @@
+use vidyut_gen::arguments::{La, Prayoga, Purusha, Vacana};
 use vidyut_gen::ashtadhyayi as A;
-use vidyut_gen::constants::{La, Prayoga, Purusha, Vacana};
 
 #[test]
 fn test_lat() {

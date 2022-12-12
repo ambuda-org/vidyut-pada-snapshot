@@ -24,6 +24,7 @@ mod tin_pratyaya;
 mod tripadi;
 mod vikarana;
 
+pub mod arguments;
 pub mod ashtadhyayi;
 pub mod constants;
 pub mod dhatupatha;

@@ -1,5 +1,6 @@
-generate:
-	cargo run --release --bin main
+# Generates all tinantas supported by the program.
+tinantas:
+	cargo run --release --bin generate
 
 # Runs all unit tests in the crate
 test:

@@ -1,6 +1,6 @@
 //! ardhadhatuka
 
-use crate::constants::La;
+use crate::arguments::La;
 use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::operators as op;
