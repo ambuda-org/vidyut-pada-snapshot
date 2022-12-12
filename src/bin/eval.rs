@@ -90,7 +90,9 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         } else {
             let actual = padas.join(" | ");
             let la = &r[4];
-            println!("[ FAIL ]  {code:<10} {dhatu:<10} {la:<10} {pada} ({actual})");
+            let purusha = &r[5];
+            let vacana = &r[6];
+            println!("[ FAIL ]  {code:<10} {dhatu:<10} {la:<10} {purusha:<10} {vacana:<10} {pada} ({actual})");
         }
 
         if n >= limit {

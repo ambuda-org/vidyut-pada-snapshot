@@ -188,9 +188,7 @@ fn try_nnit_vrddhi(p: &mut Prakriya, i: usize) -> Option<()> {
         }
     }
 
-    let anga = p.get(i)?;
-    let n = p.view(i + 1)?;
-    if anga.has_text_in(&["jan", "vaD"]) && (anga.has_u("ciR") || n.has_tag(T::Krt)) {
+    if anga.has_text_in(&["jan", "vaD"]) && (n.has_u("ciR") || n.has_tag(T::Krt)) {
         // Declined for `ajani` etc.
         p.step("7.3.35");
     } else if anga.has_antya(&*AC) {
@@ -842,7 +840,6 @@ fn try_sic_vrddhi(p: &mut Prakriya) -> Option<()> {
     let i_tin = p.terms().len() - 1;
 
     let it = if let Some(x) = i_it { p.get(x) } else { None };
-
     let sic = p.get(i_sic)?;
     let tin = p.get(i_tin)?;
     if !(sic.has_u("si~c") && !sic.has_tag(T::Luk) && tin.has_tag(T::Parasmaipada)) {
@@ -859,10 +856,8 @@ fn try_sic_vrddhi(p: &mut Prakriya) -> Option<()> {
 
     // 1.2.1 -- skip vrddhi for these sounds
     // HACK: check only sic, atidesha should not apply to it.
-    if let Some(it) = it {
-        if it.has_tag(T::Nit) || sic.has_tag(T::Nit) {
-            return None;
-        }
+    if sic.has_tag(T::Nit) || it.map(|t| t.has_tag(T::Nit)).unwrap_or(false) {
+        return None;
     }
 
     let dhatu = p.get(i)?;
@@ -977,7 +972,9 @@ pub fn hacky_before_dvitva(p: &mut Prakriya) {
 ///
 /// (7.4.1 - 7.4.6)
 fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
-    let i = p.find_first(T::Dhatu)?;
+    // Our dhatu search should also supported duplicated ac-Adi roots, e.g. uDras -> u + Da + Dras.
+    // Hence, search for the last term called "dhatu" that isn't a pratyaya.
+    let i = p.find_last_where(|t| t.has_tag(T::Dhatu) && !t.has_tag(T::Pratyaya))?;
     let i_ni = p.find_next_where(i, |t| t.has_u_in(&["Ric", "RiN"]))?;
     let _i_can = p.find_next_where(i_ni, |t| t.has_u("caN"))?;
 
@@ -997,7 +994,7 @@ fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
         if !dhatu.has_antya(sub) {
             p.op_term("7.4.1", i, op::antya(&sub.to_string()));
         }
-    };
+    }
 
     Some(())
 }
@@ -1010,7 +1007,6 @@ fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
 /// (7.4.9 - 7.4.12)
 fn try_r_guna_before_lit(p: &mut Prakriya) -> Option<()> {
     let i = p.find_first(T::Dhatu)?;
-    p.debug(format!("try r-lit-guna, {i}"));
 
     let tin = p.terms().last()?;
     if !tin.has_lakshana("li~w") {
@@ -1019,7 +1015,7 @@ fn try_r_guna_before_lit(p: &mut Prakriya) -> Option<()> {
 
     let do_ar_guna = |t: &mut Term| {
         t.add_tag(T::FlagGuna);
-        op::antya("ar")(t);
+        t.set_antya("ar");
     };
 
     let anga = p.get(i)?;

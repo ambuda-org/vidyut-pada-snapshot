@@ -194,10 +194,19 @@ fn try_lopa_of_samyoganta_and_s(p: &mut Prakriya) -> Option<()> {
                 false
             }
         },
-        |p, _, i| {
-            set_at(p, i, "");
-            p.step("8.2.29");
-            true
+        |p, text, i| {
+            let bytes = text.as_bytes();
+            if let (Some(b's'), Some(b's')) = (bytes.get(i), bytes.get(i + 1)) {
+                // HACK for dhatus ending in 's' (acakAs + t -> acakAH) so that we preserve the
+                // first 's' of the dhatu.
+                set_at(p, i + 1, "");
+                p.step("8.2.29");
+                true
+            } else {
+                set_at(p, i, "");
+                p.step("8.2.29");
+                true
+            }
         },
     );
 
@@ -268,30 +277,40 @@ fn try_ha_adesha(p: &mut Prakriya) -> Option<()> {
     Some(())
 }
 
-fn try_add_final_r(p: &mut Prakriya) -> Option<()> {
+// acakAs + t -> acakAt
+// acakAs + s -> acakAH, acakAt
+fn try_add_final_r_with_final_tin(p: &mut Prakriya) -> Option<()> {
     // Exception to general rule 8.2.66 below.
     let n = p.terms().len();
-    for i in 0..n - 1 {
-        let x = p.get(i)?;
-        let y = p.get(i + 1)?;
-        let is_last = i + 2 == n;
+    if n < 2 {
+        return None;
+    }
 
-        // FIXME: sloppy
-        if x.has_antya('s') && y.has_text("") && y.has_u("tip") && is_last {
-            p.op_term("8.2.73", i, op::antya("d"));
-        } else if (x.has_antya('s') || x.has_antya('d'))
-            && y.has_text("")
-            && y.has_u("sip")
-            && is_last
-        {
-            // FIXME: where do these rules go?
-            if x.has_antya('s') {
-                p.op_optional("8.2.74", op::t(i, op::antya("ru~")));
-            } else {
-                p.op_optional("8.2.75", op::t(i, op::antya("ru~")));
-            }
+    let i_tin = n - 1;
+    let i_dhatu = p.find_prev_where(i_tin, |t| !t.is_empty())?;
+
+    let dhatu = p.get(i_dhatu)?;
+    let tin = p.get_if(i_tin, |t| t.is_empty())?;
+
+    // FIXME: sloppy. Also, exclude "asti" for Vedic "AH".
+    if dhatu.has_antya('s') && tin.has_u("tip") {
+        p.op_term("8.2.73", i_dhatu, op::antya("d"));
+    } else if (dhatu.has_antya('s') || dhatu.has_antya('d')) && tin.has_u("sip") {
+        if dhatu.has_antya('s') {
+            // acakAs + s -> acakAH, acakAt, acakAd
+            p.op_optional("8.2.74", op::t(i_dhatu, op::antya("d")));
+        } else {
+            // aruRad + s -> aruRaH, aruRat, aruRad
+            p.op_optional("8.2.75", op::t(i_dhatu, op::antya("ru~")));
         }
     }
+
+    p.step("tried");
+    Some(())
+}
+
+fn try_add_final_r(p: &mut Prakriya) -> Option<()> {
+    try_add_final_r_with_final_tin(p);
 
     // TODO: sajuS
     let i = p.find_last_where(|t| !t.text.is_empty())?;
@@ -300,7 +319,6 @@ fn try_add_final_r(p: &mut Prakriya) -> Option<()> {
     if last.has_antya('s') {
         p.op_term("8.2.66", i, op::antya("ru~"));
     }
-
     Some(())
 }
 

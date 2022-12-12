@@ -136,6 +136,30 @@ fn run_kniti_ardhadhatuka(p: &mut Prakriya, i: usize) -> Option<()> {
 /// Runs rules conditioned on a following `kit` or `Nit` suffix.
 ///
 /// (6.4.98 - 6.4.126)
+fn try_run_kniti_for_dhatu(p: &mut Prakriya, i: usize) -> Option<()> {
+    let anga = p.get(i)?;
+    let j = p.find_next_where(i, |t| !t.is_empty())?;
+    let n = p.view(j)?;
+
+    if !n.any(&[T::kit, T::Nit]) {
+        return None;
+    }
+
+    let next_is_hi = n.first()?.has_text("hi");
+    if anga.has_text_in(&["gam", "han", "jan", "Kan", "Gas"]) && n.has_adi(&*AC) && !n.has_u("aN") {
+        p.op_term("6.4.98", i, op::upadha(""));
+    } else if (anga.has_text("hu") || anga.has_antya(&*JHAL)) && next_is_hi {
+        p.op_term("6.4.101", n.start(), op::text("Di"));
+    } else if anga.has_u("ciR") {
+        p.op_term("6.4.104", n.start(), op::luk);
+    }
+
+    Some(())
+}
+
+/// Runs rules conditioned on a following `kit` or `Nit` suffix.
+///
+/// (6.4.98 - 6.4.126)
 fn try_run_kniti(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
     let j = p.find_next_where(i, |t| !t.is_empty())?;
@@ -146,14 +170,7 @@ fn try_run_kniti(p: &mut Prakriya, i: usize) -> Option<()> {
     }
 
     let next_is_hi = n.first()?.has_text("hi");
-
-    if anga.has_text_in(&["gam", "han", "jan", "Kan", "Gas"]) && n.has_adi(&*AC) && !n.has_u("aN") {
-        p.op_term("6.4.98", i, op::upadha(""));
-    } else if (anga.has_text("hu") || anga.has_antya(&*JHAL)) && next_is_hi {
-        p.op_term("6.4.101", n.start(), op::text("Di"));
-    } else if anga.has_u("ciR") {
-        p.op_term("6.4.104", n.start(), op::luk);
-    } else if has_antya_a_asiddhavat(anga) && n.first()?.has_text("hi") {
+    if has_antya_a_asiddhavat(anga) && n.first()?.has_text("hi") {
         // Bavahi -> Bava
         p.op_term("6.4.105", n.start(), op::luk);
     } else if anga.has_antya('u') && anga.has_tag(T::Pratyaya) {
@@ -580,6 +597,8 @@ pub fn run_before_guna(p: &mut Prakriya, i: usize) -> Option<()> {
         // TODO: what is the correct prakriya here?
         p.op_term("6.4.114.v1", i, op::text("daridr"));
     }
+
+    try_run_kniti_for_dhatu(p, i);
 
     Some(())
 }
