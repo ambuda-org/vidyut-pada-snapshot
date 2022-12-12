@@ -3,7 +3,7 @@ abhyasasya
 ==========
 (7.4.58 - end of 7.4)
 
-Rules that modify the abhyāsa.
+Runs rules that modify the abhyāsa.
 */
 
 use crate::constants::Tag as T;
@@ -43,7 +43,7 @@ fn try_haladi(text: &str) -> CompactString {
     ret
 }
 
-/// Simplifies the absyasa per 7.4.61.
+/// Simplifies the abhyasa per 7.4.61.
 fn try_shar_purva(text: &str) -> CompactString {
     let mut ret = CompactString::from("");
     for (i, c) in text.chars().enumerate() {

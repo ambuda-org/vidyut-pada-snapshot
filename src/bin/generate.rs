@@ -1,3 +1,6 @@
+//! Generates all tinantas currently supported by the crate.
+//!
+//! Usage: `make generate`
 use serde::Serialize;
 use std::io;
 use std::path::Path;

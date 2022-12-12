@@ -8,7 +8,6 @@ mod atmanepada;
 mod char_view;
 mod dhatu_gana;
 mod dhatu_karya;
-// TODO
 mod dvitva;
 mod filters;
 mod it_agama;

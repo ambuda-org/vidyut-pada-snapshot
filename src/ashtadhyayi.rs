@@ -58,7 +58,7 @@ pub fn derive_tinanta(
 
     // Add the lakAra and convert it to a basic tin ending.
     la_karya::run(p, la)?;
-    ardhadhatuka::dhatu_adesha_before_pada(p, la); // [TODO implement all below this line.]
+    ardhadhatuka::dhatu_adesha_before_pada(p, la);
     atmanepada::run(p);
     tin_pratyaya::adesha(p, purusha, vacana);
     samjna::run(p);

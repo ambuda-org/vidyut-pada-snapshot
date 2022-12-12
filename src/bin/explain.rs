@@ -1,3 +1,10 @@
+//! Debugging tool that displays all prakriyas available for the given pada and code.
+//!
+//! Usage:
+//!
+//! ```ignore
+//! $ cargo run --bin explain -- --code 01.0001 --pada BavAmi
+//! ```
 use clap::Parser;
 use std::collections::BTreeMap;
 use std::error::Error;

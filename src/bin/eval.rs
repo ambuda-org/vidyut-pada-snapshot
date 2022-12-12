@@ -1,3 +1,6 @@
+//! Runs a full evaluation script over all program output.
+//!
+//! Usage: `make eval`
 use clap::Parser;
 use std::error::Error;
 use vidyut_gen::arguments::{La, Prayoga, Purusha, Vacana};

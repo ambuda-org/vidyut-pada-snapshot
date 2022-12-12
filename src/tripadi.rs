@@ -287,7 +287,7 @@ fn try_add_final_r_with_final_tin(p: &mut Prakriya) -> Option<()> {
     }
 
     let i_tin = n - 1;
-    let i_dhatu = p.find_prev_where(i_tin, |t| !t.is_empty())?;
+    let i_dhatu = p.find_prev_where(i_tin, |t| t.has_tag(T::Dhatu) && !t.is_empty())?;
 
     let dhatu = p.get(i_dhatu)?;
     let tin = p.get_if(i_tin, |t| t.is_empty())?;
