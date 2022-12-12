@@ -1,7 +1,7 @@
 use enumset::EnumSetType;
 use std::error::Error;
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Prayoga {
     Kartari,
     Karmani,
@@ -13,6 +13,13 @@ impl Prayoga {
             Self::Kartari => Tag::Kartari,
             Self::Karmani => Tag::Karmani,
             Self::Bhave => Tag::Bhave,
+        }
+    }
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Kartari => "kartari",
+            Self::Karmani => "karmani",
+            Self::Bhave => "bhave",
         }
     }
 }
@@ -31,6 +38,13 @@ impl Purusha {
             Self::Uttama => Tag::Uttama,
         }
     }
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Prathama => "prathama",
+            Self::Madhyama => "madhyama",
+            Self::Uttama => "uttama",
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -45,6 +59,13 @@ impl Vacana {
             Self::Eka => Tag::Ekavacana,
             Self::Dvi => Tag::Dvivacana,
             Self::Bahu => Tag::Bahuvacana,
+        }
+    }
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Eka => "eka",
+            Self::Dvi => "dvi",
+            Self::Bahu => "bahu",
         }
     }
 }
@@ -65,6 +86,21 @@ pub enum La {
 }
 
 impl La {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            La::Lat => "lat",
+            La::Lit => "lit",
+            La::Lut => "lut",
+            La::Lrt => "lrt",
+            La::Let => "let",
+            La::Lot => "lot",
+            La::Lan => "lan",
+            La::VidhiLin => "vidhi-lin",
+            La::AshirLin => "ashir-lin",
+            La::Lun => "lun",
+            La::Lrn => "lrn",
+        }
+    }
     pub fn is_nit(&self) -> bool {
         matches![
             self,

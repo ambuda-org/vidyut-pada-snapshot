@@ -340,7 +340,7 @@ fn add_sarvadhatuka_vikarana(p: &mut Prakriya) {
         p.op_optional("3.1.82", add_vikarana("Snu"));
     }
 
-    if p.find_first(T::Vikarana) != None {
+    if p.find_first(T::Vikarana).is_some() {
         return;
     }
 

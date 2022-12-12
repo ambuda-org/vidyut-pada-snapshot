@@ -363,7 +363,7 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
 
     if anga.has_text("Brasj") {
         p.op_optional("6.4.47", op::t(i, op::text("Barj")));
-    } else if has_antya_a_asiddhavat(&anga) {
+    } else if has_antya_a_asiddhavat(anga) {
         p.op("6.4.48", |p| {
             p.set(i, op::antya(""));
             p.set(i, op::add_tag(T::FlagAtLopa));

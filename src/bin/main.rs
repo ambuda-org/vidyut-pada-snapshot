@@ -1,4 +1,6 @@
+use serde::Serialize;
 use std::error::Error;
+use std::io;
 use std::path::Path;
 use vidyut_gen::ashtadhyayi as A;
 use vidyut_gen::constants::{La, Prayoga, Purusha, Vacana};
@@ -30,25 +32,55 @@ const TIN_SEMANTICS: &[(Purusha, Vacana)] = &[
     (Purusha::Uttama, Vacana::Bahu),
 ];
 
+#[derive(Debug, Serialize)]
+struct Row<'a> {
+    pada: String,
+    dhatu: &'a str,
+    gana: i32,
+    number: i32,
+    prayoga: &'static str,
+    lakara: &'static str,
+    purusha: &'static str,
+    vacana: &'static str,
+}
+
 fn run() -> Result<(), Box<dyn Error>> {
+    let mut wtr = csv::Writer::from_writer(io::stdout());
+
     let dhatus = D::load_dhatus(Path::new("data/dhatupatha.tsv"));
     for dhatu in dhatus?.iter() {
         for la in LAKARA {
             for (purusha, vacana) in TIN_SEMANTICS {
-                for p in A::derive_tinantas(
+                let prayoga = Prayoga::Kartari;
+                let prakriyas = A::derive_tinantas(
                     &dhatu.upadesha,
                     &dhatu.code(),
                     *la,
-                    Prayoga::Kartari,
+                    prayoga,
                     *purusha,
                     *vacana,
                     false,
-                ) {
-                    println!("{la:?}: {}", p.text());
+                );
+
+                let dhatu_text = &dhatu.upadesha;
+                for p in prakriyas {
+                    let row = Row {
+                        pada: p.text().to_string(),
+                        dhatu: dhatu_text,
+                        gana: dhatu.gana,
+                        number: dhatu.number,
+                        lakara: la.as_str(),
+                        purusha: purusha.as_str(),
+                        vacana: vacana.as_str(),
+                        prayoga: prayoga.as_str(),
+                    };
+
+                    wtr.serialize(row)?;
                 }
             }
         }
     }
+    wtr.flush()?;
     Ok(())
 }
 
