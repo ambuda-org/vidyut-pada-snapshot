@@ -1,21 +1,7 @@
 use vidyut_gen::arguments::{La, Prayoga, Purusha, Vacana};
 use vidyut_gen::ashtadhyayi as A;
 
-const LAKARA: &[La] = &[
-    La::Lat,
-    La::Lit,
-    La::Lut,
-    La::Lrt,
-    La::Let,
-    La::Lot,
-    La::Lan,
-    La::AshirLin,
-    La::VidhiLin,
-    La::Lun,
-    La::Lrn,
-];
-
-const TIN_SEMANTICS: &[(Purusha, Vacana)] = &[
+const PURUSHA_VACANA: &[(Purusha, Vacana)] = &[
     (Purusha::Prathama, Vacana::Eka),
     (Purusha::Prathama, Vacana::Dvi),
     (Purusha::Prathama, Vacana::Bahu),
@@ -27,6 +13,7 @@ const TIN_SEMANTICS: &[(Purusha, Vacana)] = &[
     (Purusha::Uttama, Vacana::Bahu),
 ];
 
+/// Tests generating all of the basic forms of BU.
 #[test]
 fn test_bhu() {
     let lat = vec![
@@ -141,7 +128,7 @@ fn test_bhu() {
             expected.extend(e.split('/'));
         }
 
-        for (purusha, vacana) in TIN_SEMANTICS {
+        for (purusha, vacana) in PURUSHA_VACANA {
             let prakriyas = A::derive_tinantas(
                 "BU",
                 "01.0001",
@@ -172,6 +159,7 @@ fn test_bhu() {
     test_la(La::Lrn, &lrn);
 }
 
+/// Tests generating various tinantas in lat-prathama-ekavacana.
 #[test]
 fn test_lat() {
     let tests = [

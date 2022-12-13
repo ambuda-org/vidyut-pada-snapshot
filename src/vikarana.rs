@@ -304,25 +304,22 @@ fn maybe_add_am_pratyaya_for_lot(p: &mut Prakriya) {
     }
 }
 
-fn add_sarvadhatuka_vikarana(p: &mut Prakriya) {
-    let i = match p.find_last(T::Dhatu) {
-        Some(i) => i,
-        None => return,
-    };
+fn add_sarvadhatuka_vikarana(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_last(T::Dhatu)?;
 
     if !p.has_tag(T::Kartari) {
         p.op("3.1.67", add_vikarana("yak"));
-        return;
+        return Some(());
     }
+
+    let dhatu = p.get(i)?;
 
     // Optional cases
     let stanbhu_stunbhu = ["sta\\nBu~", "stu\\nBu~", "ska\\nBu~", "sku\\nBu~", "sku\\Y"];
     let mut gana_4_declined = false;
-    if p.has(i, |t| {
-        t.has_text_in(&[
-            "BrAS", "BlAS", "Bram", "kram", "klam", "tras", "truw", "laz",
-        ])
-    }) {
+    if dhatu.has_text_in(&[
+        "BrAS", "BlAS", "Bram", "kram", "klam", "tras", "truw", "laz",
+    ]) {
         let applied = p.op_optional("3.1.70", add_vikarana("Syan"));
 
         // Needed to make 3.1.69 available to roots like Bram
@@ -330,48 +327,51 @@ fn add_sarvadhatuka_vikarana(p: &mut Prakriya) {
             gana_4_declined = true;
         }
     // TODO: anupasarga
-    } else if p.has(i, |t| t.has_u("yasu~")) {
+    } else if dhatu.has_u("yasu~") {
         p.op_optional("3.1.71", add_vikarana("Syan"));
-    } else if p.has(i, |t| t.has_u("akzU~")) {
+    } else if dhatu.has_u("akzU~") {
         p.op_optional("3.1.75", add_vikarana("Snu"));
-    } else if p.has(i, |t| t.has_u("takzU~")) {
+    } else if dhatu.has_u("takzU~") {
         p.op_optional("3.1.76", add_vikarana("Snu"));
-    } else if p.has(i, |t| t.has_u_in(&stanbhu_stunbhu)) {
+    } else if dhatu.has_u_in(&stanbhu_stunbhu) {
         p.op_optional("3.1.82", add_vikarana("Snu"));
     }
 
     if p.find_first(T::Vikarana).is_some() {
-        return;
+        return Some(());
     }
 
-    if p.has(i, |t| t.has_gana(4) && !gana_4_declined) {
+    let dhatu = p.get(i)?;
+    if dhatu.has_gana(4) && !gana_4_declined {
         p.op("3.1.69", add_vikarana("Syan"));
-    } else if p.has(i, |t| t.has_gana(5)) {
+    } else if dhatu.has_gana(5) {
         p.op("3.1.73", add_vikarana("Snu"));
-    } else if p.has(i, |t| t.text == "Sru") {
+    } else if dhatu.has_text("Sru") {
         p.op("3.1.74", |p| {
             p.set(i, |t| t.set_text("Sf"));
             add_vikarana("Snu")(p);
         });
-    } else if p.has(i, |t| t.has_gana(6)) {
+    } else if dhatu.has_gana(6) {
         p.op("3.1.77", add_vikarana("Sa"));
-    } else if p.has(i, |t| t.has_gana(7)) {
+    } else if dhatu.has_gana(7) {
         p.op("3.1.78", |p| {
             p.set(i, |t| t.add_tag(T::Snam));
             p.set(i, op::mit("na"));
         });
-    } else if p.has(i, |t| t.has_gana(8) || t.has_u("qukf\\Y")) {
+    } else if dhatu.has_gana(8) || dhatu.has_u("qukf\\Y") {
         p.op("3.1.79", add_vikarana("u"));
-    } else if p.has(i, |t| t.has_u_in(&["Divi~", "kfvi~"])) {
+    } else if dhatu.has_u_in(&["Divi~", "kfvi~"]) {
         p.op("3.1.80", |p| {
             p.set(i, op::antya("a"));
             add_vikarana("u")(p);
         });
-    } else if p.has(i, |t| t.has_gana(9)) {
+    } else if dhatu.has_gana(9) {
         p.op("3.1.81", add_vikarana("SnA"));
     } else {
         p.op("3.1.68", add_vikarana("Sap"));
     }
+
+    Some(())
 }
 
 fn maybe_sic_lopa_before_parasmaipada(p: &mut Prakriya, i: usize, i_vikarana: usize, i_tin: usize) {
