@@ -2,74 +2,62 @@
 //!
 //! Usage: `make eval`
 use clap::Parser;
+use sha2::{Sha256, Digest};
 use std::error::Error;
-use vidyut_gen::arguments::{La, Prayoga, Purusha, Vacana};
+use std::fs::File;
+use std::path::{Path, PathBuf};
 use vidyut_gen::ashtadhyayi as A;
 
 #[derive(Parser)]
 #[command(author, version, about)]
 struct Args {
     #[arg(long)]
+    test_cases: PathBuf,
+
+    #[arg(long)]
+    hash: String,
+
+    #[arg(long)]
     limit: Option<i32>,
+
     #[arg(long)]
     la: Option<String>,
+
     #[arg(long)]
     code: Option<String>,
 }
 
-fn parse_la(s: &str) -> La {
-    match s {
-        "law" => La::Lat,
-        "liw" => La::Lit,
-        "luw" => La::Lut,
-        "lfw" => La::Lrt,
-        "lew" => La::Let,
-        "low" => La::Lot,
-        "laN" => La::Lan,
-        "liN" => La::VidhiLin,
-        "ASIrliN" => La::AshirLin,
-        "luN" => La::Lun,
-        "lfN" => La::Lrn,
-        _ => panic!("Unknown {s}"),
-    }
-}
-
-fn parse_purusha(s: &str) -> Purusha {
-    match s {
-        "prathama" => Purusha::Prathama,
-        "madhyama" => Purusha::Madhyama,
-        "uttama" => Purusha::Uttama,
-        _ => panic!("Unknown {s}"),
-    }
-}
-
-fn parse_vacana(s: &str) -> Vacana {
-    match s {
-        "eka" => Vacana::Eka,
-        "dvi" => Vacana::Dvi,
-        "bahu" => Vacana::Bahu,
-        _ => panic!("Unknown {s}"),
-    }
+fn calculate_sha256_file_hash(path: &Path) -> std::io::Result<String> {
+    let mut hasher = Sha256::new();
+    let mut file = File::open(path)?;
+    std::io::copy(&mut file, &mut hasher)?;
+    let hash = hasher.finalize();
+    Ok(format!("{:x}", hash))
 }
 
 fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    let mut rdr = csv::Reader::from_path("data/eval.csv")?;
+    // Check that the test file is as expected.
+    let hash = calculate_sha256_file_hash(&args.test_cases)?;
+    assert_eq!(hash, args.hash);
+
+    let mut rdr = csv::Reader::from_path(&args.test_cases)?;
 
     let mut num_matches = 0;
     let mut n = 0;
     let limit = args.limit.unwrap_or(std::i32::MAX);
 
-    let la_filter = args.la.map(|x| parse_la(&x));
+    let la_filter = args.la.map(|x| x.parse().unwrap());
 
     for maybe_row in rdr.records() {
         let r = maybe_row?;
-        let pada = &r[0];
+        let expected: Vec<_> = r[0].split('|').collect();
         let dhatu = &r[1];
         let code = String::from(&r[2]) + "." + &r[3];
 
-        let la = parse_la(&r[4]);
-        let purusha = parse_purusha(&r[5]);
-        let vacana = parse_vacana(&r[6]);
+        let prayoga = r[4].parse()?;
+        let la = r[5].parse()?;
+        let purusha = r[6].parse()?;
+        let vacana = r[7].parse()?;
 
         // Filter by args
         if let Some(x) = la_filter {
@@ -83,19 +71,20 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
             }
         }
 
-        let ps = A::derive_tinantas(dhatu, &code, la, Prayoga::Kartari, purusha, vacana, false);
-        let padas: Vec<_> = ps.iter().map(|p| p.text()).collect();
+        let prakriyas = A::derive_tinantas(dhatu, &code, la, prayoga, purusha, vacana, false);
+        let mut actual: Vec<_> = prakriyas.iter().map(|p| p.text()).collect();
+        actual.sort();
 
         n += 1;
-        if padas.iter().any(|p| p == &pada) {
-            // println!("[  OK  ]  {code:<10} {dhatu:<10} {pada}");
+        if expected == actual {
             num_matches += 1;
         } else {
-            let actual = padas.join(" | ");
             let la = &r[4];
             let purusha = &r[5];
             let vacana = &r[6];
-            println!("[ FAIL ]  {code:<10} {dhatu:<10} {la:<10} {purusha:<10} {vacana:<10} {pada} ({actual})");
+            println!("[ FAIL ]  {code:<10} {dhatu:<10} {la:<10} {purusha:<10} {vacana:<10}");
+            println!("          Expected: {:?}", expected);
+            println!("          Expected: {:?}", actual);
         }
 
         if n >= limit {

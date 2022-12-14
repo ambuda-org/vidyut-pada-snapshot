@@ -1,5 +1,6 @@
 //! Structured arguments
 use crate::constants::Tag;
+use std::str::FromStr;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Prayoga {
@@ -21,6 +22,18 @@ impl Prayoga {
             Self::Karmani => "karmani",
             Self::Bhave => "bhave",
         }
+    }
+}
+impl FromStr for Prayoga {
+    type Err = &'static str;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let res = match s {
+            "kartari" => Self::Kartari,
+            "karmani" => Self::Karmani,
+            "bhave" => Self::Bhave,
+            &_ => return Err("Could not parse Prayoga")
+        };
+        Ok(res)
     }
 }
 
@@ -46,6 +59,18 @@ impl Purusha {
         }
     }
 }
+impl FromStr for Purusha {
+    type Err = &'static str;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let res = match s {
+            "prathama" => Self::Prathama,
+            "madhyama" => Self::Madhyama,
+            "uttama" => Self::Uttama,
+            &_ => return Err("Could not parse Purusha")
+        };
+        Ok(res)
+    }
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Vacana {
@@ -67,6 +92,18 @@ impl Vacana {
             Self::Dvi => "dvi",
             Self::Bahu => "bahu",
         }
+    }
+}
+impl FromStr for Vacana {
+    type Err = &'static str;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let res = match s {
+            "eka" => Self::Eka,
+            "dvi" => Self::Dvi,
+            "bahu" => Self::Bahu,
+            &_ => return Err("Could not parse Vacana")
+        };
+        Ok(res)
     }
 }
 
@@ -123,5 +160,25 @@ impl La {
     }
     pub fn is_ardhadhatuka(&self) -> bool {
         !self.is_sarvadhatuka()
+    }
+}
+impl FromStr for La {
+    type Err = &'static str;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let res = match s {
+            "lat" => Self::Lat,
+            "lit" => Self::Lit,
+            "lut" => Self::Lut,
+            "lrt" => Self::Lrt,
+            "let" => Self::Let,
+            "lot" => Self::Lot,
+            "lan" => Self::Lan,
+            "vidhi-lin" => Self::VidhiLin,
+            "ashir-lin" => Self::AshirLin,
+            "lun" => Self::Lun,
+            "lrn" => Self::Lrn,
+            &_ => return Err("Could not parse La")
+        };
+        Ok(res)
     }
 }
