@@ -37,7 +37,7 @@ fn run_1_3_2(p: &mut Prakriya, i_term: usize, before: &mut CompactString) -> Opt
     while let Some(u) = bytes.get(i) {
         let c = *u as char;
 
-        if AC.contains_char(c) {
+        if AC.contains(c) {
             if let Some(b'~') = bytes.get(i + 1) {
                 should_mark_rule = true;
                 // Nasal vowel: parse as it.
@@ -125,8 +125,8 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
     };
     let antya = t.antya().unwrap();
     if let Some(t) = p.get_mut(i) {
-        if HAL.contains_char(antya) && !irit {
-            let vibhaktau_tusmah = t.has_tag(T::Vibhakti) && TUSMA.contains_char(antya);
+        if HAL.contains(antya) && !irit {
+            let vibhaktau_tusmah = t.has_tag(T::Vibhakti) && TUSMA.contains(antya);
             if !vibhaktau_tusmah {
                 t.add_tag(T::parse_it(antya)?);
                 temp.truncate(temp.len() - 1);
@@ -159,10 +159,10 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
                 t.add_tag(T::parse_it(adi)?);
                 temp_slice = &temp_slice[1..];
                 p.step("1.3.6")
-            } else if CUTU.contains_char(adi) {
+            } else if CUTU.contains(adi) {
                 // The sounds C, J, W, and Q are replaced later in the grammar.
                 // If we substitute them now, those rules will become vyartha.
-                if !CUTU_EXCEPTION.contains_char(adi) {
+                if !CUTU_EXCEPTION.contains(adi) {
                     t.add_tag(T::parse_it(adi)?);
                     temp_slice = &temp_slice[1..];
                 }
@@ -184,8 +184,7 @@ pub fn run(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
 
     if let Some(t) = p.get_mut(i) {
         if temp_slice != t.text {
-            t.text.clear();
-            t.text.push_str(temp_slice);
+            t.text.replace_range(.., temp_slice);
             p.step("1.3.9")
         }
     }

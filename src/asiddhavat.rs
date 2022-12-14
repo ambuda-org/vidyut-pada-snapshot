@@ -51,7 +51,7 @@ fn is_anekac(p: &Prakriya, i: usize) -> bool {
         }
 
         for c in t.text.chars().rev() {
-            if AC.contains_char(c) {
+            if AC.contains(c) {
                 num_ac += 1;
                 if num_ac >= 2 {
                     return true;
@@ -68,7 +68,7 @@ fn is_samyogapurva(p: &Prakriya, i: usize) -> bool {
     let mut first = true;
     for t in p.terms()[..=i].iter().rev() {
         for c in t.text.chars().rev() {
-            if HAL.contains_char(c) {
+            if HAL.contains(c) {
                 num_hal += 1;
                 if num_hal >= 2 {
                     return true;
@@ -96,8 +96,7 @@ fn run_kniti_ardhadhatuka(p: &mut Prakriya, i: usize) -> Option<()> {
     let kniti_ardha = n.any(&[T::kit, T::Nit]) && n.has_tag(T::Ardhadhatuka);
 
     if kniti_ardha && dhatu.has_u("dI\\N") && n.has_adi(&*AC) {
-        p.op("6.4.63", |p| op::insert_agama_after(p, i, "yu~w"));
-        it_samjna::run(p, i + 1).ok()?;
+        op::append_agama("6.4.63", p, i, "yu~w");
         // No change to `n` index (`i + 1`) needed since `yu~w` is an agama and will will be
         // included in `n`.
     } else if aat && n.has_adi(&*AC) && (kniti_ardha || f::is_it_agama(n.first()?)) {
@@ -298,7 +297,7 @@ fn try_et_adesha_and_abhyasa_lopa_for_lit(p: &mut Prakriya, i: usize) -> Option<
     };
 
     let dhatu = p.get(i)?;
-    if dhatu.text == "daB" && dhatu.has_u("danBu~") {
+    if dhatu.has_text("daB") && dhatu.has_u("danBu~") {
         p.op("6.4.120.v1", op_et_abhyasa_lopa);
     } else if dhatu.has_u("tF") || dhatu.has_text_in(&["Pal", "Baj", "trap"]) {
         // teratuH, PelatuH, BejatuH, trepatuH

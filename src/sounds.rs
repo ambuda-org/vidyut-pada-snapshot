@@ -1,3 +1,39 @@
+/*!
+Functions and classes for processing Sanskrit sounds.
+
+
+Main structs and functions
+--------------------------
+The main data structures are `SoundSet`, which checks whether a sound is a member of some set, and
+`SoundMap`, which is a simple key-value map from sound to sound.
+
+The `s` function creates a `SoundSet` according to Paninian notation, and the `map_sounds` creates
+a `SoundMap` between two sets of sounds based on their phonetic similarity. For details, see the
+comments on those functions.
+
+We also expose a `Pattern` trait for APIs that wish to match against one or more sounds.
+
+Finally, we export a variety of small utility functions like `is_hrasva`, `is_guna`, etc.
+
+
+Transliteration format
+----------------------
+Within this crate, we represent all Sanskrit sounds with the [SLP1][slp1] scheme, which has the
+following useful properties:
+
+- All sounds are simple ASCII chars, which are easier to type on a standard keyboard layout.
+
+- All sounds fit in exactly one byte, which is the best byte-aligned size one could hope for. In
+  addition to being more efficient, such a representation also gives us simple constant-time access
+  to each element of a text string. (Otherwise, `chars()` and other Rust APIs are typicall O(n).)
+
+- A given sound is always represented with the same Unicode code point.
+
+We chose SLP1 over something like [WX][wx] merely because we have more familiarity with SLP1.
+
+[slp1]: https://en.wikipedia.org/wiki/SLP1
+[wx]: https://en.wikipedia.org/wiki/WX_notation
+*/
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 
@@ -6,37 +42,42 @@ type Sound = char;
 lazy_static! {
     static ref SUTRAS: Vec<Sutra> = create_shiva_sutras();
     static ref SOUND_PROPS: HashMap<Sound, Uccarana> = create_sound_props();
+    static ref AC: SoundSet = s("ac");
     static ref HAL: SoundSet = s("hal");
 }
 
+/// A set of Sanskrit sounds.
+///
+/// Internally, a `SoundSet` is just a 256-byte array where `array[i]` is 1 if the char with `u8`
+/// value `i` is present in the set and 0 otherwise.
 pub struct SoundSet([u8; 256]);
 
 impl SoundSet {
-    pub fn new(string: &str) -> Self {
-        let mut res = SoundSet([0; 256]);
+    /// Creates an empty set.
+    pub fn new() -> Self {
+        SoundSet([0; 256])
+    }
+
+    /// Creates a set whose members are the characters in `string`.
+    pub fn from(string: &str) -> Self {
+        let mut res = Self::new();
         for c in string.chars() {
             res.0[c as usize] = 1;
         }
         res
     }
 
-    pub fn contains_char(&self, c: Sound) -> bool {
+    /// Returns whether the set contains the given sound.
+    pub fn contains(&self, c: Sound) -> bool {
         self.0[c as usize] == 1
     }
 
-    pub fn contains_opt(&self, o: Option<char>) -> bool {
-        if let Some(c) = o {
-            self.contains_char(c)
-        } else {
-            false
-        }
-    }
-
-    pub fn to_string(&self) -> String {
+    /// Returns all chars in the given set in alphabetical order.
+    fn to_string(&self) -> String {
         let mut ret = String::new();
         // Use Paninian order.
         for c in "aAiIuUfFxXeEoOMHkKgGNcCjJYwWqQRtTdDnpPbBmyrlvSzsh".chars() {
-            if self.contains_char(c) {
+            if self.contains(c) {
                 ret.push(c);
             }
         }
@@ -44,22 +85,37 @@ impl SoundSet {
     }
 }
 
+impl Default for SoundSet {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Maps one Sanskrit sound to another.
+///
+/// Internally, a `SoundSet` is just a 256-byte array where `array[key]` is `value` if the value is
+/// present or `0` otherwise. All sounds are represented as `char`s, which we cast internally to
+/// `u8`.
 #[derive(Debug, PartialEq, Eq)]
 pub struct SoundMap([u8; 256]);
 
 impl SoundMap {
+    /// Creates an empty map.
     pub fn new() -> Self {
         Self([0; 256])
     }
 
+    /// Inserts the given key-value pair. The old value is overwritten.
     pub fn insert(&mut self, key: Sound, val: Sound) {
         self.0[key as usize] = val as u8;
     }
 
+    /// Returns whether the given sound is in the map.
     pub fn contains(&self, key: Sound) -> bool {
         self.0[key as usize] != 0
     }
 
+    /// Gets the value for the given key, if present.
     pub fn get(&self, key: Sound) -> Option<Sound> {
         match self.0[key as usize] {
             0 => None,
@@ -74,12 +130,16 @@ impl Default for SoundMap {
     }
 }
 
+/// A match pattern for sounds.
+///
+/// `Pattern` provides API flexibility for any function that needs to match against one or more
+/// sounds.
 pub trait Pattern {
-    /// Returns whether this `Master` includes the given sound.
+    /// Returns whether this `Pattern` includes the given sound.
     fn matches(&self, s: Sound) -> bool;
 }
 
-impl Pattern for char {
+impl Pattern for Sound {
     fn matches(&self, s: Sound) -> bool {
         *self == s
     }
@@ -87,23 +147,23 @@ impl Pattern for char {
 
 impl Pattern for SoundSet {
     fn matches(&self, s: Sound) -> bool {
-        self.contains_char(s)
+        self.contains(s)
     }
 }
 
 impl Pattern for &SoundSet {
     fn matches(&self, s: Sound) -> bool {
-        self.contains_char(s)
+        self.contains(s)
     }
 }
 
 struct Sutra {
     sounds: String,
-    it: char,
+    it: Sound,
 }
 
 impl Sutra {
-    fn new(sounds: &str, it: char) -> Self {
+    fn new(sounds: &str, it: Sound) -> Self {
         Sutra {
             sounds: sounds.to_string(),
             it,
@@ -203,42 +263,56 @@ fn create_sound_props() -> HashMap<Sound, Uccarana> {
     res
 }
 
+/// Returns whether the given sound is a short vowel.
 pub fn is_hrasva(c: Sound) -> bool {
     matches!(c, 'a' | 'i' | 'u' | 'f' | 'x')
 }
 
+/// Returns whether the given sound is a long vowel.
 pub fn is_dirgha(c: Sound) -> bool {
     matches!(c, 'A' | 'I' | 'U' | 'F' | 'X' | 'e' | 'E' | 'o' | 'O')
 }
 
+/// Returns whether the given sound is a guNa vowel.
 pub fn is_guna(c: Sound) -> bool {
     matches!(c, 'a' | 'e' | 'o')
 }
 
+/// Returns whether the given sound is a vrddhi vowel.
 pub fn is_vrddhi(c: Sound) -> bool {
     matches!(c, 'A' | 'E' | 'O')
 }
 
+/// Returns whether the given sound is a vowel.
 pub fn is_ac(c: Sound) -> bool {
-    lazy_static! {
-        static ref AC: SoundSet = s("ac");
-    }
-    AC.contains_char(c)
+    AC.contains(c)
 }
 
+/// Returns whether the given sound is a consonant.
 pub fn is_hal(c: Sound) -> bool {
-    HAL.contains_char(c)
+    HAL.contains(c)
 }
 
+/// Returns whether the given text starts with two or more consecutive consonants.
 pub fn is_samyogadi(text: &str) -> bool {
     let mut chars = text.chars();
-    HAL.contains_opt(chars.next()) && HAL.contains_opt(chars.next())
+    if let Some(x) = chars.next() {
+        if let Some(y) = chars.next() {
+            return HAL.contains(x) && HAL.contains(y);
+        }
+    }
+    false
 }
 
+/// Returns whether the given text starts with two or more consecutive consonants.
 pub fn is_samyoganta(text: &str) -> bool {
     let mut chars = text.chars().rev();
-    let last = chars.next();
-    HAL.contains_opt(last) && HAL.contains_opt(chars.next()) || last == Some('C')
+    if let Some(x) = chars.next() {
+        if let Some(y) = chars.next() {
+            return (HAL.contains(x) && HAL.contains(y)) || x == 'C';
+        }
+    }
+    false
 }
 
 pub fn to_guna(s: Sound) -> Option<&'static str> {
@@ -298,6 +372,11 @@ pub fn to_dirgha(s: Sound) -> Option<Sound> {
     Some(res)
 }
 
+/// Returns the sounds contained the given pratyahara.
+///
+/// Since the it letter `R` is duplicated, we disambiguate as follows:
+/// - `R` refers to the first `R`.
+/// - `R2` refers to the second `R`.
 fn pratyahara(s: &str) -> SoundSet {
     let first = s.as_bytes()[0] as char;
 
@@ -338,7 +417,7 @@ fn pratyahara(s: &str) -> SoundSet {
     }
 
     assert!(!res.is_empty(), "Could not parse pratyahara `{s}`");
-    SoundSet::new(&res)
+    SoundSet::from(&res)
 }
 
 pub fn s(terms: &str) -> SoundSet {
@@ -356,9 +435,10 @@ pub fn s(terms: &str) -> SoundSet {
         }
     }
 
-    SoundSet::new(&ret)
+    SoundSet::from(&ret)
 }
 
+/// Models the point of articulation of a Sanskrit sound.
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Sthana {
     Kantha,
@@ -372,18 +452,21 @@ enum Sthana {
     DantaOshtha,
 }
 
+/// Models the voicing of a Sanskrit sound.
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Ghosha {
     Ghoshavat,
     Aghosha,
 }
 
+/// Models the aspiration of a Sanskrit sound.
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Prana {
     Mahaprana,
     Alpaprana,
 }
 
+/// Models the articulatory effort of a Sanskrit sound.
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Prayatna {
     Vivrta,
@@ -391,6 +474,7 @@ enum Prayatna {
     Sprshta,
 }
 
+/// Models the phonetic properties of a Sanskrit sound.
 struct Uccarana {
     sthana: Vec<Sthana>,
     ghosha: Ghosha,
@@ -399,6 +483,8 @@ struct Uccarana {
 }
 
 impl Uccarana {
+    /// Calculates a heuristic distance between this sound and another. The shorter the distance,
+    /// the closer the sounds are.
     fn distance(&self, other: &Uccarana) -> i32 {
         let mut dist = 0;
         if self.ghosha != other.ghosha {
@@ -422,6 +508,7 @@ impl Uccarana {
     }
 }
 
+/// Maps a sound to itself and all of the sounds that are savarna with it.
 fn savarna_str(c: Sound) -> &'static str {
     match c {
         'a' | 'A' => "aA",
@@ -437,32 +524,35 @@ fn savarna_str(c: Sound) -> &'static str {
     }
 }
 
+/// Returns whether `x` and `y` are savarna to each other.
 pub fn is_savarna(x: Sound, y: Sound) -> bool {
     savarna_str(x) == savarna_str(y)
 }
 
+/// Creates a `savarna` set for teh given sound.
 pub fn savarna(c: Sound) -> SoundSet {
-    SoundSet::new(savarna_str(c))
+    SoundSet::from(savarna_str(c))
 }
 
-pub fn map_sounds(xs: &str, ys: &str) -> SoundMap {
-    let xs = s(xs);
-    let ys = s(ys);
+/// Maps the sounds in `keys` to the sounds is `values` according to their phonetic similarity.
+pub fn map_sounds(keys: &str, values: &str) -> SoundMap {
+    let keys = s(keys);
+    let values = s(values);
 
-    let mut mapping = SoundMap::new();
-    for x in xs.to_string().chars() {
-        let x_props = SOUND_PROPS.get(&x).unwrap();
+    let mut map = SoundMap::new();
+    for key in keys.to_string().chars() {
+        let key_props = SOUND_PROPS.get(&key).unwrap();
 
         // The best sound has the minimal distance.
-        let best_y = ys
+        let best_value = values
             .to_string()
             .chars()
-            .min_by_key(|y| SOUND_PROPS.get(y).unwrap().distance(x_props))
+            .min_by_key(|v| SOUND_PROPS.get(v).unwrap().distance(key_props))
             .unwrap();
-        mapping.insert(x, best_y);
+        map.insert(key, best_value);
     }
 
-    mapping
+    map
 }
 
 #[cfg(test)]
@@ -546,6 +636,13 @@ mod tests {
         assert_eq!(expected, actual);
 
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_is_samyogadi() {
+        assert!(is_samyogadi("krI"));
+        assert!(!is_samyogadi("kf"));
+        assert!(!is_samyogadi("IS"));
     }
 
     #[test]

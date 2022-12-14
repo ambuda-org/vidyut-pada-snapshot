@@ -93,18 +93,13 @@ pub fn run_before_attva(p: &mut Prakriya) {
 /// 2. atidesha & samprasarana (non-A) -> Ad-Adesha
 /// 3. Ad-Adesha --> iT-Agama (A)
 /// 4. iT-Agama (A) --> atidesha and samprasarana (A)
-pub fn run_after_attva(p: &mut Prakriya) {
-    let i = match p.find_first(T::Dhatu) {
-        Some(i) => i,
-        None => return,
-    };
-    let n = match p.view(i + 1) {
-        Some(n) => n,
-        None => return,
-    };
+pub fn run_after_attva(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_first(T::Dhatu)?;
+    let n = p.view(i + 1)?;
     let i_tin = p.terms().len() - 1;
 
-    let stha_ghu = p.has(i, |t| t.text == "sTA" || t.has_tag(T::Ghu));
+    let dhatu = p.get(i)?;
+    let stha_ghu = dhatu.has_text("sTA") || dhatu.has_tag(T::Ghu);
     if stha_ghu && p.has(i_tin, f::atmanepada) && n.has_u("si~c") {
         let i_n_end = n.end();
         p.op("1.2.17", |p| {
@@ -112,4 +107,6 @@ pub fn run_after_attva(p: &mut Prakriya) {
             p.set(i_n_end, op::add_tag(T::kit));
         });
     }
+
+    Some(())
 }

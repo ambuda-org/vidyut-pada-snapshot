@@ -77,15 +77,15 @@ fn try_general_anit(p: &mut Prakriya, i: usize) -> bool {
     };
 
     let mut it = It::None;
-    let sri_uk = dhatu.text == "Sri" || UK.contains_opt(dhatu.antya());
-    if n.has_tag(T::Krt) && !VASH.contains_opt(n.adi()) {
+    let sri_uk = dhatu.has_text("Sri") || dhatu.has_antya(&*UK);
+    if n.has_tag(T::Krt) && !n.has_adi(&*VASH) {
         it = It::Anit("7.2.8");
     } else if is_hacky_eka_ac(dhatu) && sri_uk && n.has_tag(T::Kit) {
         it = It::Anit("7.2.11");
     } else if n.has_u("san") && dhatu.has_text_in(&["Sri", "grah", "guh"]) {
         it = It::Anit("7.2.12");
     } else if n.has_tag(T::Nistha) {
-        if dhatu.text == "Svi" || dhatu.has_tag(T::Idit) {
+        if dhatu.has_text("Svi") || dhatu.has_tag(T::Idit) {
             it = It::Anit("7.2.14");
         } else if dhatu.has_tag(T::Adit) {
             let code = "7.2.17";
@@ -171,7 +171,7 @@ fn try_lit_it(p: &mut Prakriya, i: usize) -> bool {
             // default.
             p.step("7.2.13");
             let n = p.view(i + 1).unwrap();
-            if VAL.contains_opt(n.adi()) {
+            if n.has_adi(&*VAL) {
                 add_it("7.2.35", p, i);
             }
         }
@@ -223,10 +223,10 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
 
     // Special cases
     let mut add_sak = false;
-    if (anga.has_antya('f') || anga.text == "han") && n.has_u("sya") {
+    if (anga.has_antya('f') || anga.has_text("han")) && n.has_u("sya") {
         it = It::Set("7.2.70");
     } else if n.has_u("si~c") {
-        if anga.text == "aYj" {
+        if anga.has_text("aYj") {
             it = It::Set("7.2.71");
         } else if p.terms().last().unwrap().has_tag(T::Parasmaipada) {
             if anga.has_u_in(&["zwu\\Y", "zu\\Y", "DUY"]) {
@@ -255,7 +255,7 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
     let ishu_saha = &["izu~", "zaha~\\", "luBa~", "ruza~", "riza~"];
     if matches!(it, It::Set(_) | It::Anit(_)) {
         // Do nothing
-    } else if anga.has_u_in(gana::RADH_ADI) && VAL.contains_opt(n.adi()) {
+    } else if anga.has_u_in(gana::RADH_ADI) && n.has_adi(&*VAL) {
         // All of these roots are in scope for 7.2.10 (aniT).
         // So, this option allows seT.
         it = optional_set("7.2.45", p);
@@ -263,9 +263,11 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
         it = optional_anit("7.2.48", p);
     } else if anga.has_text_in(krta_crta) && se && !n.has_u("si~c") {
         it = optional_anit("7.2.57", p);
-    } else if anga.text == "gam" && antya_para && se {
+    } else if anga.has_text("gam") && antya_para && se {
+        // gamizyati
         it = It::Set("7.2.58");
     } else if anga.has_u_in(gana::VRDBHYAH) && anga.has_gana(1) && antya_para && se {
+        // vartsyati (vfd), vartsyati (vfD), Sftsyati, syantsyati
         it = It::Anit("7.2.59");
     } else if anga.has_u("kfpU~\\") && antya_para && (se || n.has_u("tAsi~")) {
         it = It::Anit("7.2.60");
@@ -293,7 +295,7 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
                 it = optional_anit("7.2.44", p)
             }
         } else if (n.has_lakshana("li~N") || n.has_u("si~c")) && last.has_tag(T::Atmanepada) {
-            let vft = anga.text == "vf" || anga.has_antya('F');
+            let vft = anga.has_text("vf") || anga.has_antya('F');
             if vft && n.has_tag(T::Ardhadhatuka) {
                 // By default, all of these roots are seT.
                 // So, the option allows anit.
@@ -321,7 +323,7 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
         //
         // Any li~w root not explictly included in 7.2.13 is also iT.
         it = It::Anit("7.2.10");
-    } else if VAL.contains_opt(n.adi()) && n.has_tag(T::Ardhadhatuka) {
+    } else if n.has_adi(&*VAL) && n.has_tag(T::Ardhadhatuka) {
         it = It::Set("7.2.35");
     }
 

@@ -1,3 +1,4 @@
+//! Structured arguments
 use crate::constants::Tag;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -67,6 +68,17 @@ impl Vacana {
             Self::Bahu => "bahu",
         }
     }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Vibhakti {
+    Prathama,
+    Dvitiya,
+    Trtiya,
+    Caturthi,
+    Panchami,
+    Sasthi,
+    Saptami,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

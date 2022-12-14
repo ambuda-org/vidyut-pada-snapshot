@@ -80,14 +80,9 @@ pub fn ti(sub: &'static str) -> impl Fn(&mut Term) {
     }
 }
 
-/// Replaces all of the text of the given term.
+/// Replaces all of the text in the given term.
 pub fn text(sub: &'static str) -> impl Fn(&mut Term) {
     move |t| t.text.replace_range(.., sub)
-}
-
-/// Replaces all of the text in the given term.
-pub fn text2(rule: Rule, p: &mut Prakriya, i: usize, sub: &'static str) {
-    p.op_term(rule, i, text(sub));
 }
 
 pub fn upadesha_no_it(p: &mut Prakriya, i: usize, sub: &str) {
@@ -97,6 +92,9 @@ pub fn upadesha_no_it(p: &mut Prakriya, i: usize, sub: &str) {
         t.set_text(sub);
     }
 }
+
+// Insertion of new terms
+// ======================
 
 pub fn insert_agama_before(p: &mut Prakriya, i: usize, u: &str) {
     let agama = Term::make_agama(u);

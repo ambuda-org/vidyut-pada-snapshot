@@ -11,13 +11,16 @@ use enumset::EnumSet;
 pub struct Term {
     pub u: Option<CompactString>,
     pub text: CompactString,
-    pub tags: EnumSet<Tag>,
-    gana: Option<i32>,
-    pub number: Option<i32>,
-    pub lakshana: Vec<CompactString>,
+    tags: EnumSet<Tag>,
+    gana: Option<u8>,
+    pub number: Option<u32>,
+    lakshana: Vec<CompactString>,
 }
 
 impl Term {
+    // Constructors
+    // ------------
+
     /// Creates a new upadesha.
     pub fn make_upadesha(s: &str) -> Self {
         Term {
@@ -43,7 +46,7 @@ impl Term {
     }
 
     /// Creates a new dhatu.
-    pub fn make_dhatu(s: &str, gana: i32, number: i32) -> Self {
+    pub fn make_dhatu(s: &str, gana: u8, number: u32) -> Self {
         let mut t = Term::make_upadesha(s);
         t.gana = Some(gana);
         t.number = Some(number);
@@ -58,6 +61,7 @@ impl Term {
     }
 
     // Sound selectors
+    // ---------------
 
     /// Returns the first sound in the term if it exists.
     pub fn adi(&self) -> Option<char> {
@@ -80,6 +84,7 @@ impl Term {
     }
 
     // Sound properties
+    // ----------------
 
     fn matches_sound_pattern(&self, c: Option<char>, pattern: impl Pattern) -> bool {
         match c {
@@ -140,7 +145,7 @@ impl Term {
     }
 
     /// Returns whether the term has the given root gaNa. If the gaNa is undefined, returns false.
-    pub fn has_gana(&self, gana: i32) -> bool {
+    pub fn has_gana(&self, gana: u8) -> bool {
         self.gana == Some(gana)
     }
 

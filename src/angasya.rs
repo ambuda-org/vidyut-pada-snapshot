@@ -23,7 +23,7 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     static ref AC: SoundSet = s("ac");
-    static ref HRASVA: SoundSet = SoundSet::new("aiufx");
+    static ref HRASVA: SoundSet = SoundSet::from("aiufx");
     static ref OSHTHYA: SoundSet = s("pu~ v");
     static ref FF: SoundSet = s("f");
     static ref IK: SoundSet = s("ik");
@@ -38,7 +38,7 @@ lazy_static! {
 fn op_antya_guna(t: &mut Term) {
     if let Some(a) = t.antya() {
         if let Some(sub) = al::to_guna(a) {
-            op::antya(sub)(t);
+            t.set_antya(sub);
             t.add_tag(T::FlagGuna);
         }
     }
@@ -54,21 +54,22 @@ fn maybe_rule(p: &mut Prakriya, rule: Rule) -> Option<Rule> {
 }
 
 /// Applies rules that replace an initial "J" in a pratyaya with the appropriate sounds.
+///
 /// (7.1.3 - 7.1.7)
 fn maybe_do_jha_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
-    let tin = p.get(i)?;
-    if !tin.has_adi('J') {
-        return None;
-    }
+    let tin = p.get_if(i, |t| t.has_adi('J'))?;
 
     let i_base = p.find_prev_where(i, |t| !t.is_empty())?;
     let base = p.get(i_base)?;
 
     if base.has_tag(T::Abhyasta) {
+        // juhvati
         p.op_term("7.1.4", i, op::adi("at"));
     } else if !base.has_antya('a') && tin.has_tag(T::Atmanepada) {
+        // kurvate
         p.op_term("7.1.5", i, op::adi("at"));
     } else {
+        // Bavanti
         p.op_term("7.1.3", i, op::adi("ant"));
     }
 
@@ -76,10 +77,11 @@ fn maybe_do_jha_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
     if p.has(i, f::atmanepada) {
         let add_rut = |p: &mut Prakriya| op::insert_agama_before(p, i, "ru~w");
         if base.has_u("SIN") {
+            // Serate
             p.op("7.1.6", add_rut);
             it_samjna::run(p, i).ok()?;
         } else if base.has_u("vida~") && base.has_gana(2) {
-            // e.g. vidrate
+            // vidrate
             if p.op_optional("7.1.7", add_rut) {
                 it_samjna::run(p, i).ok()?;
             }
@@ -106,12 +108,12 @@ pub fn try_pratyaya_adesha(p: &mut Prakriya) -> Option<()> {
 
     if last.has_text_in(&["yu~", "vu~"]) {
         if last.has_text("yu~") {
-            p.op("7.1.1", op::t(i, op::text("ana")));
+            p.op_term("7.1.1", i, op::text("ana"));
         } else {
-            p.op("7.1.1", op::t(i, op::text("aka")));
+            p.op_term("7.1.1", i, op::text("aka"));
         }
     } else if last.has_adi(&*PHA_DHA_KHA_CHA_GHA) {
-        let sub = match last.adi().unwrap() {
+        let sub = match last.adi()? {
             'P' => "Ayan",
             'Q' => "ey",
             'K' => "In",
@@ -119,7 +121,7 @@ pub fn try_pratyaya_adesha(p: &mut Prakriya) -> Option<()> {
             'G' => "in",
             _ => panic!("Unexpected"),
         };
-        p.op("7.1.2", op::t(i, op::adi(sub)));
+        p.op_term("7.1.2", i, op::adi(sub));
     } else if last.has_adi('J') {
         maybe_do_jha_adesha(p, i);
 
@@ -201,6 +203,7 @@ fn try_nnit_vrddhi(p: &mut Prakriya, i: usize) -> Option<()> {
             p.op_term("7.2.115", i, op::antya(sub));
         }
     } else if anga.has_upadha('a') {
+        // pAcayati
         p.op_term("7.2.116", i, op::upadha("A"));
     }
 
@@ -228,6 +231,7 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
     } else if anga.has_u_in(&["Divi~", "kfvi~"]) {
         // Per commentary on 3.1.81, these roots don't take guna.
     } else if anga.has_text("mid") && n.has_tag(T::Sit) {
+        // medyati
         p.op_term("7.3.82", i, |t| {
             t.text.replace_range(.., "med");
             t.add_tag(T::FlagGuna);
@@ -271,7 +275,7 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
         let n = p.get(j)?;
         if anga.has_text("jAgf") && !vi_cin_nal && !n.has_tag(T::Nit) {
             p.op_term("7.3.85", i, |t| {
-                op::antya("ar")(t);
+                t.set_antya("ar");
                 t.add_tag(T::FlagGuna);
             });
         } else if anga.has_upadha(&*HRASVA) {
@@ -295,19 +299,9 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
 }
 
 /// Runs rules that are conditioned on a following Sit-pratyaya.
-fn try_shiti(p: &mut Prakriya) {
-    let i = match p.find_last(T::Dhatu) {
-        Some(i) => i,
-        None => return,
-    };
-
-    if !p.has(i, f::dhatu) {
-        return;
-    }
-    let i_n = match p.find_next_where(i, |t| !t.text.is_empty()) {
-        Some(i) => i,
-        None => return,
-    };
+fn try_shiti(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_last(T::Dhatu)?;
+    let i_n = p.find_next_where(i, |t| !t.text.is_empty())?;
 
     let sham_adi = &[
         "Samu~", "tamu~", "damu~", "Sramu~", "Bramu~", "kzamU~", "klamu~", "madI~",
@@ -322,19 +316,18 @@ fn try_shiti(p: &mut Prakriya) {
         "piba", "jiGra", "Dama", "tizWa", "mana", "yacCa", "paSya", "fcCa", "DO", "SIya", "sIda",
     ];
 
-    let anga = &p.terms()[i];
-    let n = &p.terms()[i_n];
-    if !n.has_tag(T::Sit) {
-        return;
-    }
-    let last = p.terms().last().unwrap();
+    let anga = p.get(i)?;
+    let n = p.get_if(i_n, |t| t.has_tag(T::Sit))?;
+    let last = p.terms().last()?;
 
     if anga.has_antya('o') && n.has_u("Syan") {
+        // Syati
         p.op_term("7.3.71", i, op::antya(""));
     } else if anga.has_u_in(sham_adi) && n.has_u("Syan") && anga.has_gana(4) {
         // Check ganas to avoid `Bramu~ anavasTAne` (BrAmyati).
         p.op_term("7.3.74", i, op::upadha("A"));
     } else if anga.has_text_in(&["zWiv", "klam"]) {
+        // zWIvati, kAmati
         // TODO: A-cam
         p.op_term("7.3.75", i, |t| {
             match t.text.as_str() {
@@ -344,13 +337,15 @@ fn try_shiti(p: &mut Prakriya) {
             };
         });
     } else if anga.has_text("kram") && last.has_tag(T::Parasmaipada) {
+        // krAmati
         p.op_term("7.3.76", i, op::text("krAm"));
     } else if anga.has_u_in(&["izu~", "ga\\mx~", "ya\\ma~"]) {
+        // icCati, gacCati, yacCati
         p.op_term("7.3.77", i, op::antya("C"));
     } else if anga.has_u_in(pa_ghra) && !anga.has_gana(2) && !anga.has_gana(3) {
         // Check ganas above to avoid `pA rakzaRe` (pAti), `f gatO` (iyarti)
         let to_piba_jighra = |p: &mut Prakriya| {
-            let anga = &p.terms()[i];
+            let anga = p.get(i).unwrap();
             if let Some(needle) = &anga.u {
                 if let Some(sub) = op::yatha(needle, pa_ghra, piba_jighra) {
                     p.op_term("7.3.78", i, op::text(sub));
@@ -359,16 +354,21 @@ fn try_shiti(p: &mut Prakriya) {
                 }
             }
         };
+
+        let anga = p.get(i)?;
         if anga.has_u("sf\\") {
             // sartervegitāyāṃ gatau dhāvādeśam icchanti। anyatra sarati, anusarati
             // ityeva bhavati. (kAzikA)
             p.op_optional("7.3.78", to_piba_jighra);
         } else {
+            // pibati, jiGrati, Damati, ...
             p.op("7.3.78", to_piba_jighra);
         }
     } else if anga.has_u_in(&["jYA\\", "janI~\\"]) {
+        // jAnAti, jAyate
         p.op_term("7.3.79", i, op::text("jA"));
     } else if anga.has_u_in(gana::PU_ADI) && (anga.has_gana(5) || anga.has_gana(9)) {
+        // punAti, stfRAti, riRAti
         // All of these dhatus end in vowels.
         p.op_term("7.3.80", i, |t| {
             t.find_and_replace_text("U", "u");
@@ -376,6 +376,8 @@ fn try_shiti(p: &mut Prakriya) {
             t.find_and_replace_text("I", "i");
         });
     }
+
+    Some(())
 }
 
 /// Runs rules that add nu~m to the base.
@@ -395,6 +397,7 @@ fn try_add_num_agama(p: &mut Prakriya) -> Option<()> {
             p.op("7.1.52", |p| op::insert_agama_before(p, i_last, "su~w"));
             it_samjna::run(p, i_last).ok()?;
         } else if anga.has_text("tri") {
+            // trayaH
             p.op_term("7.1.53", i_anga, op::text("traya"));
         } else if f::is_hrasva(anga) {
             p.op("7.1.54", |p| op::insert_agama_before(p, i_last, "nu~w"));
@@ -410,6 +413,7 @@ fn try_add_num_agama(p: &mut Prakriya) -> Option<()> {
     let anga = &p.terms()[i];
     let n = p.view(i + 1)?;
     if anga.has_u_in(gana::MUC_ADI) && n.has_u("Sa") {
+        // muYcati
         p.op_term("7.1.59", i, op::mit("n"));
     } else if anga.has_u_in(gana::TRMPH_ADI) && n.has_u("Sa") {
         p.op_term("7.1.59.v1", i, op::mit("n"));
@@ -417,7 +421,7 @@ fn try_add_num_agama(p: &mut Prakriya) -> Option<()> {
         p.op_term("7.1.60", i, op::mit("n"));
     }
 
-    let anga = &p.terms()[i];
+    let anga = p.get(i)?;
     let n = p.view(i + 1)?;
     let liti = n.has_lakshana("li~w");
     if n.has_adi(&*AC) {
@@ -624,18 +628,22 @@ fn try_add_or_remove_nit(p: &mut Prakriya) -> Option<()> {
     Some(())
 }
 
-/// Runs rules that modify the `tAs` vikarana that follows `as` in `luw`-lakAra.
+/// Runs rules that modify ether the `tAs` vikarana or `as`.
 ///
 /// (7.4.50 - 7.4.52)
 fn try_tas_asti_lopa(p: &mut Prakriya, i: usize) -> Option<()> {
-    if p.has(i, |t| t.text == "tAs" || f::is_asti(t)) {
+    let term = p.get(i)?;
+    if term.has_text("tAs") || f::is_asti(term) {
         let i_n = p.find_next_where(i, |t| !t.is_empty())?;
         let n = p.get(i_n)?;
         if n.has_adi('s') {
+            // kartAsi, asi
             p.op_term("7.4.50", i, op::antya(""));
         } else if n.has_adi('r') {
+            // kartArO
             p.op_term("7.4.51", i, op::antya(""));
         } else if n.has_adi('e') {
+            // kartAhe
             p.op_term("7.4.52", i, op::antya("h"));
         }
     }
@@ -774,52 +782,55 @@ fn dhatu_rt_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
 /// Example: `Bava + mi -> BavAmi`
 ///
 /// (7.3.101 - 7.3.111)
-fn try_ato_dirgha(p: &mut Prakriya, i: usize) {
-    let n = match p.view(i + 1) {
-        Some(n) => n,
-        None => return,
-    };
+fn try_ato_dirgha(p: &mut Prakriya, i: usize) -> Option<()> {
+    let n = p.view(i + 1)?;
 
     let to_guna = |t: &mut Term| {
         let last = al::to_guna(t.antya().unwrap()).unwrap();
-        op::antya(last)(t);
+        t.set_antya(last);
     };
     let ends_in_a = |t: &Term| t.has_antya('a');
 
     if n.has_tag(T::Sarvadhatuka) {
-        if p.has(i, ends_in_a) && YANY.contains_opt(n.adi()) {
+        if p.has(i, ends_in_a) && n.has_adi(&*YANY) {
             p.op_term("7.3.101", i, op::antya("A"));
         }
     } else if n.has_tag(T::Sup) {
-        if p.has(i, ends_in_a) {
-            if n.has_tag(T::Bahuvacana) && JHAL.contains_opt(n.adi()) {
+        let stem = p.get(i)?;
+
+        if stem.has_antya('a') {
+            if n.has_tag(T::Bahuvacana) && n.has_adi(&*JHAL) {
+                // deveByaH
                 p.op_term("7.3.103", i, op::antya("e"));
-            } else if YANY.contains_opt(n.adi()) {
+            } else if n.has_adi(&*YANY) {
                 p.op_term("7.3.102", i, op::antya("A"));
-            } else if n.slice()[0].text == "os" {
+            } else if n.slice().first()?.has_text("os") {
+                // devayoH
                 p.op_term("7.3.104", i, op::antya("e"));
             }
         }
 
-        let c = &p.terms()[i];
-        let n = match p.view(i + 1) {
-            Some(n) => n,
-            None => return,
-        };
-        if al::is_hrasva(c.antya().unwrap()) && c.antya() != Some('a') {
-            if n.has_tag(T::Sambuddhi) {
+        let stem = p.get(i)?;
+        let sup = p.view(i + 1)?;
+
+        if al::is_hrasva(stem.antya()?) && !stem.has_antya('a') {
+            if sup.has_tag(T::Sambuddhi) {
+                // agne, vAyo
                 p.op_term("7.3.108", i, to_guna);
-            } else if n.has_u("jas") {
+            } else if sup.has_u("jas") {
+                // agnayaH, vAyavaH
                 p.op_term("7.3.109", i, to_guna);
-            } else if p.has(i, |t| t.has_antya('f'))
-                && (n.has_u("Ni") || n.has_tag(T::Sarvanamasthana))
-            {
+            } else if stem.has_antya('f') && (sup.has_u("Ni") || sup.has_tag(T::Sarvanamasthana)) {
+                // kartari
                 p.op_term("7.3.110", i, to_guna);
-            } else if p.has(i, f::tag(T::Ghi)) && n.has_tag(T::Nit) {
+            } else if stem.has_tag(T::Ghi) && sup.has_tag(T::Nit) {
+                // agnaye, agneH
                 p.op_term("7.3.111", i, to_guna);
             }
         }
     }
+
+    Some(())
 }
 
 /// Runs rules that cause vrddhi of `sic`-pratyaya.
@@ -902,7 +913,7 @@ fn try_sic_vrddhi(p: &mut Prakriya) -> Option<()> {
         // 7.2.3 applies to the final vowel generally, even if samyoganta
         let n_3 = dhatu.get(dhatu.text.len() - 3)?;
         p.op_term("7.2.3", i, |t| {
-            if AC.contains_char(n_3) {
+            if AC.contains(n_3) {
                 let sub = al::to_vrddhi(n_3).unwrap();
                 let i = t.text.len() - 3;
                 t.text.replace_range(i..=i, sub);
@@ -1094,11 +1105,6 @@ fn try_add_agama_before_ni(p: &mut Prakriya) -> Option<()> {
         return None;
     }
 
-    let append_agama = |rule, p: &mut Prakriya, i, sub| {
-        p.op(rule, |p| op::insert_agama_after(p, i, sub));
-        it_samjna::run(p, i + 1).unwrap();
-    };
-
     let optional_append_agama = |rule, p: &mut Prakriya, i, sub| -> bool {
         if p.op_optional(rule, |p| op::insert_agama_after(p, i, sub)) {
             it_samjna::run(p, i + 1).unwrap();
@@ -1109,7 +1115,7 @@ fn try_add_agama_before_ni(p: &mut Prakriya) -> Option<()> {
     };
 
     if dhatu.has_text_in(&["f", "hrI", "vlI", "rI", "knUy", "kzmAy"]) || dhatu.has_antya('A') {
-        append_agama("7.3.36", p, i, "pu~k");
+        op::append_agama("7.3.36", p, i, "pu~k");
     } else if dhatu.has_text_in(&["zA", "DA", "sA", "hvA", "vyA", "pA", "pE"])
         || dhatu.has_u("ve\\Y")
     {
@@ -1119,10 +1125,10 @@ fn try_add_agama_before_ni(p: &mut Prakriya) -> Option<()> {
             false
         };
         if !blocked {
-            append_agama("7.3.37", p, i, "yu~k");
+            op::append_agama("7.3.37", p, i, "yu~k");
         }
     } else if dhatu.has_text("pA") && dhatu.has_gana(2) {
-        append_agama("7.3.36", p, i, "lu~k");
+        op::append_agama("7.3.36", p, i, "lu~k");
     } else if dhatu.has_text_in(&["prI", "DU"]) {
         // Optional per Haradatta (see commentary on prIY in siddhAnta-kaumudI)
         optional_append_agama("7.3.37.v2", p, i, "nu~k");

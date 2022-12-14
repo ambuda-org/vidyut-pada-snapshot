@@ -33,7 +33,7 @@ pub fn apply_general_ac_sandhi(p: &mut Prakriya) {
                 Some(c) => *c as char,
                 None => return false,
             };
-            let vyor_vali = (x == 'v' || x == 'y') && VAL.contains_char(y);
+            let vyor_vali = (x == 'v' || x == 'y') && VAL.contains(y);
             let t = get_at(p, i).expect("should be present");
             // Ignore if it starts an upadesha, otherwise roots like "vraj" would by vyartha.
             // Likewise for roots ending with 'v'.
@@ -56,7 +56,7 @@ pub fn apply_general_ac_sandhi(p: &mut Prakriya) {
 
     char_rule(
         p,
-        xy(|x, y| EC.contains_char(x) && AC.contains_char(y)),
+        xy(|x, y| EC.contains(x) && AC.contains(y)),
         |p, text, i| {
             let x = text.as_bytes()[i] as char;
             let sub = match x {
@@ -74,7 +74,7 @@ pub fn apply_general_ac_sandhi(p: &mut Prakriya) {
 
     char_rule(
         p,
-        xy(|x, y| AK.contains_char(x) && AK.contains_char(y) && al::savarna(x).contains_char(y)),
+        xy(|x, y| AK.contains(x) && AK.contains(y) && al::savarna(x).contains(y)),
         |p, text, i| {
             let x = text.as_bytes()[i] as char;
             set_at(p, i, &al::to_dirgha(x).expect("should be ac").to_string());
@@ -86,7 +86,7 @@ pub fn apply_general_ac_sandhi(p: &mut Prakriya) {
 
     char_rule(
         p,
-        xy(|x, y| IK.contains_char(x) && AC.contains_char(y)),
+        xy(|x, y| IK.contains(x) && AC.contains(y)),
         |p, text, i| {
             let x = text.as_bytes()[i] as char;
             let res = match x {
@@ -104,11 +104,11 @@ pub fn apply_general_ac_sandhi(p: &mut Prakriya) {
 
     char_rule(
         p,
-        xy(|x, y| A.contains_char(x) && AC.contains_char(y)),
+        xy(|x, y| A.contains(x) && AC.contains(y)),
         |p, text, i| {
             let j = i + 1;
             let y = text.as_bytes()[i + 1] as char;
-            if EC.contains_char(y) {
+            if EC.contains(y) {
                 set_at(p, j, al::to_vrddhi(y).expect("should be set"));
                 set_at(p, i, "");
                 p.step("6.1.88");

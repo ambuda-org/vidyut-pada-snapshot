@@ -279,34 +279,6 @@ impl Prakriya {
         }
     }
 
-    /// Applies the given rule.
-    pub fn rule(
-        &mut self,
-        code: Rule,
-        filter: impl Fn(&Prakriya) -> bool,
-        operator: impl Fn(&mut Prakriya),
-    ) -> bool {
-        if filter(self) {
-            self.op(code, operator)
-        } else {
-            false
-        }
-    }
-
-    /// Applies the given rule optionally.
-    pub fn optional(
-        &mut self,
-        code: Rule,
-        filter: impl Fn(&Prakriya) -> bool,
-        operator: impl Fn(&mut Prakriya),
-    ) -> bool {
-        if filter(self) {
-            self.op_optional(code, operator)
-        } else {
-            false
-        }
-    }
-
     /// Add a rule to the history.
     pub fn step(&mut self, rule: Rule) {
         if self.config.log_steps {

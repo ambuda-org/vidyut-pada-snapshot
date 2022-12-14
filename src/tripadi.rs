@@ -51,20 +51,31 @@ lazy_static! {
 /// Example: rAjan + Bis -> rAjaBis.
 ///
 /// (8.2.7 - 8.2.8)
-fn try_na_lopa(p: &mut Prakriya) {
-    let i = match p.find_last(T::Sup) {
-        Some(i) => i,
-        None => return,
-    };
+fn try_na_lopa(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_last(T::Sup)?;
+    if i == 0 {
+        return None;
+    }
+
     let i_anga = i - 1;
 
-    if p.has(i_anga, |t| t.has_antya('n') && t.has_tag(T::Pratipadika)) && p.has(i, f::empty) {
-        if p.has(i, |t| t.has_tag(T::Sambuddhi) || t.has_u("Ni")) {
+    let anga = p.get(i_anga)?;
+    let sup = p.get(i)?;
+
+    // TODO: check for `pada` properly
+    if anga.has_antya('n') && anga.has_tag(T::Pratipadika) && sup.is_empty() {
+        if sup.has_tag(T::Sambuddhi) || sup.has_u("Ni") {
+            // sambuddhi: yogin, Atman
+            // ni: vyoman, Sarman, etc. (vedic)
             p.step("8.2.8");
         } else {
+            // rAjA, rAjaByAm, ...
+            // (these can be called `pada` by 1.4.17.
             p.op_term("8.2.7", i_anga, op::antya(""));
         }
     }
+
+    Some(())
 }
 
 /// Runs rules that change r to l.
@@ -104,7 +115,7 @@ fn try_lopa_of_samyoganta_and_s(p: &mut Prakriya) -> Option<()> {
     // Exception to 8.2.23.
     char_rule(
         p,
-        xyz(|x, y, z| JHAL.contains_char(x) && y == 's' && JHAL.contains_char(z)),
+        xyz(|x, y, z| JHAL.contains(x) && y == 's' && JHAL.contains(z)),
         |p, _, i| {
             set_at(p, i + 1, "");
             p.step("8.2.26");
@@ -174,19 +185,17 @@ fn try_lopa_of_samyoganta_and_s(p: &mut Prakriya) -> Option<()> {
                     match bytes.get(i - 1) {
                         Some(w) => {
                             let w = *w as char;
-                            (AC.contains_char(w) || w == 'n')
-                                && !get_at(p, i).unwrap().has_text("sanst")
+                            (AC.contains(w) || w == 'n') && !get_at(p, i).unwrap().has_text("sanst")
                         }
                         None => true,
                     }
                 } else {
                     false
                 };
-                let sku_samyoga =
-                    (x == 's' || x == 'k') && HAL.contains_char(y) && is_start_of_samyoga;
+                let sku_samyoga = (x == 's' || x == 'k') && HAL.contains(y) && is_start_of_samyoga;
                 if let Some(z) = bytes.get(i + 2) {
                     let z = *z as char;
-                    sku_samyoga && JHAL.contains_char(z)
+                    sku_samyoga && JHAL.contains(z)
                 } else {
                     sku_samyoga
                 }
@@ -261,7 +270,7 @@ fn try_ha_adesha(p: &mut Prakriya) -> Option<()> {
                     p.op_optional("8.2.33", |p| p.set(i, op::antya("G")));
                 } else if dhatu.has_u("Ra\\ha~^") {
                     p.op_term("8.2.34", i, op::antya("D"));
-                } else if dhatu.text == "Ah" {
+                } else if dhatu.has_text("Ah") {
                     p.op_term("8.2.35", i, op::antya("T"));
                 } else if dhatu.has_adi('d') && dhatu.has_antya('h') {
                     p.op_term("8.2.32", i, op::antya("G"));
@@ -333,7 +342,7 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya) -> Option<()> {
         None => false,
     };
     let is_ik = |opt| match opt {
-        Some(c) => al::is_hrasva(c) && IK.contains_char(c),
+        Some(c) => al::is_hrasva(c) && IK.contains(c),
         None => false,
     };
     let is_hal = |opt| match opt {
@@ -347,7 +356,7 @@ fn try_lengthen_dhatu_vowel(p: &mut Prakriya) -> Option<()> {
         p.step("8.2.79");
     } else if is_ik(dhatu.upadha()) && is_rv(dhatu.antya()) {
         let sub = al::to_dirgha(dhatu.upadha()?)?;
-        if p.has(i_n, |t| HAL.contains_opt(t.adi())) {
+        if p.has(i_n, |t| t.has_adi(&*HAL)) {
             p.op_term("8.2.77", i, op::upadha(&sub.to_string()));
         } else {
             // TODO: only applies to padas.
@@ -534,7 +543,7 @@ fn allows_natva(text: &str, i: usize) -> bool {
         for c in text[..i].chars().rev() {
             if "rzfF".contains(c) {
                 return true;
-            } else if !AT_KU_PU_M.contains_char(c) {
+            } else if !AT_KU_PU_M.contains(c) {
                 return false;
             }
         }
@@ -600,7 +609,7 @@ fn try_mn_to_anusvara(p: &mut Prakriya) {
     // TODO: a-padAnta
     char_rule(
         p,
-        xy(|x, y| (x == 'm' || x == 'n') && JHAL.contains_char(y)),
+        xy(|x, y| (x == 'm' || x == 'n') && JHAL.contains(y)),
         |p, _, i| {
             set_at(p, i, "M");
             p.step("8.3.24");
@@ -733,10 +742,7 @@ fn try_change_stu_to_parasavarna(p: &mut Prakriya) {
     };
     char_rule(
         p,
-        xy(|x, y| {
-            (STU.contains_char(x) && SCU.contains_char(y))
-                || (SCU.contains_char(x) && STU.contains_char(y))
-        }),
+        xy(|x, y| (STU.contains(x) && SCU.contains(y)) || (SCU.contains(x) && STU.contains(y))),
         |p, text, i| {
             let x = text.as_bytes()[i] as char;
             let y = text.as_bytes()[i + 1] as char;
@@ -744,7 +750,7 @@ fn try_change_stu_to_parasavarna(p: &mut Prakriya) {
                 p.step("8.4.44");
                 false
             } else {
-                if STU.contains_char(x) {
+                if STU.contains(x) {
                     let sub = stu_to_scu(x).expect("");
                     set_at(p, i, sub);
                 } else {
@@ -758,18 +764,15 @@ fn try_change_stu_to_parasavarna(p: &mut Prakriya) {
     );
     char_rule(
         p,
-        xy(|x, y| {
-            (STU.contains_char(x) && SWU.contains_char(y))
-                || (SWU.contains_char(x) && STU.contains_char(y))
-        }),
+        xy(|x, y| (STU.contains(x) && SWU.contains(y)) || (SWU.contains(x) && STU.contains(y))),
         |p, text, i| {
             let x = text.as_bytes()[i] as char;
             let y = text.as_bytes()[i + 1] as char;
-            if TU.contains_char(x) && y == 'z' {
+            if TU.contains(x) && y == 'z' {
                 p.step("8.4.43");
                 false
             } else {
-                if STU.contains_char(x) {
+                if STU.contains(x) {
                     let sub = stu_to_swu(x).expect("");
                     set_at(p, i, sub);
                 } else {
@@ -812,40 +815,31 @@ fn try_dha_lopa(p: &mut Prakriya) -> Option<()> {
 
 /// Runs rules that convert sounds to their savarna version.
 fn try_to_savarna(p: &mut Prakriya) {
-    char_rule(
-        p,
-        xy(|x, y| x == 'M' && YAY.contains_char(y)),
-        |p, text, i| {
-            let y = text.as_bytes()[i + 1] as char;
-            let sub = match y {
-                'k' | 'K' | 'g' | 'G' | 'N' => "N",
-                'c' | 'C' | 'j' | 'J' | 'Y' => "Y",
-                'w' | 'W' | 'q' | 'Q' | 'R' => "R",
-                't' | 'T' | 'd' | 'D' | 'n' => "n",
-                'p' | 'P' | 'b' | 'B' | 'm' => "m",
-                _ => "M",
-            };
-            set_at(p, i, sub);
-            p.step("8.4.58");
-            true
-        },
-    );
+    char_rule(p, xy(|x, y| x == 'M' && YAY.contains(y)), |p, text, i| {
+        let y = text.as_bytes()[i + 1] as char;
+        let sub = match y {
+            'k' | 'K' | 'g' | 'G' | 'N' => "N",
+            'c' | 'C' | 'j' | 'J' | 'Y' => "Y",
+            'w' | 'W' | 'q' | 'Q' | 'R' => "R",
+            't' | 'T' | 'd' | 'D' | 'n' => "n",
+            'p' | 'P' | 'b' | 'B' | 'm' => "m",
+            _ => "M",
+        };
+        set_at(p, i, sub);
+        p.step("8.4.58");
+        true
+    });
 
     char_rule(
         p,
-        xyz(|x, y, z| {
-            HAL.contains_char(x) && YAM.contains_char(y) && YAM.contains_char(z) && y == z
-        }),
+        xyz(|x, y, z| HAL.contains(x) && YAM.contains(y) && YAM.contains(z) && y == z),
         |p, _, i| p.op_optional("8.4.64", |p| set_at(p, i + 1, "")),
     );
 
     char_rule(
         p,
         xyz(|x, y, z| {
-            HAL.contains_char(x)
-                && JHAR.contains_char(y)
-                && JHAR.contains_char(z)
-                && al::is_savarna(y, z)
+            HAL.contains(x) && JHAR.contains(y) && JHAR.contains(z) && al::is_savarna(y, z)
         }),
         |p, _, i| p.op_optional("8.4.64", |p| set_at(p, i + 1, "")),
     );
@@ -854,7 +848,7 @@ fn try_to_savarna(p: &mut Prakriya) {
 fn try_jhal_adesha(p: &mut Prakriya) {
     char_rule(
         p,
-        xy(|x, y| JHAL.contains_char(x) && JHASH.contains_char(y)),
+        xy(|x, y| JHAL.contains(x) && JHASH.contains(y)),
         |p, text, i| {
             let x = text.as_bytes()[i] as char;
             let sub = JHAL_TO_JASH.get(x).unwrap();
@@ -870,7 +864,7 @@ fn try_jhal_adesha(p: &mut Prakriya) {
 
     if let Some(i) = p.find_first(T::Abhyasa) {
         let abhyasa = p.get(i).unwrap();
-        if JHAL.contains_opt(abhyasa.adi()) {
+        if abhyasa.has_adi(&*JHAL) {
             let sub = JHAL_TO_JASH_CAR
                 .get(abhyasa.adi().unwrap())
                 .unwrap()
@@ -899,7 +893,7 @@ fn try_jhal_adesha(p: &mut Prakriya) {
 
     char_rule(
         p,
-        xy(|x, y| JHAL.contains_char(x) && KHAR.contains_char(y)),
+        xy(|x, y| JHAL.contains(x) && KHAR.contains(y)),
         |p, text, i| {
             let x = text.as_bytes()[i] as char;
             let sub = JHAL_TO_CAR.get(x).unwrap();
@@ -917,7 +911,7 @@ fn try_jhal_adesha(p: &mut Prakriya) {
         p,
         |_, text, i| {
             let x = text.as_bytes()[i] as char;
-            JHAL.contains_char(x) && i == text.len() - 1
+            JHAL.contains(x) && i == text.len() - 1
         },
         |p, text, i| {
             let code = "8.4.56";

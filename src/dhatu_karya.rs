@@ -1,6 +1,5 @@
 use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
-use crate::filters as f;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
@@ -34,65 +33,60 @@ fn add_samjnas(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn gana_sutras(p: &mut Prakriya, i: usize) {
-    let d = p.get(i).unwrap();
-    if !d.has_gana(10) {
-        return;
-    };
+fn gana_sutras(p: &mut Prakriya, i: usize) -> Option<()> {
+    let dhatu = p.get_if(i, |t| t.has_gana(10))?;
 
-    if let Some(num) = d.number {
-        if p.has(i, f::u_in(gana::CUR_MIT)) {
-            p.op("cur-mit", op::t(i, op::add_tag(T::mit)));
-        }
-
-        // Need to check range explicitly because some of these roots appear
-        // multiple times in the gana, e.g. lakza~
-        p.rule(
-            "kusmadi",
-            |p| {
-                p.has(i, |t| {
-                    t.has_u_in(gana::KUSMADI) && (192..=236).contains(&num)
-                })
-            },
-            |p| p.add_tag(T::Atmanepada),
-        );
-        p.rule(
-            "garvadi",
-            |p| {
-                p.has(i, |t| {
-                    t.has_u_in(gana::GARVADI) && (440..=449).contains(&num)
-                })
-            },
-            |p| p.add_tag(T::Atmanepada),
-        );
+    let num = dhatu.number?;
+    if dhatu.has_u_in(gana::CUR_MIT) {
+        p.op_term("cur-mit", i, op::add_tag(T::mit));
     }
+
+    // Need to check range explicitly because some of these roots appear
+    // multiple times in the gana, e.g. lakza~
+    if p.has(i, |t| {
+        t.has_u_in(gana::KUSMADI) && (192..=236).contains(&num)
+    }) {
+        p.op("kusmadi", |p| p.add_tag(T::Atmanepada));
+    }
+    if p.has(i, |t| {
+        t.has_u_in(gana::GARVADI) && (440..=449).contains(&num)
+    }) {
+        p.op("garvadi", |p| p.add_tag(T::Atmanepada));
+    }
+
+    Some(())
 }
 
 fn satva_and_natva(p: &mut Prakriya, i: usize) -> Option<()> {
-    let dhatu = p.get_mut(i)?;
+    let dhatu = p.get(i)?;
     if dhatu.has_adi('z') {
         if dhatu.has_text_in(&["zWiv", "zvazk"]) {
             // Varttika -- no change for zWiv or zvask
             p.step("6.1.64.v1");
         } else if dhatu.has_prefix_in(&["zw", "zW", "zR"]) {
-            // Varttika -- also change next sound
-            match &dhatu.text[..2] {
-                "zw" => dhatu.text.replace_range(..2, "st"),
-                "zW" => dhatu.text.replace_range(..2, "sT"),
-                "zR" => dhatu.text.replace_range(..2, "sn"),
-                _ => (),
-            };
-            dhatu.add_tag(T::FlagAdeshadi);
-            p.step("6.1.64.v2");
+            // Varttika -- also change the next sound
+            p.op_term("6.1.64.v2", i, |t| {
+                match &t.text[..2] {
+                    "zw" => t.text.replace_range(..2, "st"),
+                    "zW" => t.text.replace_range(..2, "sT"),
+                    "zR" => t.text.replace_range(..2, "sn"),
+                    _ => (),
+                };
+                t.add_tag(T::FlagAdeshadi);
+            });
         } else {
-            dhatu.add_tag(T::FlagAdeshadi);
-            p.set(i, op::adi("s"));
-            p.step("6.1.64");
+            // zah -> sah
+            p.op_term("6.1.64", i, |t| {
+                t.add_tag(T::FlagAdeshadi);
+                t.set_adi("s");
+            });
         }
     } else if dhatu.has_adi('R') {
-        dhatu.add_tag(T::FlagAdeshadi);
-        p.set(i, op::adi("n"));
-        p.step("6.1.65");
+        // RI -> nI
+        p.op_term("6.1.65", i, |t| {
+            t.add_tag(T::FlagAdeshadi);
+            t.set_adi("n");
+        });
     }
 
     Some(())

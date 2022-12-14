@@ -19,6 +19,7 @@ mod samprasarana;
 mod sanadi;
 mod stem_gana;
 mod sup_adesha;
+mod sup_karya;
 mod tin_pratyaya;
 mod tripadi;
 mod vikarana;

@@ -48,8 +48,8 @@ fn try_shar_purva(text: &str) -> CompactString {
     let mut ret = CompactString::from("");
     for (i, c) in text.chars().enumerate() {
         if i == 0 {
-            assert!(SHAR.contains_char(c));
-        } else if KHAY.contains_char(c) {
+            assert!(SHAR.contains(c));
+        } else if KHAY.contains(c) {
             ret.push(c)
         } else if al::is_ac(c) {
             ret.push(c);
@@ -136,14 +136,21 @@ fn try_general_rules(p: &mut Prakriya, i: usize) -> Option<()> {
     let dhatu = p.get(i_dhatu)?;
     let last = p.terms().last()?;
     if dhatu.has_text_in(&["dyut", "svAp"]) {
-        p.op_term("7.4.67", i, op::text("dit"));
-    } else if dhatu.text == "vyaT" && last.has_lakshana("li~w") {
+        // Hacky samprasArana.
+        if dhatu.has_text("svAp") {
+            // suzvApayizati
+            p.op_term("7.4.67", i, op::text("sup"));
+        } else {
+            // vididyute
+            p.op_term("7.4.67", i, op::text("dit"));
+        }
+    } else if dhatu.has_text("vyaT") && last.has_lakshana("li~w") {
         // TODO: move this to `try_rules_for_lit`?
         p.op_term("7.4.68", i, op::text("viT"));
     }
 
     let abhyasa = p.get(i)?;
-    if SHAR.contains_opt(abhyasa.adi()) && KHAY.contains_opt(abhyasa.get(1)) {
+    if abhyasa.has_adi(&*SHAR) && abhyasa.get(1).map(|c| KHAY.contains(c)).unwrap_or(false) {
         let mut abhyasa = &mut p.get_mut(i)?;
         let res = try_shar_purva(&abhyasa.text);
         if res != abhyasa.text {
@@ -191,10 +198,12 @@ fn try_general_rules(p: &mut Prakriya, i: usize) -> Option<()> {
 /// Example: bu + BU + va -> baBUva.
 ///
 /// (7.4.70 - 7.4.74)
-fn try_rules_for_lit(p: &mut Prakriya, i: usize) {
+fn try_rules_for_lit(p: &mut Prakriya, i: usize) -> Option<()> {
     let i_dhatu = i + 1;
-    let abhyasa = &p.terms()[i];
-    let last = p.terms().last().unwrap();
+
+    let abhyasa = p.get(i)?;
+    let dhatu = p.get(i_dhatu)?;
+    let last = p.terms().last()?;
 
     let add_nut_agama = |rule, p: &mut Prakriya, i: usize| {
         op::insert_agama_before(p, i, "nu~w");
@@ -202,40 +211,46 @@ fn try_rules_for_lit(p: &mut Prakriya, i: usize) {
         it_samjna::run(p, i).unwrap();
     };
 
-    if last.has_lakshana("li~w") {
-        if abhyasa.text == "a" {
-            op::text2("7.4.70", p, i, "A");
-            // From the Kashika-vrtti:
-            //
-            //     ṛkāraikadeśo repho halgrahaṇena gṛhyate, tena iha api dvihalo
-            //     'ṅgasya nuḍāgamo bhavati. ānṛdhatuḥ, ānṛdhuḥ.
-            //
-            // if HAL.contains(dhatu.antya()) && (h
-            let dhatu = &p.terms()[i_dhatu];
-            if dhatu.has_antya(&*HAL) && dhatu.has_upadha(&*F_HAL) {
-                // 'A' acepted only by some grammarians
-                if dhatu.has_adi('A') {
-                    let code = "7.4.71.k";
-                    if p.is_allowed(code) {
-                        add_nut_agama(code, p, i + 1);
-                    } else {
-                        p.decline(code);
-                    }
-                } else {
-                    add_nut_agama("7.4.71", p, i + 1);
-                }
-            // For aSnoti only, not aSnAti
-            } else if dhatu.text == "aS" && dhatu.has_gana(5) {
-                add_nut_agama("7.4.72", p, i + 1);
-            }
-        } else if p.has(i_dhatu, |t| {
-            t.text == "BU" && (t.has_gana(1) || t.has_gana(2))
-        }) {
-            // gana 1 for `BU`, gana 2 for `as` replaced by `BU`.
-            op::text2("7.4.73", p, i, "ba");
-            // TODO: 7.4.74
-        }
+    if !last.has_lakshana("li~w") {
+        return None;
     }
+
+    if abhyasa.has_text("a") {
+        p.op_term("7.4.70", i, op::text("A"));
+
+        // From the Kashika-vrtti:
+        //
+        //     ṛkāraikadeśo repho halgrahaṇena gṛhyate, tena iha api dvihalo
+        //     'ṅgasya nuḍāgamo bhavati. ānṛdhatuḥ, ānṛdhuḥ.
+        //
+        // if HAL.contains(dhatu.antya()) && (h
+        let dhatu = p.get(i_dhatu)?;
+        if dhatu.has_antya(&*HAL) && dhatu.has_upadha(&*F_HAL) {
+            // 'A' acepted only by some grammarians
+            if dhatu.has_adi('A') {
+                let code = "7.4.71.k";
+                if p.is_allowed(code) {
+                    add_nut_agama(code, p, i_dhatu);
+                } else {
+                    p.decline(code);
+                }
+            } else {
+                add_nut_agama("7.4.71", p, i_dhatu);
+            }
+        } else if dhatu.has_text("aS") && dhatu.has_gana(5) {
+            // For aSnoti only, not aSnAti
+            add_nut_agama("7.4.72", p, i_dhatu);
+        }
+    } else if dhatu.has_text("BU") && (dhatu.has_gana(1) || dhatu.has_gana(2)) {
+        // baBUva
+        //
+        // We check gana 1 for `BU` and gana 2 for `as` replaced by `BU`. This check excludes BU
+        // with gana 10.
+        p.op_term("7.4.73", i, op::text("ba"));
+        // TODO: 7.4.74
+    }
+
+    Some(())
 }
 
 /// Runs abhyasa rules specific to Slu-pratyaya.
@@ -255,11 +270,14 @@ fn try_rules_for_slu(p: &mut Prakriya, i: usize) -> Option<()> {
     let dhatu = p.get(i_dhatu)?;
 
     if dhatu.has_text_in(&["nij", "vij", "viz"]) {
+        // nenekti, vevekti, vevezwi
         let sub = al::to_guna(abhyasa.antya()?)?;
         p.op_term("7.4.75", i, op::antya(sub));
     } else if dhatu.has_u_in(&["quBf\\Y", "mA\\N", "o~hA\\N"]) {
+        // biBarti, mimIte, jihIte
         p.op_term("7.4.76", i, op::antya("i"));
     } else if dhatu.has_text_in(&["f", "pf", "pF"]) {
+        // iyarti, piparti (allowed by both `pf` and `pF`)
         p.op_term("7.4.77", i, op::antya("i"));
     }
 
@@ -281,7 +299,7 @@ fn run_at_index(p: &mut Prakriya, i: usize) {
 
 /// Runs the abhyasa rules for all abhyasas in the prakriya.
 ///
-/// Examples of words with multiple absyasas:
+/// Examples of words with multiple abhyasas:
 /// - biBriyAYcakAra
 /// - jugupsAYcakre
 pub fn run(p: &mut Prakriya) -> Option<()> {

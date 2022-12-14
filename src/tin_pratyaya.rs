@@ -15,7 +15,6 @@
 
 use crate::arguments::{La, Purusha, Vacana};
 use crate::constants::Tag as T;
-use crate::filters as f;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
@@ -141,56 +140,58 @@ fn maybe_do_lut_siddhi(p: &mut Prakriya, i_la: usize, la: La) -> bool {
 }
 
 /// Applies tin-siddhi rules that apply to just loT.
-fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
-    if p.has(i, |t| t.has_lakshana("lo~w")) {
-        // let mut t = p.get_mut(i).unwrap();
-        if p.has(i, |t| t.text == "si") {
-            p.op(
-                "3.4.87",
-                op::t(i, |t| {
-                    t.set_u("hi");
-                    t.set_text("hi");
-                    t.remove_tag(T::pit);
-                }),
-            );
+fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Option<()> {
+    let tin = p.get_if(i, |t| t.has_lakshana("lo~w"))?;
 
-            if p.has_tag(T::Chandasi) {
-                p.op_optional("3.4.88", op::t(i, op::add_tag(T::Pit)));
-            }
-        } else if p.has(i, f::ends_with("mi")) {
-            op::adesha("3.4.89", p, i, "ni");
-        } else if p.has(i, f::ends_with("i")) {
-            p.op_term("3.4.86", i, op::antya("u"));
-        } else if p.has(i, f::ends_with("e")) {
-            if p.has(i, |t| t.has_tag(T::Uttama) && t.text.ends_with('e')) {
-                p.op_term("3.4.93", i, op::antya("E"));
-            } else if p.has(i, |t| t.text.ends_with("se") || t.text.ends_with("ve")) {
-                p.set(i, |t| {
-                    let n = t.text.len();
-                    if t.text.ends_with("se") {
-                        t.text.replace_range(n - 2.., "sva");
-                    } else {
-                        t.text.replace_range(n - 2.., "vam");
-                    }
-                });
-                p.step("3.4.91")
-            } else {
-                p.op_term("3.4.90", i, op::antya("Am"));
-            }
+    if tin.has_text("si") {
+        p.op(
+            "3.4.87",
+            op::t(i, |t| {
+                t.set_u("hi");
+                t.set_text("hi");
+                t.remove_tag(T::pit);
+            }),
+        );
+
+        if p.has_tag(T::Chandasi) {
+            p.op_optional("3.4.88", op::t(i, op::add_tag(T::Pit)));
         }
-
-        if p.has(i, |t| t.has_tag(T::Uttama)) {
-            p.op("3.4.92", |p| {
-                let agama = Term::make_agama("Aw");
-                // Add pit to the pratyaya, not the Agama.
-                p.set(i, |t| t.add_tag(T::pit));
-                p.insert_before(i, agama);
+    } else if tin.text.ends_with("mi") {
+        // BavAni
+        op::adesha("3.4.89", p, i, "ni");
+    } else if tin.has_antya('i') {
+        // Bavatu
+        p.op_term("3.4.86", i, op::antya("u"));
+    } else if tin.has_antya('e') {
+        if tin.has_tag(T::Uttama) && tin.text.ends_with('e') {
+            p.op_term("3.4.93", i, op::antya("E"));
+        } else if tin.text.ends_with("se") || tin.text.ends_with("ve") {
+            p.op_term("3.4.91", i, |t| {
+                let n = t.text.len();
+                if t.text.ends_with("se") {
+                    t.text.replace_range(n - 2.., "sva");
+                } else {
+                    t.text.replace_range(n - 2.., "vam");
+                }
             });
-            it_samjna::run(p, i)?;
+        } else {
+            p.op_term("3.4.90", i, op::antya("Am"));
         }
     }
 
-    Ok(())
+    let tin = p.get(i)?;
+    if tin.has_tag(T::Uttama) {
+        // BavAni
+        p.op("3.4.92", |p| {
+            let agama = Term::make_agama("Aw");
+            // Add pit to the pratyaya, not the Agama.
+            p.set(i, |t| t.add_tag(T::pit));
+            p.insert_before(i, agama);
+        });
+        it_samjna::run(p, i).ok()?;
+    }
+
+    Some(())
 }
 
 fn maybe_do_lin_siddhi(p: &mut Prakriya, i_tin: usize, la: La) -> Result<(), Box<dyn Error>> {
@@ -307,7 +308,7 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Option<()> {
 
     // TODO: 3.4.94 - 3.4.98
 
-    maybe_do_lot_only_siddhi(p, i).ok()?;
+    maybe_do_lot_only_siddhi(p, i);
     // Must occur before 3.4.100 in loT/nit siddhi.
     maybe_replace_jhi_with_jus(p, i, la);
     maybe_do_lot_and_nit_siddhi(p, la);

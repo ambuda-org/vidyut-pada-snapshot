@@ -89,7 +89,7 @@ impl ShortRule {
     fn apply(&self, p: &mut Prakriya) {
         match self.pada {
             Pada::Atmane => p.op(self.code, op_atmanepada),
-            Pada::Ubhaya => p.optional(self.code, |_| true, op_atmanepada),
+            Pada::Ubhaya => p.op_optional(self.code, op_atmanepada),
             Pada::Parasmai => p.op(self.code, op_parasmaipada),
         };
     }
@@ -115,7 +115,7 @@ pub fn run(p: &mut Prakriya) -> Option<()> {
     }
 
     if p.any(&[T::Bhave, T::Karmani]) {
-        p.rule("1.3.13", |_| true, op_atmanepada);
+        p.op("1.3.13", op_atmanepada);
     }
 
     let la = p.terms().last()?;
@@ -135,7 +135,7 @@ pub fn run(p: &mut Prakriya) -> Option<()> {
     let ubha = ShortRule::ubhaya;
     let basic_rules = [
         atma("1.3.17", &["ni"], &["viS"]),
-        atma("1.3.18", &["pari", "vi", "ava"], &["ji"]),
+        atma("1.3.18", &["pari", "vi", "ava"], &["krI"]),
         atma("1.3.19", &["vi", "parA"], &["ji"]),
         ubha("1.3.20", &["AN"], &["dA"]),
         atma("1.3.21", &["anu", "sam", "pari"], &["krIq"]),
@@ -230,6 +230,7 @@ pub fn run(p: &mut Prakriya) -> Option<()> {
     // TODO: san
     } else if dhatu.has_u_in(VRDBHYAH) && dhatu.has_gana(1) && la.has_u_in(&["lf~w", "lf~N"]) {
         p.op_optional("1.3.92", op_parasmaipada);
+    // TODO: san
     } else if dhatu.has_u("kfpU~\\") && la.has_u_in(&["lf~w", "lf~N", "lu~w"]) {
         p.op_optional("1.3.93", op_parasmaipada);
     }
@@ -240,18 +241,22 @@ pub fn run(p: &mut Prakriya) -> Option<()> {
     if p.any(&[T::Parasmaipada, T::Atmanepada]) {
         // Matched above already
     } else if dhatu.has_tag_in(&[T::Nit, T::anudattet]) {
+        // eDate
         p.op("1.3.12", op_atmanepada);
     } else if dhatu.has_tag_in(&[T::Yit, T::svaritet]) {
+        // karoti, kurute
         p.op_optional("1.3.72", op_atmanepada);
-    } else if p.terms().len() == 3 && p.get(1).unwrap().has_u("Ric") {
+    } else if p.terms().len() == 3 && p.get(1)?.has_u("Ric") {
+        // corayati, corayate
         p.op_optional("1.3.74", op_atmanepada);
     } else if dhatu.has_text("jYA") && upasargas.is_empty() {
+        // jAnAti, jAnIte
         p.op_optional("1.3.76", op_atmanepada);
     }
 
     // Otherwise, use parasmaipada by default.
-
     if p.has_tag(T::Kartari) && !p.has_tag(T::Atmanepada) {
+        // Bavati
         p.op("1.3.78", op_parasmaipada);
     }
 

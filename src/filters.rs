@@ -19,7 +19,7 @@ lazy_static! {
 
 /// Returns whether the given term has exactly one vowel sound.
 pub fn is_eka_ac(t: &Term) -> bool {
-    let num_ac = t.text.chars().filter(|c| AC.contains_char(*c)).count();
+    let num_ac = t.text.chars().filter(|c| AC.contains(*c)).count();
     num_ac == 1
 }
 
@@ -77,14 +77,6 @@ pub fn is_dirgha(t: &Term) -> bool {
         Some(c) => al::is_dirgha(c),
         None => false,
     }
-}
-
-pub fn ends_with(sub: &'static str) -> impl Fn(&Term) -> bool {
-    move |t| t.text.ends_with(sub)
-}
-
-pub fn empty(t: &Term) -> bool {
-    t.text.is_empty()
 }
 
 /// Returns whether the term has the given `tag`.

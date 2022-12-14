@@ -6,6 +6,12 @@ use crate::operators as op;
 use crate::prakriya::{Prakriya, Rule};
 use crate::term::Term;
 
+// These dhatus use their pratyaya optionally if followed by ArdhadhAtuka.
+const AYADAYA: &[&str] = &[
+    "gupU~", "DUpa~", "vicCa~", "paRa~\\", "pana~\\", "fti", "kamu~\\",
+];
+
+/// Adds `upadesha` as a pratyaya after the dhatu at index `i_dhatu`.
 fn add_sanadi(rule: Rule, p: &mut Prakriya, i_dhatu: usize, upadesha: &str) {
     p.op(rule, |p| {
         let mut pratyaya = Term::make_upadesha(upadesha);
@@ -24,20 +30,18 @@ pub fn run(p: &mut Prakriya, la: La) -> Option<()> {
     let i = p.find_first(T::Dhatu)?;
     let dhatu = p.get(i)?;
 
-    // These dhatus use their pratyaya optionally if followed by ArdhadhAtuka.
-    const AYADAYA: &[&str] = &[
-        "gupU~", "DUpa~", "vicCa~", "paRa~\\", "pana~\\", "fti", "kamu~\\",
-    ];
-
     // `gana` is required so that we can exclude "03.0021 kita~".
     if dhatu.has_u_in(&["gupa~\\", "tija~\\", "kita~"]) && dhatu.has_gana(1) {
+        // jugupsate, titikzate, cikitsati
         add_sanadi("3.1.5", p, i, "san");
         p.set(i + 1, |t| t.add_tag(T::FlagNoArdhadhatuka));
     } else if dhatu.has_u_in(gana::MAN_BADHA) {
+        // mImAMsate, etc.
         add_sanadi("3.1.6", p, i, "san");
         // TODO: optional by extension of "vA" from 3.1.7 per Kashika?
         p.set(i + 1, |t| t.add_tag(T::FlagNoArdhadhatuka));
     } else if dhatu.has_gana(10) {
+        // corayati
         add_sanadi("3.1.25", p, i, "Ric");
     } else if dhatu.has_u_in(AYADAYA) {
         let mut add_pratyaya = true;

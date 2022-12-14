@@ -31,12 +31,14 @@ pub enum Tag {
     Taddhita,
     Vikarana,
 
-    // It
+    /// Placeholder *it* with no specific meaning.
     adit,
-    /// (pratyaya) prevents it-agama for nisthA pratyayas per 7.2.16.
+    /// (pratyaya) prevents it-agama for nisthA pratyayas per 7.2.16 but allows it optionally in
+    /// non-kartari usage per 7.2.17.
     Adit,
     /// (dhatu) indicates the mandatory use of num-Agama (vidi~ -> vind).
     idit,
+    /// (pratyaya) prevents it-Agama for nisthA pratyayas per 7.2.14.
     Idit,
     /// (pratyaya) optionally allows it-agama for ktvA-pratyaya per 7.2.56.
     udit,
@@ -64,9 +66,11 @@ pub enum Tag {
     ///
     /// (dhatu) marks the dhAtu as taking only Atmanepada endings per 1.3.12.
     Nit,
+    /// (pratyaya) indicates that the last syllable of the stem is udAtta per 6.1.153.
     cit,
     /// (taddhita) replaced with "Iy" per 7.1.2.
     Cit,
+    /// (pratyaya) used to give distinct names to certain pratyayas, such as `jas`, `jus`, ...
     jit,
     /// (pratyaya) first letter of the bahuvacana-prathama-parasmaipada tinanta suffix. It is
     /// replaced with "ant" or similar options per 7.1.3 - 7.1.5 and with "jus" by 3.4.108 -
@@ -103,6 +107,8 @@ pub enum Tag {
     /// (pratyaya) marks the pratyaya as sArvadhAtuka per 3.4.113.
     Sit,
     zit,
+    /// (pratyaya) indicates that the previous term should be called `pada` per 1.4.16.
+    sit,
 
     /// (dhatu) indicates the optional use of aN-pratyaya in luN-lakAra per 3.1.57.
     irit,
@@ -247,6 +253,7 @@ impl Tag {
             'l' => Tag::lit,
             'S' => Tag::Sit,
             'z' => Tag::zit,
+            's' => Tag::sit,
             _ => panic!("Unknown it letter {it}"),
         };
         Ok(res)
