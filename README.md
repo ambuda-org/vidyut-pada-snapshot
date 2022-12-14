@@ -48,22 +48,22 @@ First, install Rust on your computer. You can find installation instructions
 Second, download `vidyut-pada` to your computer:
 
 ```
-$ git clone git@github.com:ambuda-org/vidyut-pada.git
-$ cd vidyut-pada
+$ git clone git@github.com:ambuda-org/vidyut-pada-snapshot.git
+$ cd vidyut-pada-snapshot
 ```
 
 Finally, generate a list of tinantas:
 
 ```
-$ make tinantas
+$ make generate_tinantas
 ```
 
-The first run of `make tinantas` will be slow since it takes some time to
-compile `vidyut-pada`. After initial compilation, `make tinantas` will
+The first run of `make generate_tinantas` will be slow since it takes some time
+to compile `vidyut-pada`. After initial compilation, this command will
 typically compile and complete within 10 seconds.
 
 
-[install-rust]: http://
+[install-rust]: https://www.rust-lang.org/tools/install
 [sv]: https://github.com/drdhaval2785/SanskritVerb
 
 
