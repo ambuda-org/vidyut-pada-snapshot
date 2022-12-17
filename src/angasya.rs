@@ -24,6 +24,7 @@ use lazy_static::lazy_static;
 lazy_static! {
     static ref AC: SoundSet = s("ac");
     static ref HRASVA: SoundSet = SoundSet::from("aiufx");
+    static ref DANTYA: SoundSet = s("tu~ v");
     static ref OSHTHYA: SoundSet = s("pu~ v");
     static ref FF: SoundSet = s("f");
     static ref IK: SoundSet = s("ik");
@@ -238,8 +239,10 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
         });
     } else if is_ik && n.has_u("jus") {
         p.op_term("7.3.83", i, op_antya_guna);
-    } else if anga.has_text("tfnah") && n.has_adi(&*HAL) && piti_sarvadhatuke {
+    } else if anga.has_text("tfnah") && n.has_adi(&*HAL) && piti_sarvadhatuke && !n.has_tag(T::Nit)
+    {
         // tfneQi; otherwise, tfRahAni, tfRQaH.
+        // HACK: check for explicit 'p' on first term to prevent tfnhyAt -> tfRihyAt
         p.op_term("7.3.92", i, op::mit("i"));
     } else if is_sarva_ardha && can_use_guna {
         let anga = p.get(i)?;
@@ -471,7 +474,8 @@ pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
     let is_aprkta = n.slice().iter().map(|t| t.text.len()).sum::<usize>() == 1;
 
     if n.has_adi(&*HAL) && n.has_tag(T::Sarvadhatuka) {
-        let piti = n.has_tag(T::pit);
+        // HACK to avoid yAsut and prevent bruvIyAt, etc.
+        let piti = n.has_tag(T::pit) && !n.has_tag(T::Nit);
         let mut rule = None;
         if anga.has_text("brU") && piti {
             rule = Some("7.3.93");
@@ -880,10 +884,10 @@ fn try_sic_vrddhi(p: &mut Prakriya) -> Option<()> {
 
     let mut block = None;
 
-    let dhatu = p.get(i)?;
     let it = if let Some(x) = i_it { p.get(x) } else { None };
     // TODO: don't add hack for tug-Agama. Should reorder.
     if it.is_some() {
+        let dhatu = p.get(i)?;
         // TODO: other cases
         let antya = dhatu.antya()?;
         if "hmy".chars().any(|c| c == antya)
@@ -896,7 +900,7 @@ fn try_sic_vrddhi(p: &mut Prakriya) -> Option<()> {
         } else if dhatu.has_adi(&*HAL) && dhatu.has_upadha('a') && !dhatu.has_antya('C') {
             block = maybe_rule(p, "7.2.7")
         } else if dhatu.has_antya(&*HAL) {
-            block = maybe_rule(p, "7.2.4")
+            block = Some("7.2.4")
         }
     };
 
@@ -954,18 +958,6 @@ fn try_cani_before_guna(p: &mut Prakriya) -> Option<()> {
         );
     }
 
-    let dhatu = p.get(i)?;
-    let last = p.terms().last()?;
-    if dhatu.has_text_in(&["SF", "dF", "pF"]) && last.has_lakshana("li~w") && !dhatu.has_gana(10) {
-        p.op_optional(
-            "7.4.12",
-            op::t(i, |t| {
-                t.set_antya("f");
-                t.add_tag(T::FlagGunaApavada);
-            }),
-        );
-    }
-
     Some(())
 }
 
@@ -1012,10 +1004,12 @@ fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
 
 /// Run rules that condition on a following liT-pratyaya.
 ///
+/// Per commentaries, these rules apply for cases where guna does not otherwise obtain.
+///
 /// Constraints:
 /// - must run after guna/vrddhi have been tried.
 ///
-/// (7.4.9 - 7.4.12)
+/// (7.4.10 - 7.4.12)
 fn try_r_guna_before_lit(p: &mut Prakriya) -> Option<()> {
     let i = p.find_first(T::Dhatu)?;
 
@@ -1036,7 +1030,20 @@ fn try_r_guna_before_lit(p: &mut Prakriya) -> Option<()> {
         if anga.has_u("fCa~") {
             p.op_term("7.4.11", i, op::adi("ar"));
         } else {
-            p.op_term("7.4.11", i, do_ar_guna);
+            let mut skipped = false;
+            if anga.has_text_in(&["SF", "dF", "pF"]) && !anga.has_gana(10) {
+                skipped = p.op_optional(
+                    "7.4.12",
+                    op::t(i, |t| {
+                        t.set_antya("f");
+                        t.add_tag(T::FlagGunaApavada);
+                    }),
+                );
+            }
+
+            if !skipped {
+                p.op_term("7.4.11", i, do_ar_guna);
+            }
         }
     }
 
@@ -1082,13 +1089,20 @@ fn try_ksa_lopa(p: &mut Prakriya) -> Option<()> {
     let i = i_dhatu + 1;
     let i_tin = i_dhatu + 2;
 
-    if p.has(i, f::u("ksa")) {
-        if p.has(i + 1, |t| t.has_adi(&*AC)) {
-            p.op_term("7.2.72", i, op::antya(""));
-        }
-        if p.has(i_dhatu, f::text_in(&["duh", "dih", "lih", "guh"])) && p.has(i_tin, f::atmanepada)
+    let dhatu = p.get(i_dhatu)?;
+    let vikarana = p.get(i)?;
+    let tin = p.get(i_tin)?;
+
+    if vikarana.has_u("ksa") {
+        if tin.has_adi(&*AC) {
+            p.step("mand");
+            p.op_term("7.3.72", i, op::antya(""));
+        } else if dhatu.has_text_in(&["duh", "dih", "lih", "guh"])
+            && f::atmanepada(tin)
+            && tin.has_adi(&*DANTYA)
         {
-            p.op_optional("7.3.73", op::t(i, op::antya("")));
+            // aduhvahi/aDukzAvahi, adugDA/aDukzata, ...
+            p.op_optional("7.3.73", op::t(i, op::luk));
         }
     }
 
@@ -1246,9 +1260,10 @@ pub fn run_remainder(p: &mut Prakriya) {
         try_guna_adesha(p, i);
         // TODO: 7.4.23-4
     }
+    // Alternative to guna-adesha
+    try_r_guna_before_lit(p);
 
     try_change_dhatu_before_y(p);
-    try_r_guna_before_lit(p);
     // Rules for various lun-vikaranas.
     try_change_anga_before_an(p);
 

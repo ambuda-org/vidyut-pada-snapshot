@@ -295,8 +295,13 @@ fn try_add_final_r_with_final_tin(p: &mut Prakriya) -> Option<()> {
         return None;
     }
 
+    let i_dhatu = p.find_last_where(|t| t.has_tag(T::Dhatu) && !t.is_empty())?;
+    if p.find_next_where(i_dhatu, |t| !t.is_empty()).is_some() {
+        // For these rules, the dhatu must be at the end of the pada.
+        return None;
+    }
+
     let i_tin = n - 1;
-    let i_dhatu = p.find_prev_where(i_tin, |t| t.has_tag(T::Dhatu) && !t.is_empty())?;
 
     let dhatu = p.get(i_dhatu)?;
     let tin = p.get_if(i_tin, |t| t.is_empty())?;
@@ -878,7 +883,7 @@ fn try_jhal_adesha(p: &mut Prakriya) {
         p,
         |x, y| {
             x.has_u("quDA\\Y")
-                && x.has_text("D")
+                && x.has_text_in(&["D", "d"])
                 && (y.has_adi('t')
                     || y.has_adi('T')
                     || y.has_adi('s')

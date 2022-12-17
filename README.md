@@ -55,10 +55,10 @@ $ cd vidyut-pada-snapshot
 To generate all basic tinantas in kartari prayoga, run:
 
 ```
-$ make generate_tinantas
+$ make create_tinantas
 ```
 
-The first run of `make generate_tinantas` will be slow since it takes some time
+The first run of `make create_tinantas` will be slow since it takes some time
 to compile vidyut-pada. After initial compilation, this command will
 typically compile and complete within 10 seconds.
 

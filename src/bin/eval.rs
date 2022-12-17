@@ -2,7 +2,7 @@
 //!
 //! Usage: `make eval`
 use clap::Parser;
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 use std::error::Error;
 use std::fs::File;
 use std::path::{Path, PathBuf};
@@ -16,9 +16,6 @@ struct Args {
 
     #[arg(long)]
     hash: String,
-
-    #[arg(long)]
-    limit: Option<i32>,
 
     #[arg(long)]
     la: Option<String>,
@@ -44,7 +41,6 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
 
     let mut num_matches = 0;
     let mut n = 0;
-    let limit = args.limit.unwrap_or(std::i32::MAX);
 
     let la_filter = args.la.map(|x| x.parse().unwrap());
 
@@ -79,16 +75,12 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         if expected == actual {
             num_matches += 1;
         } else {
-            let la = &r[4];
-            let purusha = &r[5];
-            let vacana = &r[6];
+            let la = &r[5];
+            let purusha = &r[6];
+            let vacana = &r[7];
             println!("[ FAIL ]  {code:<10} {dhatu:<10} {la:<10} {purusha:<10} {vacana:<10}");
             println!("          Expected: {:?}", expected);
-            println!("          Expected: {:?}", actual);
-        }
-
-        if n >= limit {
-            break;
+            println!("          Actual  : {:?}", actual);
         }
     }
 

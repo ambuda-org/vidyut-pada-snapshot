@@ -19,7 +19,7 @@ lazy_static! {
 }
 
 fn run_before_attva_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
-    let dhatu = p.get(i)?;
+    let cur = p.get_if(i, |t| !t.has_tag(T::Agama))?;
     let n = p.view(i + 1)?;
 
     let add_nit = op::add_tag(T::Nit);
@@ -27,28 +27,38 @@ fn run_before_attva_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
 
     // Must check for `Agama` specifically because of the tiN ending "iw".
     let iti = n.has_u("iw") && n.has_tag(T::Agama);
+    let apit = !n.has_tag(T::pit);
+    let n_is_lit = n.has_lakshana("li~w");
 
     let gan_kutadi = p.has(i, |t| t.has_u("gAN") || is_kutadi(t));
     if gan_kutadi && !n.any(&[T::Rit, T::Yit]) {
         p.op_term("1.2.1", i + 1, add_nit);
-    } else if dhatu.has_text("vij") && iti {
+    } else if cur.has_u_in(&["o~vijI~\\", "o~vijI~"]) && iti {
+        // Just for this `vij` per the Kashika.
         p.op_term("1.2.2", n.end(), add_nit);
-    } else if dhatu.has_text("UrRu") && iti {
+    } else if cur.has_text("UrRu") && iti {
         p.op_optional("1.2.3", op::t(n.end(), add_nit));
-    } else if n.has_tag(T::Sarvadhatuka) && !n.has_tag(T::pit) {
-        let n = p.view(i + 1)?;
+    } else if n.has_tag(T::Sarvadhatuka) && apit {
         p.op_term("1.2.4", n.end(), add_nit);
-    } else if dhatu.has_tag(T::Dhatu)
-        && !f::is_samyoganta(dhatu)
-        && n.has_lakshana("li~w")
-        && !n.has_tag(T::pit)
-    {
+    } else if !f::is_samyoganta(cur) && n_is_lit && !n.has_tag(T::pit) {
         p.op_term("1.2.5", n.end(), add_kit);
-    } else if dhatu.has_text_in(&["BU", "inD"]) && n.has_lakshana("li~w") {
+    } else if cur.has_text_in(&["BU", "inD"]) && n_is_lit && apit {
         p.op_term("1.2.6", n.end(), add_kit);
-    } else if n.has_lakshana("li~w") && dhatu.has_text_in(&["SranT", "granT", "danB", "svanj"]) {
+    } else if n_is_lit && cur.has_text_in(&["SranT", "granT", "danB", "svanj"]) && apit {
         // TODO: rule seems obligatory; where is optionality defined?
         p.op_optional("1.2.6.v1", op::t(n.end(), add_kit));
+    } else if cur.has_text_in(&["mfq", "mfd", "guD", "kuz", "kliS", "vad", "vas"])
+        && n.has_u("ktvA")
+    {
+        p.op_term("1.2.7", n.end(), add_kit);
+    } else if cur.has_text_in(&["rud", "vid", "muz", "grah", "svap", "praC"])
+        && n.has_u_in(&["ktvA", "san"])
+    {
+        p.op_term("1.2.8", n.end(), add_kit);
+    } else if cur.has_antya(&*IK) && n.has_u("san") {
+        p.op_term("1.2.9", n.end(), add_kit);
+    } else if cur.has_upadha(&*IK) && cur.has_antya(&*HAL) && n.has_u("san") {
+        p.op_term("1.2.10", n.end(), add_kit);
     }
 
     let n = p.view(i + 1)?;

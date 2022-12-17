@@ -162,7 +162,6 @@ pub fn upadesha_yatha(p: &mut Prakriya, i: usize, old: &[&str], new: &[&str]) {
                 if t.has_u(x) {
                     t.set_text(new[i_entry]);
                     t.set_u(new[i_entry]);
-                    it_samjna::run(p, i).unwrap();
                     return;
                 }
             }

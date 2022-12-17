@@ -1,8 +1,8 @@
 # Generates all tinantas supported by the program.
-generate_tinantas:
+create_tinantas:
 	cargo run --release --bin generate
 
-generate_test_file:
+create_test_files:
 	cargo run --release --bin create_test_file > test-files/tinanta.csv
 
 # Runs all unit tests in the crate
@@ -16,7 +16,11 @@ coverage:
 eval:
 	RUST_BACKTRACE=1 cargo run --release --bin eval -- \
 				   --test-cases test-files/tinanta.csv \
-				   --hash "e10800020c5cc7af563546635a787eee0cef5462fd296cde1911fac4395b0e58"
+				   --hash "96719f11dc1c0b582c56d3bac40e4deed91ce7f0ef0b0dce29d7687063a06c63"
+
+sanskrit_verb_eval:
+	cargo run --release --bin sanskrit_verb_eval | tee sanskrit-verb-results.txt
+
 
 # Profiles the program's execution time on OSX. This command will probably not
 # work on other operating systems.

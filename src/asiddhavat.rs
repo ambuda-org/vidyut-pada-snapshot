@@ -273,32 +273,27 @@ fn try_et_adesha_and_abhyasa_lopa_for_lit(p: &mut Prakriya, i: usize) -> Option<
     if i == 0 {
         return None;
     }
-    let dhatu = p.get(i)?;
-    if !dhatu.all(&[T::Dhatu, T::Abhyasta]) {
-        return None;
-    }
-    let abhyasa = p.get(i - 1)?;
-    if !abhyasa.has_tag(T::Abhyasa) {
-        return None;
-    }
+
+    let dhatu = p.get_if(i, |t| t.all(&[T::Dhatu, T::Abhyasta]))?;
+    let abhyasa = p.get_if(i - 1, |t| t.has_tag(T::Abhyasa))?;
     let n = p.view(i + 1)?;
 
     let kniti = n.is_knit();
-    let thali_seti = f::is_it_agama(n.get(0)?) && n.get(1)?.has_u("Tal");
+    let thali_seti = f::is_it_agama(n.first()?) && n.last()?.has_u("Tal");
     if !(kniti || thali_seti) {
         return None;
     }
-    let abhyasa = p.get(i - 1)?;
-    let n = p.view(i + 1)?;
 
     let op_et_abhyasa_lopa = |p: &mut Prakriya| {
         p.set(i, op::upadha("e"));
         p.set(i - 1, op::lopa);
     };
 
-    let dhatu = p.get(i)?;
     if dhatu.has_text("daB") && dhatu.has_u("danBu~") {
-        p.op("6.4.120.v1", op_et_abhyasa_lopa);
+        // varttika stated before 6.4.121, so Tal is excluded.
+        if !thali_seti {
+            p.op("6.4.120.v1", op_et_abhyasa_lopa);
+        }
     } else if dhatu.has_u("tF") || dhatu.has_text_in(&["Pal", "Baj", "trap"]) {
         // teratuH, PelatuH, BejatuH, trepatuH
         p.op("6.4.122", op_et_abhyasa_lopa);

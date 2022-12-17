@@ -17,7 +17,7 @@ use crate::arguments::{La, Purusha, Vacana};
 use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::operators as op;
-use crate::prakriya::Prakriya;
+use crate::prakriya::{Prakriya, Rule};
 use crate::term::Term;
 use std::error::Error;
 
@@ -237,6 +237,17 @@ fn maybe_do_lin_siddhi(p: &mut Prakriya, i_tin: usize, la: La) -> Result<(), Box
     Ok(())
 }
 
+fn yatha(rule: Rule, p: &mut Prakriya, i: usize, old: &[&str], new: &[&str]) {
+    p.op(rule, |p| op::upadesha_yatha(p, i, old, new));
+    it_samjna::run(p, i).ok();
+}
+
+fn yatha_optional(rule: Rule, p: &mut Prakriya, i: usize, old: &[&str], new: &[&str]) {
+    if p.op_optional(rule, |p| op::upadesha_yatha(p, i, old, new)) {
+        it_samjna::run(p, i).ok();
+    }
+}
+
 // Includes lo~w by 3.4.85
 fn maybe_do_lot_and_nit_siddhi(p: &mut Prakriya, la: La) {
     let i = match p.find_last(T::Tin) {
@@ -248,7 +259,7 @@ fn maybe_do_lot_and_nit_siddhi(p: &mut Prakriya, la: La) {
         let tas_thas = &["tas", "Tas", "Ta", "mip"];
         let taam_tam = &["tAm", "tam", "ta", "am"];
         if p.has(i, |t| t.has_u_in(tas_thas)) {
-            p.op("3.4.101", |p| op::upadesha_yatha(p, i, tas_thas, taam_tam));
+            yatha("3.4.101", p, i, tas_thas, taam_tam);
         }
 
         if p.has(i, |t| t.has_tag(T::Parasmaipada)) {
@@ -286,21 +297,22 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Option<()> {
         let ta_jha = &["ta", "Ja"];
         let es_irec = &["eS", "irec"];
         if tin.has_lakshana("li~w") && tin.has_text_in(ta_jha) {
-            p.op("3.4.81", |p| op::upadesha_yatha(p, i, ta_jha, es_irec));
+            yatha("3.4.81", p, i, ta_jha, es_irec);
         } else if tin.has_text("TAs") {
             op::adesha("3.4.80", p, i, "se");
         } else {
             p.op_term("3.4.79", i, op::ti("e"));
         }
     } else if tin.has_lakshana("li~w") && tin.has_tag(T::Parasmaipada) {
-        p.op("3.4.82", |p| op::upadesha_yatha(p, i, TIN_PARA, NAL_PARA));
+        yatha("3.4.82", p, i, TIN_PARA, NAL_PARA);
     } else if tin.has_lakshana("la~w") && tin.has_tag(T::Parasmaipada) {
         if dhatu.has_u("vida~") && tin.has_u_in(TIN_PARA) {
-            p.op_optional("3.4.83", |p| op::upadesha_yatha(p, i, TIN_PARA, NAL_PARA));
+            yatha_optional("3.4.83", p, i, TIN_PARA, NAL_PARA);
         } else if dhatu.has_text("brU") && tin.has_u_in(&TIN_PARA[..5]) {
             p.op_optional("3.4.84", |p| {
                 p.set(i_dhatu, |t| t.set_text("Ah"));
                 op::upadesha_yatha(p, i, TIN_PARA, NAL_PARA);
+                it_samjna::run(p, i).ok();
             });
         }
         p.step("lato va");

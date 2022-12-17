@@ -12,7 +12,6 @@ const LAKARA: &[La] = &[
     La::Lit,
     La::Lut,
     La::Lrt,
-    La::Let,
     La::Lot,
     La::Lan,
     La::AshirLin,
@@ -63,10 +62,7 @@ fn run(dhatus: Vec<D::Dhatu>) -> Result<(), io::Error> {
                 );
 
                 let dhatu_text = &dhatu.upadesha;
-                let mut padas: Vec<_> = prakriyas
-                    .iter()
-                    .map(|p| p.text())
-                    .collect();
+                let mut padas: Vec<_> = prakriyas.iter().map(|p| p.text()).collect();
                 padas.sort();
                 let padas = padas.join("|");
 

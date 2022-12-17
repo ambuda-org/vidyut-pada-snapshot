@@ -31,7 +31,7 @@ impl FromStr for Prayoga {
             "kartari" => Self::Kartari,
             "karmani" => Self::Karmani,
             "bhave" => Self::Bhave,
-            &_ => return Err("Could not parse Prayoga")
+            &_ => return Err("Could not parse Prayoga"),
         };
         Ok(res)
     }
@@ -66,7 +66,7 @@ impl FromStr for Purusha {
             "prathama" => Self::Prathama,
             "madhyama" => Self::Madhyama,
             "uttama" => Self::Uttama,
-            &_ => return Err("Could not parse Purusha")
+            &_ => return Err("Could not parse Purusha"),
         };
         Ok(res)
     }
@@ -101,7 +101,7 @@ impl FromStr for Vacana {
             "eka" => Self::Eka,
             "dvi" => Self::Dvi,
             "bahu" => Self::Bahu,
-            &_ => return Err("Could not parse Vacana")
+            &_ => return Err("Could not parse Vacana"),
         };
         Ok(res)
     }
@@ -177,7 +177,7 @@ impl FromStr for La {
             "ashir-lin" => Self::AshirLin,
             "lun" => Self::Lun,
             "lrn" => Self::Lrn,
-            &_ => return Err("Could not parse La")
+            &_ => return Err("Could not parse La"),
         };
         Ok(res)
     }

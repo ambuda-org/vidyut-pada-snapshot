@@ -44,9 +44,11 @@ pub enum Tag {
     udit,
     /// (pratyaya) optionally allows it-agama per 7.2.44.
     Udit,
+    /// (dhatu) prevents shortening of the dhatu vowel when followed by Ni + caN per 7.4.2.
     fdit,
     /// (dhatu) indicates the use of aN-pratyaya in luN-lakAra per 3.1.55. (gamx~ -> agamat)
     xdit,
+    /// (dhatu) prevents vrddhi of the dhatu vowel when followed by it-Agama per 7.2.5
     edit,
     /// (dhatu) indicates replacement of the "t" of a nistha-pratyaya with "n" per 8.2.45 (lagta ->
     /// lagna).
@@ -89,6 +91,7 @@ pub enum Tag {
     Qit,
     /// (pratyaya) causes vrddhi per 7.2.115.
     Rit,
+    /// (pratyaya)
     nit,
     /// (pratyaya) indicates anudatta accent per 3.1.4. For sarvadhatuka pratyayas, allows guna and
     /// vrddhi; all other sarvadhatuka pratyayas are marked as `Nit` per 1.2.4 and are thus blocked
@@ -106,6 +109,7 @@ pub enum Tag {
     ///
     /// (pratyaya) marks the pratyaya as sArvadhAtuka per 3.4.113.
     Sit,
+    /// (pratyaya)
     zit,
     /// (pratyaya) indicates that the previous term should be called `pada` per 1.4.16.
     sit,
@@ -119,7 +123,7 @@ pub enum Tag {
     /// (dhatu) allows the krt-pratyaya "ktri" per 3.1.89.
     qvit,
 
-    /// Lopa
+    /// (pratyaya) indicates general lopa.
     Luk,
     /// (pratyaya) indicates lopa that causes dvitva (hu -> juhoti)
     Slu,
