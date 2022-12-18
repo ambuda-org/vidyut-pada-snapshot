@@ -10,7 +10,7 @@ create_tinantas:
 # ~~~~~~~~~~
 
 # Runs all unit tests in the crate.
-test:
+integration_:
 	cargo test --lib
 
 # Generates a simple coverage report and writes it to disk as an HTML file.

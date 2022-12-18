@@ -1,3 +1,6 @@
+(This code will soon be merged into `ambuda-org/vidyut`.)
+
+
 vidyut-prakriya
 ===============
 
@@ -97,11 +100,55 @@ for p in prakriyas {
 Contributing
 ------------
 
-`vidyut-prakriya` is an ambitious project, and you can help it grow. If you
-notice any errors in our output or derivations, please [file a GitHub
-issue][issue].
+### Reporting errors
 
-[issues]: https://github.com/ambuda-org/vidyut-pada-snapshot/issues 
+`vidyut-prakriya` is an ambitious project, and you can help it grow. The
+easiest way to help is to [file a GitHub issue][gh-issue] if you notice an
+error.
+
+[gh-issue]: https://github.com/ambuda-org/vidyut-pada-snapshot/issues
+
+### Modifying the code
+
+First, see if you can run our existing code on your machine. We suggest
+that you start by running our integration tests:
+
+```
+$ make create_test_files
+$ make test_all
+```
+
+Next, try using our prakriya debugger, which shows exactly how a given word was
+derived:
+
+```
+cargo run --bin explain -- --code 01.0001 --pada Bavati
+```
+
+Once you've confirmed that your setup works, we suggest that you read through
+the documentation for `Term` (in the `term` module) and `Prakriya` (in the
+`prakriya` module). Almost every part of the code touches these two structs.
+
+To get familiar with our rules, we suggest that you skim through the
+`ashtadhyayi` module, which defines our high-level API and wraps all of the
+rules that we use in the system. We encourage you to read our extensive
+comments and explore the smaller modules that we use within `ashtadhyayi`.
+
+Now you're ready to make changes to the code. After you make your changes, run
+`make test_all` to verify the impact of your code.
+
+If you are satisfied with your changes, you will need to update our integration
+test file. This process has three steps. First, run the steps below and confirm
+that your tests fail:
+
+```
+$ make create_test_files
+$ make test_all
+```
+
+`make test_all` should fail on a hash comparison error. Copy the new hash code,
+replace the existing hash code in the `test_all` in our `Makefile` with that
+copied value. Then, run `make test_all` again and confirm that all tests pass.
 
 
 Design
