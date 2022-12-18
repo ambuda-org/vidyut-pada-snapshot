@@ -47,7 +47,7 @@ struct Row<'a> {
 
 fn run(dhatus: Vec<D::Dhatu>) -> Result<(), io::Error> {
     let mut wtr = csv::Writer::from_writer(io::stdout());
-    let a = Ashtadhyayi::new();
+    let a = Ashtadhyayi::builder().log_steps(false).build();
 
     for dhatu in dhatus {
         for la in LAKARA {
@@ -60,7 +60,6 @@ fn run(dhatus: Vec<D::Dhatu>) -> Result<(), io::Error> {
                     prayoga,
                     *purusha,
                     *vacana,
-                    false,
                 );
 
                 let dhatu_text = &dhatu.upadesha;

@@ -84,7 +84,6 @@ let prakriyas = a.derive_tinantas(
     Prayoga::Kartari,
     Purusha::Prathama,
     Vacana::Eka,
-    true,
 );
 
 for p in prakriyas {

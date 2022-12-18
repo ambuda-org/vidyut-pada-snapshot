@@ -1,5 +1,5 @@
-use vidyut_prakriya::arguments::{La, Prayoga, Purusha, Vacana};
-use vidyut_prakriya::ashtadhyayi::Ashtadhyayi;
+use vidyut_prakriya::Ashtadhyayi;
+use vidyut_prakriya::{La, Prayoga, Purusha, Vacana};
 
 const PURUSHA_VACANA: &[(Purusha, Vacana)] = &[
     (Purusha::Prathama, Vacana::Eka),
@@ -128,16 +128,11 @@ fn test_bhu() {
             expected.extend(e.split('/'));
         }
 
+        let a = Ashtadhyayi::new();
+
         for (purusha, vacana) in PURUSHA_VACANA {
-            let prakriyas = A::derive_tinantas(
-                "BU",
-                "01.0001",
-                la,
-                Prayoga::Kartari,
-                *purusha,
-                *vacana,
-                false,
-            );
+            let prakriyas =
+                a.derive_tinantas("BU", "01.0001", la, Prayoga::Kartari, *purusha, *vacana);
             actual.extend(prakriyas.iter().map(|t| t.text()));
         }
 
@@ -202,7 +197,6 @@ fn test_lat() {
             Prayoga::Kartari,
             Purusha::Prathama,
             Vacana::Eka,
-            false,
         );
         let mut actual: Vec<_> = prakriyas.iter().map(|t| t.text()).collect();
         let mut padas: Vec<_> = padas.split(',').collect();

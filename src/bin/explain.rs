@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 use std::error::Error;
 use std::path::Path;
 use vidyut_prakriya::dhatupatha as D;
-use vidyut_prakriya::prakriya::Prakriya;
+use vidyut_prakriya::Prakriya;
 use vidyut_prakriya::{Ashtadhyayi, La, Prayoga, Purusha, Vacana};
 
 #[derive(Parser)]
@@ -63,7 +63,8 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let dhatus = D::load_dhatus(Path::new("data/dhatupatha.tsv"));
 
     let mut ordered_words = BTreeMap::new();
-    let a = Ashtadhyayi::new();
+    let a = Ashtadhyayi::builder().log_steps(false).build();
+
     for dhatu in dhatus?.iter() {
         if dhatu.code() != args.code {
             continue;
@@ -78,7 +79,6 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
                     Prayoga::Kartari,
                     *purusha,
                     *vacana,
-                    true,
                 );
                 for p in ps {
                     words.push(p.text());

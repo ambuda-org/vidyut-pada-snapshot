@@ -37,7 +37,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let hash = calculate_sha256_file_hash(&args.test_cases)?;
     assert_eq!(hash, args.hash);
 
-    let a = Ashtadhyayi::new();
+    let a = Ashtadhyayi::builder().log_steps(false).build();
 
     let mut rdr = csv::Reader::from_path(&args.test_cases)?;
 
@@ -69,7 +69,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
             }
         }
 
-        let prakriyas = a.derive_tinantas(dhatu, &code, la, prayoga, purusha, vacana, false);
+        let prakriyas = a.derive_tinantas(dhatu, &code, la, prayoga, purusha, vacana);
         let mut actual: Vec<_> = prakriyas.iter().map(|p| p.text()).collect();
         actual.sort();
 

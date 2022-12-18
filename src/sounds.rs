@@ -111,6 +111,7 @@ impl SoundMap {
     }
 
     /// Returns whether the given sound is in the map.
+    #[allow(unused)]
     pub fn contains(&self, key: Sound) -> bool {
         self.0[key as usize] != 0
     }

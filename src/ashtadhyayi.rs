@@ -24,7 +24,26 @@ use std::error::Error;
 ///
 /// - whether to store the full derivation history or to disable it for performance reasons.
 /// - whether to disable certain optional rules
-pub struct Ashtadhyayi {}
+///
+/// To run with our suggested defaults, use:
+///
+/// ```
+/// use vidyut_prakriya::Ashtadhyayi;
+///
+/// let a = Ashtadhyayi::new();
+/// ```
+///
+/// For tighter control over options, use `Ashtadhyayi::builder`:
+///
+/// ```no_run
+/// use vidyut_prakriya::Ashtadhyayi;
+///
+/// let a = Ashtadhyayi::builder().log_steps(false).build();
+/// ```
+#[derive(Debug)]
+pub struct Ashtadhyayi {
+    log_steps: bool,
+}
 
 /// Samprasarana of the dhatu is conditioned on several other operations, which we must execute
 /// first:
@@ -116,10 +135,44 @@ fn derive_tinanta(
     Ok(())
 }
 
-impl Ashtadhyayi {
-    pub fn new() -> Self {
-        Ashtadhyayi {}
+pub struct AshtadhyayiBuilder {
+    a: Ashtadhyayi,
+}
+
+impl AshtadhyayiBuilder {
+    /// Creates a new builder.
+    fn new() -> Self {
+        Self {
+            a: Ashtadhyayi::new(),
+        }
     }
+
+    /// Whether to log individual steps of the prakriya or not.
+    /// - If `true`, each `Prakriya` will contain a full history.
+    /// - If `false`, the program will run faster.
+    pub fn log_steps(mut self, value: bool) -> Self {
+        self.a.log_steps = value;
+        self
+    }
+
+    /// Creates an `Ashtadhyayi` object.
+    pub fn build(self) -> Ashtadhyayi {
+        self.a
+    }
+}
+
+impl Ashtadhyayi {
+    /// Creates an interface with sane defaults.
+    pub fn new() -> Self {
+        Ashtadhyayi { log_steps: true }
+    }
+
+    /// Returns a builder that lets you better configure how the engine runs rules and saves
+    /// derivational data.
+    pub fn builder() -> AshtadhyayiBuilder {
+        AshtadhyayiBuilder::new()
+    }
+
     pub fn derive_tinantas(
         &self,
         dhatu: &str,
@@ -128,13 +181,18 @@ impl Ashtadhyayi {
         prayoga: Prayoga,
         purusha: Purusha,
         vacana: Vacana,
-        log_steps: bool,
     ) -> Vec<Prakriya> {
         let mut stack = PrakriyaStack::new();
         stack.find_all(
             |p| derive_tinanta(p, dhatu, code, la, prayoga, purusha, vacana).unwrap(),
-            log_steps,
+            self.log_steps,
         );
         stack.prakriyas()
+    }
+}
+
+impl Default for Ashtadhyayi {
+    fn default() -> Self {
+        Self::new()
     }
 }

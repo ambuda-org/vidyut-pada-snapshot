@@ -31,9 +31,9 @@ mod tin_pratyaya;
 mod tripadi;
 mod vikarana;
 
-pub mod arguments;
-pub mod constants;
+mod arguments;
+mod constants;
 pub mod dhatupatha;
-pub mod prakriya;
-pub mod sounds;
-pub mod term;
+mod prakriya;
+mod sounds;
+mod term;
