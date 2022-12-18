@@ -6,7 +6,7 @@ use sha2::{Digest, Sha256};
 use std::error::Error;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use vidyut_prakriya::ashtadhyayi as A;
+use vidyut_prakriya::Ashtadhyayi;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -36,6 +36,8 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     // Check that the test file is as expected.
     let hash = calculate_sha256_file_hash(&args.test_cases)?;
     assert_eq!(hash, args.hash);
+
+    let a = Ashtadhyayi::new();
 
     let mut rdr = csv::Reader::from_path(&args.test_cases)?;
 
@@ -67,7 +69,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
             }
         }
 
-        let prakriyas = A::derive_tinantas(dhatu, &code, la, prayoga, purusha, vacana, false);
+        let prakriyas = a.derive_tinantas(dhatu, &code, la, prayoga, purusha, vacana, false);
         let mut actual: Vec<_> = prakriyas.iter().map(|p| p.text()).collect();
         actual.sort();
 
@@ -84,9 +86,8 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let remaining = n - num_matches;
     let pct = 100_f32 * (num_matches as f32) / (n as f32);
-    println!("Results: {num_matches} / {n} ({pct:.2}%, {remaining} remain)");
+    println!("{num_matches} / {n} tests pass ({pct:.2}%)");
     Ok(())
 }
 

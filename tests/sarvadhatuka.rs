@@ -1,5 +1,5 @@
 use vidyut_prakriya::arguments::{La, Prayoga, Purusha, Vacana};
-use vidyut_prakriya::ashtadhyayi as A;
+use vidyut_prakriya::ashtadhyayi::Ashtadhyayi;
 
 const PURUSHA_VACANA: &[(Purusha, Vacana)] = &[
     (Purusha::Prathama, Vacana::Eka),
@@ -194,7 +194,8 @@ fn test_lat() {
 
     for (dhatu, gana, padas) in tests {
         let code = format!("{gana}.0001");
-        let prakriyas = A::derive_tinantas(
+        let a = Ashtadhyayi::new();
+        let prakriyas = a.derive_tinantas(
             dhatu,
             &code,
             La::Lat,

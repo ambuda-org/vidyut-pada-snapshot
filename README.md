@@ -74,10 +74,10 @@ compile and complete within a few seconds.
 To generate prakriyas programmatically, you can use the starter code below:
 
 ```rust
-use vidyut_prakriya::ashtadhyayi;
-use vidyut_prakriya::arguments::{La, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::{Ashtadhyayi, La, Prayoga, Purusha, Vacana};
 
-let prakriyas = ashtadhyayi::derive_tinantas(
+let a = Ashtadhyayi::new();
+let prakriyas = a.derive_tinantas(
     "BU",
     "01.0001",
     La::Lat,

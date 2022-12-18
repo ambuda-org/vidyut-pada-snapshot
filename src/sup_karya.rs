@@ -4,6 +4,7 @@ use crate::it_samjna;
 use crate::prakriya::Prakriya;
 use crate::term::Term;
 
+#[allow(unused)]
 fn find_sup(vibhakti: Vibhakti, vacana: Vacana) -> &'static str {
     match (vibhakti, vacana) {
         (Vibhakti::Prathama, Vacana::Eka) => "su~",
@@ -30,6 +31,7 @@ fn find_sup(vibhakti: Vibhakti, vacana: Vacana) -> &'static str {
     }
 }
 
+#[allow(unused)]
 pub fn run(p: &mut Prakriya, vibhakti: Vibhakti, vacana: Vacana) -> Option<()> {
     let sup = find_sup(vibhakti, vacana);
     let mut sup = Term::make_upadesha(sup);

@@ -17,6 +17,15 @@ use crate::tripadi;
 use crate::vikarana;
 use std::error::Error;
 
+/// An interface to the rules of the Ashtadhyayi.
+///
+/// This lightweight struct contains configuration options that might affect how a word is derived,
+/// such as:
+///
+/// - whether to store the full derivation history or to disable it for performance reasons.
+/// - whether to disable certain optional rules
+pub struct Ashtadhyayi {}
+
 /// Samprasarana of the dhatu is conditioned on several other operations, which we must execute
 /// first:
 ///
@@ -41,7 +50,7 @@ fn dhatu_samprasarana_tasks(p: &mut Prakriya) {
     atidesha::run_after_attva(p);
 }
 
-pub fn derive_tinanta(
+fn derive_tinanta(
     p: &mut Prakriya,
     dhatu: &str,
     code: &str,
@@ -107,19 +116,25 @@ pub fn derive_tinanta(
     Ok(())
 }
 
-pub fn derive_tinantas(
-    dhatu: &str,
-    code: &str,
-    la: La,
-    prayoga: Prayoga,
-    purusha: Purusha,
-    vacana: Vacana,
-    log_steps: bool,
-) -> Vec<Prakriya> {
-    let mut stack = PrakriyaStack::new();
-    stack.find_all(
-        |p| derive_tinanta(p, dhatu, code, la, prayoga, purusha, vacana).unwrap(),
-        log_steps,
-    );
-    stack.prakriyas()
+impl Ashtadhyayi {
+    pub fn new() -> Self {
+        Ashtadhyayi {}
+    }
+    pub fn derive_tinantas(
+        &self,
+        dhatu: &str,
+        code: &str,
+        la: La,
+        prayoga: Prayoga,
+        purusha: Purusha,
+        vacana: Vacana,
+        log_steps: bool,
+    ) -> Vec<Prakriya> {
+        let mut stack = PrakriyaStack::new();
+        stack.find_all(
+            |p| derive_tinanta(p, dhatu, code, la, prayoga, purusha, vacana).unwrap(),
+            log_steps,
+        );
+        stack.prakriyas()
+    }
 }

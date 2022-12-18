@@ -4,9 +4,8 @@
 use serde::Serialize;
 use std::io;
 use std::path::Path;
-use vidyut_prakriya::arguments::{La, Prayoga, Purusha, Vacana};
-use vidyut_prakriya::ashtadhyayi as A;
 use vidyut_prakriya::dhatupatha as D;
+use vidyut_prakriya::{Ashtadhyayi, La, Prayoga, Purusha, Vacana};
 
 const LAKARA: &[La] = &[
     La::Lat,
@@ -48,12 +47,13 @@ struct Row<'a> {
 
 fn run(dhatus: Vec<D::Dhatu>) -> Result<(), io::Error> {
     let mut wtr = csv::Writer::from_writer(io::stdout());
+    let a = Ashtadhyayi::new();
 
     for dhatu in dhatus {
         for la in LAKARA {
             for (purusha, vacana) in TIN_SEMANTICS {
                 let prayoga = Prayoga::Kartari;
-                let prakriyas = A::derive_tinantas(
+                let prakriyas = a.derive_tinantas(
                     &dhatu.upadesha,
                     &dhatu.code(),
                     *la,
