@@ -356,7 +356,7 @@ impl Prakriya {
 /// rules, we create different final results. `PrakriyaStack` manages the work required in finding
 /// and exploring the various combinations of optional rules.
 #[derive(Default)]
-pub struct PrakriyaStack {
+pub(crate) struct PrakriyaStack {
     /// Completed prakriyas.
     prakriyas: Vec<Prakriya>,
     /// Combinations of optional rules that we have yet to try.

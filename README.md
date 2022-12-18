@@ -2,18 +2,20 @@ vidyut-prakriya
 ===============
 
 `vidyut-prakriya` generates Sanskrit words with their prakriyās (derivations)
-according to the rules of Paninian grammar.
+according to the rules of Paninian grammar. Our long-term goal is to provide a
+complete implementation of the Ashtadhyayi.
 
-This crate is under active development as part of the [Ambuda][ambuda] project.
-If you enjoy our work and wish to contribute, we encourage you to [join our
-Discord server][discord].
+This [crate][crate] is under active development as part of the [Ambuda][ambuda]
+project. If you enjoy our work and wish to contribute, we encourage you to
+[join our Discord server][discord].
 
-- [Overview][#overview]
-- [Usage][#usage]
-- [Technical design][#technical-design]
-- [Roadmap][#roadmap]
+- [Overview](#overview)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [Design](#design)
+- [Roadmap](#roadmap)
 
-
+[crate]: https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html
 [ambuda]: https://ambuda.org
 [discord]: https://discord.gg/7rGdTyWY7Z
 
@@ -37,9 +39,8 @@ Overview
    be combined to WebAssembly, which means that it can run in a modern web
    browser.
 
-`vidyut-prakriya` currently has strong support for basic verbs. But long-term,
-we want `vidyut-prakriya` to generate every pada allowed by the rules of
-Paninian grammar. For details, see our [roadmap][#roadmap].
+`vidyut-prakriya` currently has strong support for basic verbs. For future plans,
+see our [roadmap](#roadmap).
 
 
 Usage
@@ -48,24 +49,26 @@ Usage
 First, install Rust on your computer. You can find installation instructions
 [here][install-rust].
 
-Second, download `vidyut-prakriya` to your computer:
+Second, download `vidyut-prakriya` to your computer and enter the project
+directory:
 
 ```
-$ git clone git@github.com:ambuda-org/vidyut-prakriya-snapshot.git
-$ cd vidyut-prakriya-snapshot
+$ git clone git@github.com:ambuda-org/vidyut-pada-snapshot.git
+$ cd vidyut-pada-snapshot
 ```
 
 To generate all basic tinantas in kartari prayoga, run:
 
 ```
-$ make create_tinantas
+$ make create_tinantas > output.csv
 ```
 
 The first run of `make create_tinantas` will be slow since your machine must
-first compile `vidyut-prakriya`. After this initial compilation step, `make
-create_tinantas` will typically compile and complete within a few seconds.
+first compile `vidyut-prakriya`. After this initial compilation step, however,
+subsequent runs will be much faster, and `make create_tinantas` will likely
+compile and complete within a few seconds.
 
-To generates prakriyas programmatically, you can use the starter code below:
+To generate prakriyas programmatically, you can use the starter code below:
 
 ```rust
 use vidyut_prakriya::ashtadhyayi;
@@ -91,9 +94,18 @@ for p in prakriyas {
 [sv]: https://github.com/drdhaval2785/SanskritVerb
 
 
+Contributing
+------------
 
-Technical design
-----------------
+`vidyut-prakriya` is an ambitious project, and you can help it grow. If you
+notice any errors in our output or derivations, please [file a GitHub
+issue][issue].
+
+[issues]: https://github.com/ambuda-org/vidyut-pada-snapshot/issues 
+
+
+Design
+------
 
 `vidyut-prakriya` follows the form and spirit of the Ashtadhyayi as closely as
 possible. At the same time, we make certain concessions to pragmatism so that
@@ -101,27 +113,62 @@ we can build a clear and maintainable program. For example, instead of
 selecting a rule according to principles like `utsarga-apavAda`, we instead
 manually reorder rules so that we can run a simple imperative program.
 
-Our main data structure is a `Term`, which is a string with associated
-metadata that we use during the derivation. `Term` has an expressive API that
-lets us express Paninian rules readably and concisely.
+Our main data structure is a `Term`, which generalizes the उपदेश concept from
+traditional grammar. `Term` is simply a string with useful metadata and a rich
+API. For details, see the `term` module.
 
-We manage the overall derivation with a `Prakriya`, which a `Vec<Term>` along
-with associated metadata and a log of which steps were applied in the
-derivation.
+We manage the overall derivation with a `Prakriya`, which is a `Vec<Term>` along
+with useful metadata and a rich API. `Prakriya` also maintains a log of which
+steps have been applied in the derivation. For details, see the `prakriya`
+module.
 
-In general, rules have a basic structure:
+Both `Term` and `Prakriya` are annotated with `Tag`s, which generalize the संज्ञा
+concept from  traditional grammar. For details, see the `tag` module.
+
+In general, our rules are implemented as simple if-else statements. For example:
 
 ```rust
-if meets_condition(p) {
-    p.op("1.2.3", some_operator)
+let tin = p.get_if(i, |t| t.has_adi('J'))?;
+
+let i_base = p.find_prev_where(i, |t| !t.is_empty())?;
+let base = p.get(i_base)?;
+
+if base.has_tag(T::Abhyasta) {
+    // juhvati
+    p.op_term("7.1.4", i, op::adi("at"));
+} else if !base.has_antya('a') && tin.has_tag(T::Atmanepada) {
+    // kurvate
+    p.op_term("7.1.5", i, op::adi("at"));
+} else {
+    // Bavanti
+    p.op_term("7.1.3", i, op::adi("ant"));
 }
 ```
 
-where:
-- `p` is a `Prakriya`. We abbreviate this to `p`.
-- `op` applies the `some_operator` function to `p` and records that rule
-  `"1.2.3"` was applied.
-- `some_operator` is a function that alters the prakriya in some way.
+Since we have so many rules to write, we use short variable names as long as
+they don't sacrifice readability. Some notes on our naming conventions:
+
+- `p` is a `Prakriya`.
+- `i` is the index of a term in the prakriya. We use indices often so that we
+  can [better accommodate Rust's borrow checker][rust-borrow].
+- `t` is a `Term`.
+- `?` is a [Rust operator][rust-q] that roughly means "return if not found."
+- `T` is an alias for `Tag`.
+- `op` is a module that contains common operations.
+
+And on our API:
+
+- `p.op_term("my-rule", i, fn)` applies the `fn` function to the term at index `i`
+  of `p` and associates that operation with `"my-rule"`.
+- `op::adi(s)` returns a function. The returned function accepts a `Term` and
+  replaces its first sound with `s`. If you haven't worked with [first-class
+  functions][funcs] before, you might find this API strange at first. But in
+  time, we hope that you find it to be as expressive and powerful as we do.
+
+
+[rust-q]: https://doc.rust-lang.org/rust-by-example/std/result/question_mark.html
+[rust-borrow]: https://users.rust-lang.org/t/newbie-mut-with-nested-structs/84755
+[funcs]: https://en.wikipedia.org/wiki/First-class_function
 
 
 Roadmap
