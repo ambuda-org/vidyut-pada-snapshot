@@ -4,9 +4,9 @@
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::path::Path;
-use vidyut_gen::arguments::{Prayoga, Purusha, Vacana};
-use vidyut_gen::ashtadhyayi as A;
-use vidyut_gen::dhatupatha as D;
+use vidyut_prakriya::arguments::{Prayoga, Purusha, Vacana};
+use vidyut_prakriya::ashtadhyayi as A;
+use vidyut_prakriya::dhatupatha as D;
 
 const PURUSHA_VACANA: &[(Purusha, Vacana)] = &[
     (Purusha::Prathama, Vacana::Eka),

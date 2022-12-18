@@ -1,9 +1,9 @@
 use serde::Serialize;
 use std::io;
 use std::path::Path;
-use vidyut_gen::arguments::{La, Prayoga, Purusha, Vacana};
-use vidyut_gen::ashtadhyayi as A;
-use vidyut_gen::dhatupatha as D;
+use vidyut_prakriya::arguments::{La, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::ashtadhyayi as A;
+use vidyut_prakriya::dhatupatha as D;
 
 const LAKARA: &[La] = &[
     La::Lat,

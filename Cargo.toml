@@ -1,5 +1,5 @@
 [package]
-name = "vidyut-gen"
+name = "vidyut-prakriya"
 version = "0.1.0"
 authors = ["Arun Prasad <ambuda.library@gmail.com>"]
 description = "A Sanskrit word generator"

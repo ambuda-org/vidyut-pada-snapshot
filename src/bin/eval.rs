@@ -6,7 +6,7 @@ use sha2::{Digest, Sha256};
 use std::error::Error;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use vidyut_gen::ashtadhyayi as A;
+use vidyut_prakriya::ashtadhyayi as A;
 
 #[derive(Parser)]
 #[command(author, version, about)]

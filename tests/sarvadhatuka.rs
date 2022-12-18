@@ -1,5 +1,5 @@
-use vidyut_gen::arguments::{La, Prayoga, Purusha, Vacana};
-use vidyut_gen::ashtadhyayi as A;
+use vidyut_prakriya::arguments::{La, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::ashtadhyayi as A;
 
 const PURUSHA_VACANA: &[(Purusha, Vacana)] = &[
     (Purusha::Prathama, Vacana::Eka),

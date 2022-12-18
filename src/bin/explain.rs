@@ -9,10 +9,10 @@ use clap::Parser;
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::path::Path;
-use vidyut_gen::arguments::{La, Prayoga, Purusha, Vacana};
-use vidyut_gen::ashtadhyayi as A;
-use vidyut_gen::dhatupatha as D;
-use vidyut_gen::prakriya::Prakriya;
+use vidyut_prakriya::arguments::{La, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::ashtadhyayi as A;
+use vidyut_prakriya::dhatupatha as D;
+use vidyut_prakriya::prakriya::Prakriya;
 
 #[derive(Parser)]
 #[command(author, version, about)]
