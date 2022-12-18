@@ -44,14 +44,14 @@ fn gana_sutras(p: &mut Prakriya, i: usize) -> Option<()> {
     // Need to check range explicitly because some of these roots appear
     // multiple times in the gana, e.g. lakza~
     if p.has(i, |t| {
-        t.has_u_in(gana::KUSMADI) && (192..=236).contains(&num)
+        t.has_u_in(gana::AAKUSMADI) && (192..=236).contains(&num)
     }) {
-        p.op("kusmadi", |p| p.add_tag(T::Atmanepada));
+        p.op("AkusmAdi", |p| p.add_tag(T::Atmanepada));
     }
     if p.has(i, |t| {
-        t.has_u_in(gana::GARVADI) && (440..=449).contains(&num)
+        t.has_u_in(gana::AAGARVADI) && (440..=449).contains(&num)
     }) {
-        p.op("garvadi", |p| p.add_tag(T::Atmanepada));
+        p.op("AgarvAdi", |p| p.add_tag(T::Atmanepada));
     }
 
     Some(())

@@ -120,8 +120,10 @@ fn maybe_replace_cli_with_ksa(p: &mut Prakriya, i: usize) -> Option<()> {
             p.op_optional("3.1.45", |p| {
                 to_ksa(p);
                 // Needed if we use "ksa" with a veT root.
-                p.add_tag(T::FlagAnitKsa);
+                p.add_tag(T::FlagHasAnitKsa);
+                p.step("added ksa");
             });
+            p.add_tag(T::FlagHagSetSic);
         } else {
             p.op("3.1.45", to_ksa);
         }

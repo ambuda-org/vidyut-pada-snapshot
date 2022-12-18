@@ -211,8 +211,8 @@ pub enum Tag {
     // Flags on the `Prakriya`.
     FlagAdeshadi,
     FlagNoArdhadhatuka,
-    FlagAnitKsa,
-    FlagSetSic,
+    FlagHasAnitKsa,
+    FlagHagSetSic,
     FlagAtAgama,
     FlagAtLopa,
     /// Indicates deletion of a term's final "n" in the asiddhavat section.

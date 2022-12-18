@@ -286,11 +286,14 @@ fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
         // Do nothing
     } else if n.has_adi(&*VAL) {
         if anga.has_u_in(&["svf", "zUN", "DUY"]) || anga.has_tag(T::Udit) {
-            // Synchronize choice of "it" with the choice of lun-vikarana.
-            if p.has_tag(T::FlagAnitKsa) {
+            // Synchronize choice of "it" with the choice of lun-vikarana in 3.1.45:
+            // - if lun and using ksa, must use anit.
+            // - if lun and not using ksa, must use set.
+            // - otherwise, vet.
+            if p.has_tag(T::FlagHasAnitKsa) {
                 it = It::Anit("7.2.44");
-            } else if p.has_tag(T::FlagSetSic) {
-                // do nothing
+            } else if p.has_tag(T::FlagHagSetSic) {
+                // Do nothing; the control flow will fall through and pick up 7.2.35 further below.
             } else {
                 it = optional_anit("7.2.44", p)
             }
@@ -356,6 +359,7 @@ fn try_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
     let i_n = p.find_next_where(i, |t| !t.is_empty())?;
     let n = p.view(i_n)?;
+    let tin = n.last()?;
 
     if !(n.has_adi(&*VAL) && n.has_tag(T::Sarvadhatuka)) {
         return None;
@@ -368,11 +372,14 @@ fn try_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
     } else if anga.has_text("IS") && n.has_adi('s') {
         // ISize, ISizva
         add_it_before("7.2.77", p, i_n);
-    } else if anga.has_text_in(&["Iq", "jan", "IS"]) && (n.has_adi('s') || n.last()?.has_u("Dvam"))
+    } else if anga.has_text_in(&["Iq", "jan", "IS"])
+        && (n.has_adi('s') || (tin.has_u("Dvam") && !tin.has_lakshana("la~N")))
     {
         // IqiDve, janiDve
         //
         // See kAshika on 7.2.78 for inclusion of IS here.
+        // > "kṛtaṭeretvasya grahaṇāt laṅi dhvami na bhavitavyamiṭā"
+        // - kashika on why laN is excluded.
         add_it_before("7.2.78", p, i_n);
     }
 

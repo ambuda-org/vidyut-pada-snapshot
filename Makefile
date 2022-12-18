@@ -16,7 +16,7 @@ coverage:
 eval:
 	RUST_BACKTRACE=1 cargo run --release --bin eval -- \
 				   --test-cases test-files/tinanta.csv \
-				   --hash "96719f11dc1c0b582c56d3bac40e4deed91ce7f0ef0b0dce29d7687063a06c63"
+				   --hash "bf906cec17e58e84da96a30d38131f29a004b444eac6581e3679966dafec2482"
 
 sanskrit_verb_eval:
 	cargo run --release --bin sanskrit_verb_eval | tee sanskrit-verb-results.txt

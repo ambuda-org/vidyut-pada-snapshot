@@ -315,7 +315,6 @@ pub fn siddhi(p: &mut Prakriya, la: La) -> Option<()> {
                 it_samjna::run(p, i).ok();
             });
         }
-        p.step("lato va");
     }
 
     // TODO: 3.4.94 - 3.4.98

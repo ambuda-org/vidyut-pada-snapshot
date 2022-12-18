@@ -10,6 +10,7 @@ mod dhatu_gana;
 mod dhatu_karya;
 mod dvitva;
 mod filters;
+mod guna_vrddhi;
 mod it_agama;
 mod it_samjna;
 mod la_karya;
