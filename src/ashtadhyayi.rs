@@ -1,7 +1,7 @@
 use crate::ac_sandhi;
 use crate::angasya;
 use crate::ardhadhatuka;
-use crate::args::{Lakara, Prayoga, Purusha, Vacana};
+use crate::args::{Dhatu, Lakara, Prayoga, Purusha, Vacana};
 use crate::atidesha;
 use crate::atmanepada;
 use crate::dhatu_karya;
@@ -71,8 +71,7 @@ fn dhatu_samprasarana_tasks(p: &mut Prakriya) {
 
 fn derive_tinanta(
     p: &mut Prakriya,
-    dhatu: &str,
-    code: &str,
+    dhatu: &Dhatu,
     la: Lakara,
     prayoga: Prayoga,
     purusha: Purusha,
@@ -81,7 +80,7 @@ fn derive_tinanta(
     p.add_tags(&[prayoga.as_tag(), purusha.as_tag(), vacana.as_tag()]);
 
     // Create the dhatu.
-    dhatu_karya::run(p, dhatu, code)?;
+    dhatu_karya::run(p, dhatu)?;
     sanadi::run(p, la);
 
     // Add the lakAra and convert it to a basic tin ending.
@@ -135,11 +134,11 @@ fn derive_tinanta(
     Ok(())
 }
 
+/// A builder for creating an `Ashtadhyayi` struct.
 pub struct AshtadhyayiBuilder {
     a: Ashtadhyayi,
 }
 
-/// A buildef ro creating an `Ashtadhyayi` struct.
 impl AshtadhyayiBuilder {
     /// Creates a new builder.
     fn new() -> Self {
@@ -181,8 +180,7 @@ impl Ashtadhyayi {
     /// Returns all possible prakriyas that can be derived with the given initial conditions.
     pub fn derive_tinantas(
         &self,
-        dhatu: &str,
-        code: &str,
+        dhatu: &Dhatu,
         lakara: Lakara,
         prayoga: Prayoga,
         purusha: Purusha,
@@ -190,7 +188,7 @@ impl Ashtadhyayi {
     ) -> Vec<Prakriya> {
         let mut stack = PrakriyaStack::new();
         stack.find_all(
-            |p| derive_tinanta(p, dhatu, code, lakara, prayoga, purusha, vacana).unwrap(),
+            |p| derive_tinanta(p, dhatu, lakara, prayoga, purusha, vacana).unwrap(),
             self.log_steps,
         );
         stack.prakriyas()

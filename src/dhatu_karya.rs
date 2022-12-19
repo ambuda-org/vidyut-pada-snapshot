@@ -1,3 +1,4 @@
+use crate::args::Dhatu;
 use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
 use crate::it_samjna;
@@ -7,14 +8,13 @@ use crate::term::Term;
 
 use std::error::Error;
 
-fn init(p: &mut Prakriya, dhatu: &str, code: &str) -> Result<(), Box<dyn Error>> {
-    let (gana, number) = match code.split_once('.') {
-        Some((x, y)) => (x, y),
-        None => return Ok(()),
-    };
-
+fn init(p: &mut Prakriya, dhatu: &Dhatu) -> Result<(), Box<dyn Error>> {
     // The root enters the prakriyA
-    p.push(Term::make_dhatu(dhatu, gana.parse()?, number.parse()?));
+    p.push(Term::make_dhatu(
+        &dhatu.upadesha,
+        dhatu.gana,
+        dhatu.number.into(),
+    ));
     p.step("start");
 
     Ok(())
@@ -126,10 +126,10 @@ fn maybe_add_upasarga(p: &mut Prakriya, i: usize) -> Option<()> {
     Some(())
 }
 
-pub fn run(p: &mut Prakriya, dhatu: &str, code: &str) -> Result<(), Box<dyn Error>> {
+pub fn run(p: &mut Prakriya, dhatu: &Dhatu) -> Result<(), Box<dyn Error>> {
     let i = 0;
 
-    init(p, dhatu, code)?;
+    init(p, dhatu)?;
     add_samjnas(p, i)?;
     gana_sutras(p, i);
 
@@ -145,8 +145,9 @@ mod tests {
     use super::*;
 
     fn check(text: &str, code: &str) -> Term {
+        let dhatu = Dhatu::new(text, code);
         let mut p = Prakriya::new();
-        run(&mut p, text, code).unwrap();
+        run(&mut p, &dhatu).unwrap();
         p.get(0).unwrap().clone()
     }
 

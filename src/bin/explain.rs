@@ -73,14 +73,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         for (i, la) in LAKARA.iter().enumerate() {
             let mut words = vec![];
             for (purusha, vacana) in PURUSHA_VACANA {
-                let ps = a.derive_tinantas(
-                    &dhatu.upadesha,
-                    &dhatu.code(),
-                    *la,
-                    Prayoga::Kartari,
-                    *purusha,
-                    *vacana,
-                );
+                let ps = a.derive_tinantas(&dhatu, *la, Prayoga::Kartari, *purusha, *vacana);
                 for p in ps {
                     words.push(p.text());
                     if p.text() == args.pada {

@@ -1,36 +1,21 @@
+use crate::args::Dhatu;
 use crate::term::Term;
 use std::error::Error;
 use std::path::Path;
-
-pub struct Dhatu {
-    pub upadesha: String,
-    pub gana: i32,
-    pub number: i32,
-}
-
-impl Dhatu {
-    pub fn code(&self) -> String {
-        format!("{:0>2}.{:0>4}", self.gana, self.number)
-    }
-}
 
 pub fn load_dhatus(path: &Path) -> Result<Vec<Dhatu>, Box<dyn Error>> {
     let mut res = vec![];
     let mut rdr = csv::ReaderBuilder::new().delimiter(b'\t').from_path(path)?;
     for maybe_row in rdr.records() {
         let r = maybe_row?;
-        let code = r[0].to_string();
-        let upadesha = r[1].to_string();
+        let code = &r[0];
+        let upadesha = &r[1];
 
         if upadesha == "-" {
             continue;
         }
         if let Some((gana, number)) = code.split_once('.') {
-            res.push(Dhatu {
-                upadesha,
-                gana: gana.parse()?,
-                number: number.parse()?,
-            });
+            res.push(Dhatu::new(upadesha, gana.parse()?, number.parse()?));
         }
     }
     Ok(res)

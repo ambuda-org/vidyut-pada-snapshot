@@ -2,7 +2,7 @@
 use serde::Serialize;
 use std::io;
 use std::path::Path;
-use vidyut_prakriya::args::{Lakara, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::args::{Dhatu, Lakara, Prayoga, Purusha, Vacana};
 use vidyut_prakriya::dhatupatha as D;
 use vidyut_prakriya::Ashtadhyayi;
 
@@ -36,15 +36,15 @@ const TIN_SEMANTICS: &[(Purusha, Vacana)] = &[
 struct Row<'a> {
     padas: String,
     dhatu: &'a str,
-    gana: i32,
-    number: i32,
+    gana: u8,
+    number: u16,
     prayoga: &'static str,
     lakara: &'static str,
     purusha: &'static str,
     vacana: &'static str,
 }
 
-fn run(dhatus: Vec<D::Dhatu>) -> Result<(), io::Error> {
+fn run(dhatus: Vec<Dhatu>) -> Result<(), io::Error> {
     let mut wtr = csv::Writer::from_writer(io::stdout());
     let a = Ashtadhyayi::builder().log_steps(false).build();
 
@@ -52,14 +52,7 @@ fn run(dhatus: Vec<D::Dhatu>) -> Result<(), io::Error> {
         for la in LAKARA {
             for (purusha, vacana) in TIN_SEMANTICS {
                 let prayoga = Prayoga::Kartari;
-                let prakriyas = a.derive_tinantas(
-                    &dhatu.upadesha,
-                    &dhatu.code(),
-                    *la,
-                    prayoga,
-                    *purusha,
-                    *vacana,
-                );
+                let prakriyas = a.derive_tinantas(&dhatu, *la, prayoga, *purusha, *vacana);
 
                 let dhatu_text = &dhatu.upadesha;
                 let mut padas: Vec<_> = prakriyas.iter().map(|p| p.text()).collect();

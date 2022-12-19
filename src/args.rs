@@ -1,8 +1,44 @@
 /*!
-Most of the arguments to `Ashtadhyayi`s core functions are strongly typed enums.
+Common arguments for this crate's main functions.
+
+To use the Ashtadhyayi, we must declare various kinds of semantic information up-front, such are
+our desired purush and vacana, the dhatu we wish to use, and so on. To better document the API and
+to avoid common typos for end users, we model most arguments through this module.
+
+To give callers extra flexibility, all of the enums here provides `as_str` and `from_str` methods.
+For details on which strings are valid arguments in `from_str`, please read the source code
+directly.
 */
 use crate::constants::Tag;
+use compact_str::CompactString;
 use std::str::FromStr;
+
+/// The verb root to use for the derivation.
+#[derive(Debug)]
+pub struct Dhatu {
+    pub upadesha: CompactString,
+    pub gana: u8,
+    pub number: u16,
+}
+
+impl Dhatu {
+    /// Creates a new `Dhatu`.
+    /// - `upadesha` must be an SLP1 string that includes any necessary svaras. For examples, see
+    ///    the `dhatu` column in the `data/dhatupatha.tsv` file included in this crate
+    /// -  `gana` is a number between 1 and 10, inclusive.
+    /// -  `number` is the position of this dhatu within the gana, starting at 1. (TODO: deprecate
+    ///     this fragile argument.)
+    pub fn new(upadesha: impl AsRef<str>, gana: u8, number: u16) -> Self {
+        Dhatu {
+            upadesha: CompactString::from(upadesha.as_ref()),
+            gana,
+            number,
+        }
+    }
+    pub fn code(&self) -> String {
+        format!("{:0>2}.{:0>4}", self.gana, self.number)
+    }
+}
 
 /// The prayoga of some tinanta.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -123,6 +159,7 @@ impl FromStr for Vacana {
     }
 }
 
+/// The case ending of some subanta.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Vibhakti {
     /// The first vibhakti. Sometimes called the *nominative case*.
@@ -141,6 +178,7 @@ pub enum Vibhakti {
     Saptami,
 }
 
+/// The tense/mood of some tinanta.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Lakara {
     /// Describes action in the present tense. Ssometimes called the *present indicative*.
@@ -156,7 +194,7 @@ pub enum Lakara {
     Lot,
     /// Describes past action before the current day. Sometimes called the *imperfect*.
     Lan,
-    /// Describes options, potential action, etc. Sometimes called the *optative*.
+    /// Describes potential or hypothetical actions. Sometimes called the *optative*.
     VidhiLin,
     /// Describes wishes and prayers. Sometimes called the *benedictive*.
     AshirLin,
@@ -193,7 +231,10 @@ impl Lakara {
 
     /// Returns whether or not this lakara will be termed sArvadhAtuka.
     pub(crate) fn is_sarvadhatuka(&self) -> bool {
-        matches!(self, Lakara::Lat | Lakara::Lot | Lakara::Lan | Lakara::VidhiLin)
+        matches!(
+            self,
+            Lakara::Lat | Lakara::Lot | Lakara::Lan | Lakara::VidhiLin
+        )
     }
 
     /// Returns whether or not this lakara will be termed ArdhadhAtuka.

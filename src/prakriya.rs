@@ -15,11 +15,12 @@ pub struct Step {
     pub state: String,
 }
 
+/// Records whether an optional rule was accepted or declined.
 #[derive(Clone, Copy, Debug)]
 pub enum RuleChoice {
-    /// Whether a rule was used during the derivation.
+    /// Indicates that a rule was accepted and used during the derivation.
     Accept(Rule),
-    /// Whether a rule was declined during the derivation.
+    /// Indicates whether a rule was declined and ignored during the derivation.
     Decline(Rule),
 }
 
@@ -35,7 +36,7 @@ impl Config {
     }
 }
 
-/// Models a derivation.
+/// Models a Paninian derivation.
 #[derive(Default)]
 pub struct Prakriya {
     terms: Vec<Term>,
@@ -46,8 +47,28 @@ pub struct Prakriya {
 }
 
 impl Prakriya {
+    /// Returns the current state of the derivation. If the derivation is complete, `text()` will
+    /// thus represent the derivation's final output, which is a complete Sanskrit *pada*.
+    pub fn text(&self) -> CompactString {
+        let mut ret = CompactString::from("");
+        for t in &self.terms {
+            ret.push_str(&t.text);
+        }
+        ret
+    }
+
+    /// Returns all of the optional rules that were encountered during the derivation and whether
+    /// they were accepted or rejected.
+    pub fn rule_choices(&self) -> &Vec<RuleChoice> {
+        &self.rule_decisions
+    }
+
+    pub fn history(&self) -> &Vec<Step> {
+        &self.history
+    }
+
     // Creates an empty prakriya.
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Prakriya {
             terms: Vec::new(),
             tags: EnumSet::new(),
@@ -57,7 +78,7 @@ impl Prakriya {
         }
     }
 
-    pub fn with_config(config: Config) -> Self {
+    pub(crate) fn with_config(config: Config) -> Self {
         let mut p = Prakriya::new();
         p.config = config;
         p
@@ -65,37 +86,29 @@ impl Prakriya {
 
     // Term accessors
 
-    pub fn rule_choices(&self) -> &Vec<RuleChoice> {
-        &self.rule_decisions
-    }
-
-    pub fn history(&self) -> &Vec<Step> {
-        &self.history
-    }
-
     /// Returns all terms.
-    pub fn terms(&self) -> &Vec<Term> {
+    pub(crate) fn terms(&self) -> &Vec<Term> {
         &self.terms
     }
 
     /// Returns all terms mutably.
-    pub fn terms_mut(&mut self) -> &mut Vec<Term> {
+    pub(crate) fn terms_mut(&mut self) -> &mut Vec<Term> {
         &mut self.terms
     }
 
     /// Returns a reference to the `Term` at the given index or `None` if the index is out of
     /// bounds.
-    pub fn get(&self, i: usize) -> Option<&Term> {
+    pub(crate) fn get(&self, i: usize) -> Option<&Term> {
         self.terms.get(i)
     }
 
     /// Returns a mutable reference to the `Term` at the given index or `None` if the index is out
     /// of bounds.
-    pub fn get_mut(&mut self, i: usize) -> Option<&mut Term> {
+    pub(crate) fn get_mut(&mut self, i: usize) -> Option<&mut Term> {
         self.terms.get_mut(i)
     }
 
-    pub fn get_if(&self, i: usize, filter: impl Fn(&Term) -> bool) -> Option<&Term> {
+    pub(crate) fn get_if(&self, i: usize, filter: impl Fn(&Term) -> bool) -> Option<&Term> {
         if let Some(t) = self.get(i) {
             if filter(t) {
                 return Some(t);
@@ -104,11 +117,11 @@ impl Prakriya {
         None
     }
 
-    pub fn view(&self, i: usize) -> Option<TermView> {
+    pub(crate) fn view(&self, i: usize) -> Option<TermView> {
         TermView::new(self.terms(), i)
     }
 
-    pub fn find_first_where(&self, f: impl Fn(&Term) -> bool) -> Option<usize> {
+    pub(crate) fn find_first_where(&self, f: impl Fn(&Term) -> bool) -> Option<usize> {
         for (i, t) in self.terms.iter().enumerate() {
             if f(t) {
                 return Some(i);
@@ -119,7 +132,7 @@ impl Prakriya {
 
     /// Returns the index of the first `Term` that has the given tag or `None` if no such term
     /// exists.
-    pub fn find_first(&self, tag: Tag) -> Option<usize> {
+    pub(crate) fn find_first(&self, tag: Tag) -> Option<usize> {
         for (i, t) in self.terms.iter().enumerate() {
             if t.has_tag(tag) {
                 return Some(i);
@@ -128,7 +141,7 @@ impl Prakriya {
         None
     }
 
-    pub fn find_prev_where(
+    pub(crate) fn find_prev_where(
         &self,
         start_index: usize,
         filter: impl Fn(&Term) -> bool,
@@ -146,7 +159,7 @@ impl Prakriya {
         }
     }
 
-    pub fn find_next_where(
+    pub(crate) fn find_next_where(
         &self,
         start_index: usize,
         filter: impl Fn(&Term) -> bool,
@@ -163,7 +176,7 @@ impl Prakriya {
         }
     }
 
-    pub fn find_last_where(&self, f: impl Fn(&Term) -> bool) -> Option<usize> {
+    pub(crate) fn find_last_where(&self, f: impl Fn(&Term) -> bool) -> Option<usize> {
         for (i, t) in self.terms.iter().enumerate().rev() {
             if f(t) {
                 return Some(i);
@@ -174,7 +187,7 @@ impl Prakriya {
 
     /// Returns the index of the last `Term` that has the given tag or `None` if no such term
     /// exists.
-    pub fn find_last(&self, tag: Tag) -> Option<usize> {
+    pub(crate) fn find_last(&self, tag: Tag) -> Option<usize> {
         for (i, t) in self.terms.iter().enumerate().rev() {
             if t.has_tag(tag) {
                 return Some(i);
@@ -184,14 +197,14 @@ impl Prakriya {
     }
 
     /// Returns all of the terms that have the given tag.
-    pub fn find_all<'a>(&'a self, tag: &'a Tag) -> impl Iterator<Item = &'a Term> {
+    pub(crate) fn find_all<'a>(&'a self, tag: &'a Tag) -> impl Iterator<Item = &'a Term> {
         self.terms.iter().filter(|t| t.has_tag(*tag))
     }
 
     // Filters
 
     /// Returns whether a term exists at `index` and matches the condition in `filter`.
-    pub fn has(&self, index: usize, filter: impl Fn(&Term) -> bool) -> bool {
+    pub(crate) fn has(&self, index: usize, filter: impl Fn(&Term) -> bool) -> bool {
         if let Some(t) = self.get(index) {
             filter(t)
         } else {
@@ -199,60 +212,65 @@ impl Prakriya {
         }
     }
 
-    pub fn all(&self, tags: &[Tag]) -> bool {
+    pub(crate) fn all(&self, tags: &[Tag]) -> bool {
         tags.iter().all(|t| self.tags.contains(*t))
     }
 
-    pub fn any(&self, tags: &[Tag]) -> bool {
+    pub(crate) fn any(&self, tags: &[Tag]) -> bool {
         tags.iter().any(|t| self.tags.contains(*t))
     }
 
-    pub fn has_tag(&self, tag: Tag) -> bool {
+    pub(crate) fn has_tag(&self, tag: Tag) -> bool {
         self.tags.contains(tag)
     }
 
     // Basic mutators
 
-    pub fn add_tag(&mut self, t: Tag) {
+    pub(crate) fn add_tag(&mut self, t: Tag) {
         self.tags.insert(t);
     }
 
-    pub fn add_tags(&mut self, tags: &[Tag]) {
+    pub(crate) fn add_tags(&mut self, tags: &[Tag]) {
         for t in tags {
             self.tags.insert(*t);
         }
     }
 
-    pub fn set(&mut self, index: usize, operator: impl Fn(&mut Term)) {
+    pub(crate) fn set(&mut self, index: usize, operator: impl Fn(&mut Term)) {
         if let Some(t) = self.get_mut(index) {
             operator(t);
         }
     }
 
-    pub fn insert_before(&mut self, i: usize, t: Term) {
+    pub(crate) fn insert_before(&mut self, i: usize, t: Term) {
         self.terms.insert(i, t);
     }
 
-    pub fn insert_after(&mut self, i: usize, t: Term) {
+    pub(crate) fn insert_after(&mut self, i: usize, t: Term) {
         self.terms.insert(i + 1, t);
     }
 
     /// Adds the given term to the end of the term list.
-    pub fn push(&mut self, t: Term) {
+    pub(crate) fn push(&mut self, t: Term) {
         self.terms.push(t);
     }
 
     // Rule application
 
     /// Applies the given operator.
-    pub fn op(&mut self, code: Rule, operator: impl Fn(&mut Prakriya)) -> bool {
+    pub(crate) fn op(&mut self, code: Rule, operator: impl Fn(&mut Prakriya)) -> bool {
         operator(self);
         self.step(code);
         true
     }
 
     /// Applies the given operator to the given term.
-    pub fn op_term(&mut self, code: Rule, index: usize, operator: impl Fn(&mut Term)) -> bool {
+    pub(crate) fn op_term(
+        &mut self,
+        code: Rule,
+        index: usize,
+        operator: impl Fn(&mut Term),
+    ) -> bool {
         if let Some(term) = self.get_mut(index) {
             operator(term);
             self.step(code);
@@ -266,7 +284,7 @@ impl Prakriya {
     ///
     /// Returns: whether the operation was applied. This return value is required for certain
     /// complex conditions (e.g. 6.4.116 & 117; "if this rule was not applied, ...").
-    pub fn op_optional(&mut self, code: Rule, operator: impl Fn(&mut Prakriya)) -> bool {
+    pub(crate) fn op_optional(&mut self, code: Rule, operator: impl Fn(&mut Prakriya)) -> bool {
         if self.is_allowed(code) {
             operator(self);
             self.step(code);
@@ -278,7 +296,7 @@ impl Prakriya {
     }
 
     /// Add a rule to the history.
-    pub fn step(&mut self, rule: Rule) {
+    pub(crate) fn step(&mut self, rule: Rule) {
         if self.config.log_steps {
             let state = self.terms.iter().fold(String::new(), |a, b| {
                 if a.is_empty() {
@@ -291,7 +309,7 @@ impl Prakriya {
         }
     }
 
-    pub fn debug(&mut self, text: String) {
+    pub(crate) fn debug(&mut self, text: String) {
         self.history.push(Step {
             rule: "debug",
             state: text,
@@ -300,7 +318,7 @@ impl Prakriya {
 
     // Optional rules
 
-    pub fn is_allowed(&mut self, r: Rule) -> bool {
+    pub(crate) fn is_allowed(&mut self, r: Rule) -> bool {
         for option in &self.config.rule_choices {
             match option {
                 RuleChoice::Accept(code) => {
@@ -322,29 +340,12 @@ impl Prakriya {
         true
     }
 
-    pub fn accept(&mut self, rule: Rule) {
+    pub(crate) fn accept(&mut self, rule: Rule) {
         self.rule_decisions.push(RuleChoice::Accept(rule));
     }
 
-    pub fn decline(&mut self, rule: Rule) {
+    pub(crate) fn decline(&mut self, rule: Rule) {
         self.rule_decisions.push(RuleChoice::Decline(rule));
-    }
-
-    pub fn debug_print(&self) {
-        for t in &self.terms {
-            println!("- {t:?}");
-        }
-        println!("{:?}", self.tags);
-    }
-
-    // Final output
-
-    pub fn text(&self) -> CompactString {
-        let mut ret = CompactString::from("");
-        for t in &self.terms {
-            ret.push_str(&t.text);
-        }
-        ret
     }
 }
 

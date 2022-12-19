@@ -1,5 +1,5 @@
 pub use crate::ashtadhyayi::{Ashtadhyayi, AshtadhyayiBuilder};
-pub use crate::prakriya::Prakriya;
+pub use crate::prakriya::{Prakriya, RuleChoice};
 
 mod abhyasasya;
 mod ac_sandhi;

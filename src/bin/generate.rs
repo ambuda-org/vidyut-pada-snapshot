@@ -4,7 +4,7 @@
 use serde::Serialize;
 use std::io;
 use std::path::Path;
-use vidyut_prakriya::args::{Lakara, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::args::{Dhatu, Lakara, Prayoga, Purusha, Vacana};
 use vidyut_prakriya::dhatupatha as D;
 use vidyut_prakriya::Ashtadhyayi;
 
@@ -46,7 +46,7 @@ struct Row<'a> {
     vacana: &'static str,
 }
 
-fn run(dhatus: Vec<D::Dhatu>) -> Result<(), io::Error> {
+fn run(dhatus: Vec<Dhatu>) -> Result<(), io::Error> {
     let mut wtr = csv::Writer::from_writer(io::stdout());
     let a = Ashtadhyayi::builder().log_steps(false).build();
 
@@ -54,22 +54,15 @@ fn run(dhatus: Vec<D::Dhatu>) -> Result<(), io::Error> {
         for la in LAKARA {
             for (purusha, vacana) in TIN_SEMANTICS {
                 let prayoga = Prayoga::Kartari;
-                let prakriyas = a.derive_tinantas(
-                    &dhatu.upadesha,
-                    &dhatu.code(),
-                    *la,
-                    prayoga,
-                    *purusha,
-                    *vacana,
-                );
+                let prakriyas = a.derive_tinantas(&dhatu, *la, prayoga, *purusha, *vacana);
 
                 let dhatu_text = &dhatu.upadesha;
                 for p in prakriyas {
                     let row = Row {
                         pada: p.text().to_string(),
                         dhatu: dhatu_text,
-                        gana: dhatu.gana,
-                        number: dhatu.number,
+                        gana: dhatu.gana as i32,
+                        number: dhatu.number as i32,
                         lakara: la.as_str(),
                         purusha: purusha.as_str(),
                         vacana: vacana.as_str(),
