@@ -41,3 +41,10 @@ test_all:
 profile-time-osx:
 	cargo instruments -t time --release --bin generate
 
+
+# Other
+# ~~~~~
+
+# Generates project docs and opens them in your default browser.
+docs:
+	cargo doc --no-deps --open

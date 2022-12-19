@@ -13,7 +13,7 @@ use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
-use crate::sounds::{map_sounds, s, SoundMap, SoundSet};
+use crate::sounds::{map, s, SoundMap, SoundSet};
 use compact_str::CompactString;
 use lazy_static::lazy_static;
 
@@ -24,7 +24,7 @@ lazy_static! {
     static ref HAL: SoundSet = s("hal");
     static ref F_HAL: SoundSet = s("f hal");
     static ref PU_YAN_J: SoundSet = s("pu~ yaR j");
-    static ref KUH_CU: SoundMap = map_sounds("ku~ h", "cu~");
+    static ref KUH_CU: SoundMap = map("ku~ h", "cu~");
 }
 
 /// Simplifies the abhyasa per 7.4.60.

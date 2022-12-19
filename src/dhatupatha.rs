@@ -28,7 +28,7 @@ pub fn load_dhatus(path: &Path) -> Result<Vec<Dhatu>, Box<dyn Error>> {
     Ok(res)
 }
 
-pub fn is_kutadi(t: &Term) -> bool {
+pub(crate) fn is_kutadi(t: &Term) -> bool {
     // Check number explicitly because some roots are duplicated within tudAdi
     // but outside this gana (e.g. juq).
     match t.number {

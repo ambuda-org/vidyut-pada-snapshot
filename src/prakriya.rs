@@ -9,10 +9,19 @@ pub type Rule = &'static str;
 /// Represents a step of the derivation.
 #[derive(Debug)]
 pub struct Step {
+    rule: Rule,
+    result: String,
+}
+
+impl Step {
     /// The rule that produced the current step.
-    pub rule: Rule,
-    /// Output for the current step.
-    pub state: String,
+    pub fn rule(&self) -> Rule {
+        self.rule
+    }
+    /// The result of this step.
+    pub fn result(&self) -> &String {
+        &self.result
+    }
 }
 
 /// Records whether an optional rule was accepted or declined.
@@ -42,7 +51,7 @@ pub struct Prakriya {
     terms: Vec<Term>,
     tags: EnumSet<Tag>,
     history: Vec<Step>,
-    pub config: Config,
+    config: Config,
     rule_decisions: Vec<RuleChoice>,
 }
 
@@ -305,7 +314,10 @@ impl Prakriya {
                     a + " + " + &b.text
                 }
             });
-            self.history.push(Step { rule, state })
+            self.history.push(Step {
+                rule,
+                result: state,
+            })
         }
     }
 
@@ -313,7 +325,7 @@ impl Prakriya {
     pub(crate) fn debug(&mut self, text: String) {
         self.history.push(Step {
             rule: "debug",
-            state: text,
+            result: text,
         });
     }
 

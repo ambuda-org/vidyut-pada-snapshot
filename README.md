@@ -90,7 +90,39 @@ let prakriyas = a.derive_tinantas(
 
 for p in prakriyas {
     println!("{}", p.text());
+    println!("---------------------------");
+    for step in p.history() {
+        println!("{:<10} | {}", step.rule(), step.result());
+    }
+    println!("---------------------------");
+    println!("\n");
 }
+```
+
+Output of the code above:
+
+```text
+Bavati
+---------------------------
+start      | BU
+1.3.1      | BU
+3.3.123    | BU + la~w
+1.3.2      | BU + la~w
+1.3.3      | BU + la~w
+1.3.9      | BU + l
+1.3.78     | BU + l
+3.4.78     | BU + tip
+1.3.3      | BU + tip
+1.3.9      | BU + ti
+3.4.113    | BU + ti
+3.1.68     | BU + Sap + ti
+1.3.3      | BU + Sap + ti
+1.3.8      | BU + Sap + ti
+1.3.9      | BU + a + ti
+3.4.113    | BU + a + ti
+7.3.84     | Bo + a + ti
+6.1.78     | Bav + a + ti
+---------------------------
 ```
 
 

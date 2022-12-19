@@ -16,18 +16,19 @@ use std::str::FromStr;
 /// The verb root to use for the derivation.
 #[derive(Debug)]
 pub struct Dhatu {
+    /// The dhatu as stated in its aupadeshka form. `upadesha` should be an SLP1 string that
+    /// includes any necessary svaras. For examples, see the `dhatu` column in the
+    /// `data/dhatupatha.tsv` file included in this crate.
     pub upadesha: CompactString,
+    /// The dhatu's gana. This should be a number between 1 and 10, inclusive.
     pub gana: u8,
+    /// The position of this dhatu within the gana, starting at 1.
+    /// (TODO: deprecate this fragile argument.)
     pub number: u16,
 }
 
 impl Dhatu {
     /// Creates a new `Dhatu`.
-    /// - `upadesha` must be an SLP1 string that includes any necessary svaras. For examples, see
-    ///    the `dhatu` column in the `data/dhatupatha.tsv` file included in this crate
-    /// -  `gana` is a number between 1 and 10, inclusive.
-    /// -  `number` is the position of this dhatu within the gana, starting at 1. (TODO: deprecate
-    ///     this fragile argument.)
     pub fn new(upadesha: impl AsRef<str>, gana: u8, number: u16) -> Self {
         Dhatu {
             upadesha: CompactString::from(upadesha.as_ref()),
@@ -35,6 +36,9 @@ impl Dhatu {
             number,
         }
     }
+
+    /// Creates a convenient human-readable code for this dhatu. This code matches the format used
+    /// on sites like ashtadhyayi.com.
     pub fn code(&self) -> String {
         format!("{:0>2}.{:0>4}", self.gana, self.number)
     }
@@ -59,7 +63,7 @@ impl Prayoga {
             Self::Bhave => Tag::Bhave,
         }
     }
-    /// Returns a simple human-readable string that represents the enum value.
+    /// Returns a simple human-readable string that represents this enum's value.
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Kartari => "kartari",
@@ -99,6 +103,7 @@ impl Purusha {
             Self::Uttama => Tag::Uttama,
         }
     }
+    /// Returns a simple human-readable string that represents this enum's value.
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Prathama => "prathama",
@@ -138,6 +143,7 @@ impl Vacana {
             Self::Bahu => Tag::Bahuvacana,
         }
     }
+    /// Returns a simple human-readable string that represents this enum's value.
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Eka => "eka",
@@ -189,6 +195,7 @@ pub enum Lakara {
     Lut,
     /// Describes general future action. Sometimes called the *simple future*.
     Lrt,
+    /// The Vedic subjunctive. `vidyut-prakriya` currently has poor support for this lakara.
     Let,
     /// Describes commands. Sometimes called the *imperative*.
     Lot,
@@ -205,6 +212,7 @@ pub enum Lakara {
 }
 
 impl Lakara {
+    /// Returns a simple human-readable string that represents this enum's value.
     pub fn as_str(&self) -> &'static str {
         match self {
             Lakara::Lat => "lat",

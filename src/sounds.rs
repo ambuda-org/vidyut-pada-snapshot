@@ -486,7 +486,7 @@ struct Uccarana {
 impl Uccarana {
     /// Calculates a heuristic distance between this sound and another. The shorter the distance,
     /// the closer the sounds are.
-    fn distance(&self, other: &Uccarana) -> i32 {
+    fn distance(&self, other: &Uccarana) -> usize {
         let mut dist = 0;
         if self.ghosha != other.ghosha {
             dist += 1;
@@ -498,7 +498,7 @@ impl Uccarana {
             dist += 1;
         }
 
-        let mut sthana_dist = (self.sthana.len() + other.sthana.len()) as i32;
+        let mut sthana_dist = self.sthana.len() + other.sthana.len();
         for s in &self.sthana {
             if other.sthana.contains(s) {
                 sthana_dist -= 2;
@@ -536,7 +536,7 @@ pub fn savarna(c: Sound) -> SoundSet {
 }
 
 /// Maps the sounds in `keys` to the sounds is `values` according to their phonetic similarity.
-pub fn map_sounds(keys: &str, values: &str) -> SoundMap {
+pub fn map(keys: &str, values: &str) -> SoundMap {
     let keys = s(keys);
     let values = s(values);
 
@@ -585,7 +585,7 @@ mod tests {
 
     #[test]
     fn test_map_sounds_jhal_jhash() {
-        let actual = map_sounds("Jal", "jaS");
+        let actual = map("Jal", "jaS");
         let expected_vec = vec![
             ('J', 'j'),
             ('B', 'b'),
@@ -621,7 +621,7 @@ mod tests {
 
     #[test]
     fn test_map_sounds_kuh_cu() {
-        let actual = map_sounds("ku~ h", "cu~");
+        let actual = map("ku~ h", "cu~");
         let expected_vec = vec![
             ('k', 'c'),
             ('K', 'C'),

@@ -26,7 +26,7 @@ struct Args {
 fn pretty_print_prakriya(p: &Prakriya) {
     println!("------------------------------");
     for step in p.history() {
-        println!("{:<10} | {}", step.rule, step.state);
+        println!("{:<10} | {}", step.rule(), step.result());
     }
     println!("------------------------------");
     for choice in p.rule_choices() {
@@ -64,7 +64,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let dhatus = D::load_dhatus(Path::new("data/dhatupatha.tsv"));
 
     let mut ordered_words = BTreeMap::new();
-    let a = Ashtadhyayi::builder().log_steps(false).build();
+    let a = Ashtadhyayi::new();
 
     for dhatu in dhatus?.iter() {
         if dhatu.code() != args.code {
@@ -73,7 +73,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         for (i, la) in LAKARA.iter().enumerate() {
             let mut words = vec![];
             for (purusha, vacana) in PURUSHA_VACANA {
-                let ps = a.derive_tinantas(&dhatu, *la, Prayoga::Kartari, *purusha, *vacana);
+                let ps = a.derive_tinantas(dhatu, *la, Prayoga::Kartari, *purusha, *vacana);
                 for p in ps {
                     words.push(p.text());
                     if p.text() == args.pada {

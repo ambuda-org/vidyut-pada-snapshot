@@ -177,7 +177,10 @@ impl Ashtadhyayi {
         AshtadhyayiBuilder::new()
     }
 
-    /// Returns all possible prakriyas that can be derived with the given initial conditions.
+    /// Returns all possible tinanta prakriyas that can be derived with the given initial
+    /// conditions.
+    ///
+    /// TODO: add support for upasargas and sanAdi-pratyayas.
     pub fn derive_tinantas(
         &self,
         dhatu: &Dhatu,

@@ -1,7 +1,7 @@
 /*!
 asiddhavat
 ==========
-(6.4.22 - 6.4.175 [end])
+(6.4.22 - 6.4.175)
 
 Rules in the *asiddhavat* rules do not interfere with each other. That is, if
 a rule A would ordinary block a rule B, both are allowed to apply if they are

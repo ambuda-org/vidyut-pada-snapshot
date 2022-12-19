@@ -1,5 +1,5 @@
-//! atmanepada (1.3.12 - 1.3.93 [end])
-//! ==================================
+//! atmanepada (1.3.12 - 1.3.93)
+//! ============================
 //!
 //! Rules to determine parasmaipada/Atmanepada.
 //!

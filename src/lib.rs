@@ -1,4 +1,5 @@
 #![doc = include_str!("../README.md")]
+#![warn(missing_docs)]
 
 pub use crate::ashtadhyayi::{Ashtadhyayi, AshtadhyayiBuilder};
 pub use crate::prakriya::{Prakriya, Rule, RuleChoice, Step};
