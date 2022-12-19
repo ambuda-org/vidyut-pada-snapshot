@@ -10,8 +10,10 @@ according to the rules of Paninian grammar. Our long-term goal is to provide a
 complete implementation of the Ashtadhyayi.
 
 This [crate][crate] is under active development as part of the [Ambuda][ambuda]
-project. If you enjoy our work and wish to contribute, we encourage you to
-[join our Discord server][discord].
+project. If you enjoy our work and wish to contribute to it, please see the
+[Contributing](#contributing) section below. We also encourage you to [join our
+Discord server][discord], where you can meet other Sanskrit programmers and
+enthusiasts.
 
 - [Overview](#overview)
 - [Usage](#usage)
@@ -234,9 +236,10 @@ they don't sacrifice readability. Some notes on our naming conventions:
 - `t` is a `Term`.
 - `?` is a [Rust operator][rust-q] that roughly means "return if not found."
 - `T` is an alias for `Tag`.
-- `op` is a module that contains common operations.
+- `op` is an alias for `operators`, a module that contains common operations
+  that we apply to terms during the derivation.
 
-And on our API:
+Notes on our API:
 
 - `p.op_term("my-rule", i, fn)` applies the `fn` function to the term at index `i`
   of `p` and associates that operation with `"my-rule"`.
@@ -244,7 +247,6 @@ And on our API:
   replaces its first sound with `s`. If you haven't worked with [first-class
   functions][funcs] before, you might find this API strange at first. But in
   time, we hope that you find it to be as expressive and powerful as we do.
-
 
 [rust-q]: https://doc.rust-lang.org/rust-by-example/std/result/question_mark.html
 [rust-borrow]: https://users.rust-lang.org/t/newbie-mut-with-nested-structs/84755
