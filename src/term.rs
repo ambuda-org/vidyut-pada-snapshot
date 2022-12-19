@@ -298,16 +298,19 @@ impl<'a> TermView<'a> {
         self.end
     }
 
+    #[allow(unused)]
     pub fn is_padanta(&self) -> bool {
         self.is_empty() && self.ends_word()
     }
 
     /// Returns whether this view has any text.
+    #[allow(unused)]
     pub fn is_empty(&self) -> bool {
         self.slice().iter().all(|t| t.text.is_empty())
     }
 
     /// Returns whether this view is at the very end of the given word.
+    #[allow(unused)]
     pub fn ends_word(&self) -> bool {
         self.end == self.terms.len() - 1
     }
@@ -390,14 +393,6 @@ impl<'a> TermView<'a> {
 
     pub fn is_knit(&self) -> bool {
         self.any(&[Tag::kit, Tag::Nit])
-    }
-
-    pub fn text(&self) -> CompactString {
-        let mut ret = CompactString::from("");
-        for t in self.slice() {
-            ret.push_str(&t.text);
-        }
-        ret
     }
 }
 

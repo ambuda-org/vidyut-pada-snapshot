@@ -1,8 +1,9 @@
 (This code will soon be merged into `ambuda-org/vidyut`.)
 
-
-vidyut-prakriya
-===============
+<div align="center">
+<h1><code>vidyut-prakriya</code></h1>
+<p><i>A Paninian word generator</i></p>
+</div>
 
 `vidyut-prakriya` generates Sanskrit words with their prakriyās (derivations)
 according to the rules of Paninian grammar. Our long-term goal is to provide a
@@ -74,13 +75,14 @@ compile and complete within a few seconds.
 To generate prakriyas programmatically, you can use the starter code below:
 
 ```rust
-use vidyut_prakriya::{Ashtadhyayi, La, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::Ashtadhyayi;
+use vidyut_prakriya::args::{Dhatu, Lakara, Prayoga, Purusha, Vacana};
 
 let a = Ashtadhyayi::new();
+let dhatu = Dhatu::new("BU", 1, 1);
 let prakriyas = a.derive_tinantas(
-    "BU",
-    "01.0001",
-    La::Lat,
+    &dhatu,
+    Lakara::Lat,
     Prayoga::Kartari,
     Purusha::Prathama,
     Vacana::Eka,

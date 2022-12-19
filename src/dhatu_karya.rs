@@ -145,7 +145,9 @@ mod tests {
     use super::*;
 
     fn check(text: &str, code: &str) -> Term {
-        let dhatu = Dhatu::new(text, code);
+        let (gana, number) = code.split_once('.').unwrap();
+        let dhatu = Dhatu::new(text, gana.parse().unwrap(), number.parse().unwrap());
+
         let mut p = Prakriya::new();
         run(&mut p, &dhatu).unwrap();
         p.get(0).unwrap().clone()

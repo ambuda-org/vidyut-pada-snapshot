@@ -63,6 +63,9 @@ impl Prakriya {
         &self.rule_decisions
     }
 
+    /// Returns all of the rules that were applied during the derivation and the output of each
+    /// step. If history logging has been disabled on `Ashtadhyayi`, then `history()` will return
+    /// an empty `Vec`.
     pub fn history(&self) -> &Vec<Step> {
         &self.history
     }
@@ -197,6 +200,7 @@ impl Prakriya {
     }
 
     /// Returns all of the terms that have the given tag.
+    #[allow(unused)]
     pub(crate) fn find_all<'a>(&'a self, tag: &'a Tag) -> impl Iterator<Item = &'a Term> {
         self.terms.iter().filter(|t| t.has_tag(*tag))
     }
@@ -210,10 +214,6 @@ impl Prakriya {
         } else {
             false
         }
-    }
-
-    pub(crate) fn all(&self, tags: &[Tag]) -> bool {
-        tags.iter().all(|t| self.tags.contains(*t))
     }
 
     pub(crate) fn any(&self, tags: &[Tag]) -> bool {
@@ -309,6 +309,7 @@ impl Prakriya {
         }
     }
 
+    #[allow(unused)]
     pub(crate) fn debug(&mut self, text: String) {
         self.history.push(Step {
             rule: "debug",

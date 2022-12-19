@@ -1,5 +1,5 @@
+use vidyut_prakriya::args::{Dhatu, Lakara, Prayoga, Purusha, Vacana};
 use vidyut_prakriya::Ashtadhyayi;
-use vidyut_prakriya::{La, Prayoga, Purusha, Vacana};
 
 const PURUSHA_VACANA: &[(Purusha, Vacana)] = &[
     (Purusha::Prathama, Vacana::Eka),
@@ -121,7 +121,7 @@ fn test_bhu() {
         "aBavizyAma",
     ];
 
-    fn test_la(la: La, expected_static: &[&'static str]) {
+    fn test_la(la: Lakara, expected_static: &[&'static str]) {
         let mut actual = Vec::new();
         let mut expected = Vec::new();
         for e in expected_static {
@@ -130,9 +130,9 @@ fn test_bhu() {
 
         let a = Ashtadhyayi::new();
 
+        let dhatu = Dhatu::new("BU", 1, 1);
         for (purusha, vacana) in PURUSHA_VACANA {
-            let prakriyas =
-                a.derive_tinantas("BU", "01.0001", la, Prayoga::Kartari, *purusha, *vacana);
+            let prakriyas = a.derive_tinantas(&dhatu, la, Prayoga::Kartari, *purusha, *vacana);
             actual.extend(prakriyas.iter().map(|t| t.text()));
         }
 
@@ -142,16 +142,16 @@ fn test_bhu() {
         assert_eq!(expected, actual);
     }
 
-    test_la(La::Lat, &lat);
-    test_la(La::Lit, &lit);
-    test_la(La::Lut, &lut);
-    test_la(La::Lrt, &lrt);
-    test_la(La::Lot, &lot);
-    test_la(La::Lan, &lan);
-    test_la(La::AshirLin, &ashir_lin);
-    test_la(La::VidhiLin, &vidhi_lin);
-    test_la(La::Lun, &lun);
-    test_la(La::Lrn, &lrn);
+    test_la(Lakara::Lat, &lat);
+    test_la(Lakara::Lit, &lit);
+    test_la(Lakara::Lut, &lut);
+    test_la(Lakara::Lrt, &lrt);
+    test_la(Lakara::Lot, &lot);
+    test_la(Lakara::Lan, &lan);
+    test_la(Lakara::AshirLin, &ashir_lin);
+    test_la(Lakara::VidhiLin, &vidhi_lin);
+    test_la(Lakara::Lun, &lun);
+    test_la(Lakara::Lrn, &lrn);
 }
 
 /// Tests generating various tinantas in lat-prathama-ekavacana.
@@ -188,12 +188,10 @@ fn test_lat() {
     ];
 
     for (dhatu, gana, padas) in tests {
-        let code = format!("{gana}.0001");
         let a = Ashtadhyayi::new();
         let prakriyas = a.derive_tinantas(
-            dhatu,
-            &code,
-            La::Lat,
+            &Dhatu::new(dhatu, gana, 1),
+            Lakara::Lat,
             Prayoga::Kartari,
             Purusha::Prathama,
             Vacana::Eka,

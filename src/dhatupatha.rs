@@ -1,8 +1,15 @@
+/*!
+Utility functions for working with the Dhatupatha.
+
+
+*/
+
 use crate::args::Dhatu;
 use crate::term::Term;
 use std::error::Error;
 use std::path::Path;
 
+/// Loads a list of dhatus from the given path.
 pub fn load_dhatus(path: &Path) -> Result<Vec<Dhatu>, Box<dyn Error>> {
     let mut res = vec![];
     let mut rdr = csv::ReaderBuilder::new().delimiter(b'\t').from_path(path)?;

@@ -1,5 +1,7 @@
+#![doc = include_str!("../README.md")]
+
 pub use crate::ashtadhyayi::{Ashtadhyayi, AshtadhyayiBuilder};
-pub use crate::prakriya::{Prakriya, RuleChoice};
+pub use crate::prakriya::{Prakriya, Rule, RuleChoice, Step};
 
 mod abhyasasya;
 mod ac_sandhi;
