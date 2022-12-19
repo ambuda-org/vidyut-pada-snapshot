@@ -1,6 +1,6 @@
-use crate::constants::Tag as T;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
+use crate::tag::Tag as T;
 
 fn run_for_prakriya(p: &mut Prakriya, i: usize) -> Option<()> {
     let add_sarva = op::t(i, op::add_tag(T::Sarvadhatuka));

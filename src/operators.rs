@@ -21,10 +21,10 @@ closures. This approach gives us a terse and simple scheme for describing variou
 Rust's zero-cost abstractions ensure that there is no runtime penalty for juggling so many
 closures.
 */
-use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::prakriya::{Prakriya, Rule};
 use crate::sounds::is_ac;
+use crate::tag::Tag as T;
 use crate::term::Term;
 
 /// Wraps a `Term` operator and converts it to a `Prakriya` operator.

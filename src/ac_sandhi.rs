@@ -3,12 +3,12 @@
 //! (6.1.66 - 6.1.101)
 
 use crate::char_view::{char_rule, get_at, set_at, xy};
-use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
+use crate::tag::Tag as T;
 use lazy_static::lazy_static;
 
 lazy_static! {

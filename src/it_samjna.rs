@@ -4,9 +4,9 @@
 //!
 //! The most "core" prakaraṇa is the it-saṁjñā-prakaraṇa, which identifies remove different `it`
 //! sounds from an upadeśa. Most derivations use this prakaraṇa at least once.
-use crate::constants::Tag as T;
 use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
+use crate::tag::Tag as T;
 use compact_str::CompactString;
 use lazy_static::lazy_static;
 use std::error::Error;

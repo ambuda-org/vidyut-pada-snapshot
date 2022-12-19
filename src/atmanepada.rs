@@ -11,9 +11,9 @@
 //! context. Then when we introduce the correct tiN suffix, we will assign *parasmaipada* or
 //! *Atmanepada* to it as appropriate.
 
-use crate::constants::Tag as T;
 use crate::dhatu_gana::{DYUT_ADI, VRDBHYAH};
 use crate::prakriya::{Prakriya, Rule};
+use crate::tag::Tag as T;
 use crate::term::Term;
 use compact_str::CompactString;
 

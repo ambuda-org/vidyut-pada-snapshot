@@ -14,10 +14,10 @@
 //! All of these rules are found at the end of section 3.4 of the Ashtadhyayi.
 
 use crate::args::{Lakara, Purusha, Vacana};
-use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::{Prakriya, Rule};
+use crate::tag::Tag as T;
 use crate::term::Term;
 use std::error::Error;
 

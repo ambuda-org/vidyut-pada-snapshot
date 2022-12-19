@@ -1,5 +1,5 @@
-use crate::constants::Tag;
 use crate::sounds::Pattern;
+use crate::tag::Tag;
 use compact_str::CompactString;
 use enumset::EnumSet;
 

@@ -12,12 +12,12 @@ the tripādi applies rules in order and will never "go back" to apply an earlie
 */
 
 use crate::char_view::{char_at, char_rule, get_at, set_at, xy, xyz};
-use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{map, s, SoundMap, SoundSet};
+use crate::tag::Tag as T;
 use crate::term::Term;
 use compact_str::CompactString;
 use lazy_static::lazy_static;

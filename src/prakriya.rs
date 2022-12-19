@@ -1,4 +1,4 @@
-use crate::constants::Tag;
+use crate::tag::Tag;
 use crate::term::{Term, TermView};
 use compact_str::CompactString;
 use enumset::EnumSet;

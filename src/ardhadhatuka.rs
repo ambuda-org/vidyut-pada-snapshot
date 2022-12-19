@@ -1,11 +1,11 @@
 //! ardhadhatuka
 
 use crate::args::Lakara;
-use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
+use crate::tag::Tag as T;
 use crate::term::TermView;
 use lazy_static::lazy_static;
 

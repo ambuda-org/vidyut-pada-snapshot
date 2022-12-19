@@ -33,8 +33,8 @@ mod tripadi;
 mod vikarana;
 
 pub mod args;
-mod constants;
 pub mod dhatupatha;
 mod prakriya;
 mod sounds;
+mod tag;
 mod term;

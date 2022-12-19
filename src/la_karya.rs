@@ -1,7 +1,7 @@
 use crate::args::Lakara;
-use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::prakriya::{Prakriya, Rule};
+use crate::tag::Tag as T;
 use crate::term::Term;
 use std::error::Error;
 

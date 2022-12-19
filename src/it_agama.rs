@@ -23,13 +23,13 @@ Order of operations:
   a following `sya`, `si~c`, etc.
 */
 
-use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
 use crate::filters as f;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::{Prakriya, Rule};
 use crate::sounds::{s, SoundSet};
+use crate::tag::Tag as T;
 use crate::term::Term;
 use lazy_static::lazy_static;
 

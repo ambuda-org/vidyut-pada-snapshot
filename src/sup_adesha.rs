@@ -1,8 +1,8 @@
-use crate::constants::Tag as T;
 use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::stem_gana as gana;
+use crate::tag::Tag as T;
 
 fn yatha(needle: &str, old: &'static [&str], new: &'static [&str]) -> Option<&'static str> {
     for (i, o) in old.iter().enumerate() {

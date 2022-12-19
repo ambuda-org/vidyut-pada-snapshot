@@ -1,9 +1,9 @@
 use crate::args::Lakara;
-use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::{Prakriya, Rule};
+use crate::tag::Tag as T;
 use crate::term::Term;
 
 // These dhatus use their pratyaya optionally if followed by ArdhadhAtuka.

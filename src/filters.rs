@@ -6,9 +6,9 @@ We model rules as having two parts: a `filter` that determines whether the rule 
 filters and various utilities for working with filters in the rest of the system.
 
 */
-use crate::constants::Tag as T;
 use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
+use crate::tag::Tag as T;
 use crate::term::Term;
 use lazy_static::lazy_static;
 

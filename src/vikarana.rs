@@ -16,13 +16,13 @@
 // The it-prakarana is applied at the very end, since there might be various
 // substitutions by lopa that block the prakarana.
 
-use crate::constants::Tag as T;
 use crate::dhatu_gana::{DYUT_ADI, PUSH_ADI, TAN_ADI};
 use crate::filters as f;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
+use crate::tag::Tag as T;
 use crate::term::Term;
 use lazy_static::lazy_static;
 use std::error::Error;

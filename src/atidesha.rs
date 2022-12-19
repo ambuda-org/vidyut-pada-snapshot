@@ -3,12 +3,12 @@ atidesha (1.2.1 - 1.2.17)
 =========================
 */
 
-use crate::constants::Tag as T;
 use crate::dhatupatha::is_kutadi;
 use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds::{s, SoundSet};
+use crate::tag::Tag as T;
 use lazy_static::lazy_static;
 
 lazy_static! {

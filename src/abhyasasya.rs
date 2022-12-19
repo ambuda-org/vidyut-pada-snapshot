@@ -6,7 +6,6 @@ abhyasasya
 Runs rules that modify the abhyāsa.
 */
 
-use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
 use crate::filters as f;
 use crate::it_samjna;
@@ -14,6 +13,7 @@ use crate::operators as op;
 use crate::prakriya::Prakriya;
 use crate::sounds as al;
 use crate::sounds::{map, s, SoundMap, SoundSet};
+use crate::tag::Tag as T;
 use compact_str::CompactString;
 use lazy_static::lazy_static;
 

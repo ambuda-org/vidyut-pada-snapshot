@@ -9,7 +9,6 @@
 use crate::abhyasasya;
 use crate::asiddhavat;
 use crate::char_view::{char_rule, get_at, set_at, xy};
-use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
 use crate::filters as f;
 use crate::guna_vrddhi;
@@ -19,6 +18,7 @@ use crate::prakriya::{Prakriya, Rule};
 use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
 use crate::sup_adesha;
+use crate::tag::Tag as T;
 use crate::term::Term;
 use lazy_static::lazy_static;
 

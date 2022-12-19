@@ -1,4 +1,3 @@
-use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
 use crate::operators as op;
 /// Applies samprasarana changes as needed.
@@ -7,6 +6,7 @@ use crate::operators as op;
 /// - Must follow atidesha so that suffixes have the kit/Nit annotations necessary to cause
 ///   samprasanara.
 use crate::prakriya::{Prakriya, Rule};
+use crate::tag::Tag as T;
 use crate::term::Term;
 
 fn is_vaci_svapi(t: &Term) -> bool {

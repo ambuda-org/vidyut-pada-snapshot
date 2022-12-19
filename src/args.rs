@@ -9,7 +9,7 @@ To give callers extra flexibility, all of the enums here provides `as_str` and `
 For details on which strings are valid arguments in `from_str`, please read the source code
 directly.
 */
-use crate::constants::Tag;
+use crate::tag::Tag;
 use compact_str::CompactString;
 use std::str::FromStr;
 
