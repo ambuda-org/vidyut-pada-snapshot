@@ -46,8 +46,6 @@ pub struct Prakriya {
 }
 
 impl Prakriya {
-    // Constructors
-
     // Creates an empty prakriya.
     pub fn new() -> Self {
         Prakriya {

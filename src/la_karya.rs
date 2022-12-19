@@ -1,4 +1,4 @@
-use crate::arguments::La;
+use crate::args::Lakara;
 use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::prakriya::{Prakriya, Rule};
@@ -16,27 +16,27 @@ fn add_la(rule: Rule, p: &mut Prakriya, i: usize, la: &str) -> Result<(), Box<dy
     Ok(())
 }
 
-pub fn run(p: &mut Prakriya, la: La) -> Result<(), Box<dyn Error>> {
+pub fn run(p: &mut Prakriya, la: Lakara) -> Result<(), Box<dyn Error>> {
     let i = match p.find_last(T::Dhatu) {
         Some(i) => i,
         None => return Ok(()),
     };
 
     match la {
-        La::Lat => add_la("3.3.123", p, i, "la~w")?,
-        La::Lit => add_la("3.2.114", p, i, "li~w")?,
-        La::Lut => add_la("3.3.15", p, i, "lu~w")?,
-        La::Lrt => add_la("3.3.13", p, i, "lf~w")?,
-        La::Let => add_la("3.4.7", p, i, "le~w")?,
-        La::Lot => add_la("3.3.162", p, i, "lo~w")?,
-        La::Lan => add_la("3.2.111", p, i, "la~N")?,
-        La::AshirLin => {
+        Lakara::Lat => add_la("3.3.123", p, i, "la~w")?,
+        Lakara::Lit => add_la("3.2.114", p, i, "li~w")?,
+        Lakara::Lut => add_la("3.3.15", p, i, "lu~w")?,
+        Lakara::Lrt => add_la("3.3.13", p, i, "lf~w")?,
+        Lakara::Let => add_la("3.4.7", p, i, "le~w")?,
+        Lakara::Lot => add_la("3.3.162", p, i, "lo~w")?,
+        Lakara::Lan => add_la("3.2.111", p, i, "la~N")?,
+        Lakara::AshirLin => {
             p.add_tag(T::Ashih);
             add_la("3.3.173", p, i, "li~N")?;
         }
-        La::VidhiLin => add_la("3.3.161", p, i, "li~N")?,
-        La::Lun => add_la("3.2.110", p, i, "lu~N")?,
-        La::Lrn => add_la("3.3.139", p, i, "lf~N")?,
+        Lakara::VidhiLin => add_la("3.3.161", p, i, "li~N")?,
+        Lakara::Lun => add_la("3.2.110", p, i, "lu~N")?,
+        Lakara::Lrn => add_la("3.3.139", p, i, "lf~N")?,
     };
 
     Ok(())

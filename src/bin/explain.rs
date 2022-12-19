@@ -9,9 +9,10 @@ use clap::Parser;
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::path::Path;
+use vidyut_prakriya::args::{Lakara, Prayoga, Purusha, Vacana};
 use vidyut_prakriya::dhatupatha as D;
+use vidyut_prakriya::Ashtadhyayi;
 use vidyut_prakriya::Prakriya;
-use vidyut_prakriya::{Ashtadhyayi, La, Prayoga, Purusha, Vacana};
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -34,17 +35,17 @@ fn pretty_print_prakriya(p: &Prakriya) {
     println!("------------------------------");
 }
 
-const LAKARA: &[La] = &[
-    La::Lat,
-    La::Lit,
-    La::Lut,
-    La::Lrt,
-    La::Lot,
-    La::Lan,
-    La::AshirLin,
-    La::VidhiLin,
-    La::Lun,
-    La::Lrn,
+const LAKARA: &[Lakara] = &[
+    Lakara::Lat,
+    Lakara::Lit,
+    Lakara::Lut,
+    Lakara::Lrt,
+    Lakara::Lot,
+    Lakara::Lan,
+    Lakara::AshirLin,
+    Lakara::VidhiLin,
+    Lakara::Lun,
+    Lakara::Lrn,
 ];
 
 const PURUSHA_VACANA: &[(Purusha, Vacana)] = &[

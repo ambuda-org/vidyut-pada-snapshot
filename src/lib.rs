@@ -1,7 +1,5 @@
-pub use crate::arguments::{La, Prayoga, Purusha, Vacana, Vibhakti};
-pub use crate::ashtadhyayi::Ashtadhyayi;
+pub use crate::ashtadhyayi::{Ashtadhyayi, AshtadhyayiBuilder};
 pub use crate::prakriya::Prakriya;
-pub use crate::term::Term;
 
 mod abhyasasya;
 mod ac_sandhi;
@@ -31,7 +29,7 @@ mod tin_pratyaya;
 mod tripadi;
 mod vikarana;
 
-mod arguments;
+pub mod args;
 mod constants;
 pub mod dhatupatha;
 mod prakriya;

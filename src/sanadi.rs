@@ -1,4 +1,4 @@
-use crate::arguments::La;
+use crate::args::Lakara;
 use crate::constants::Tag as T;
 use crate::dhatu_gana as gana;
 use crate::it_samjna;
@@ -26,7 +26,7 @@ fn add_sanadi(rule: Rule, p: &mut Prakriya, i_dhatu: usize, upadesha: &str) {
 
 // TODO: 3.1.8 - 3.1.24
 // TODO: 3.1.26 - 3.1.27
-pub fn run(p: &mut Prakriya, la: La) -> Option<()> {
+pub fn run(p: &mut Prakriya, la: Lakara) -> Option<()> {
     let i = p.find_first(T::Dhatu)?;
     let dhatu = p.get(i)?;
 
@@ -92,7 +92,7 @@ mod tests {
         let mut p = Prakriya::new();
         dhatu_karya::run(&mut p, dhatu, code).unwrap();
 
-        run(&mut p, La::Lat).unwrap();
+        run(&mut p, Lakara::Lat).unwrap();
         let dhatu = p.get(0).unwrap();
         let pratyaya = p.get(1).unwrap();
         (dhatu.clone(), pratyaya.clone())

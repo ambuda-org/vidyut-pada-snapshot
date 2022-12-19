@@ -13,7 +13,7 @@
 //!
 //! All of these rules are found at the end of section 3.4 of the Ashtadhyayi.
 
-use crate::arguments::{La, Purusha, Vacana};
+use crate::args::{Lakara, Purusha, Vacana};
 use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::operators as op;
@@ -88,13 +88,13 @@ pub fn adesha(p: &mut Prakriya, purusha: Purusha, vacana: Vacana) {
     }
 }
 
-fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) -> Option<()> {
+fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: Lakara) -> Option<()> {
     let tin = p.get(i)?;
     if !tin.has_u("Ji") {
         return None;
     }
 
-    if matches!(la, La::AshirLin | La::VidhiLin) {
+    if matches!(la, Lakara::AshirLin | Lakara::VidhiLin) {
         op::adesha("3.4.108", p, i, "jus");
     } else if la.is_nit() {
         let i_prev = p.find_prev_where(i, |t| !t.is_empty())?;
@@ -105,12 +105,12 @@ fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) -> Option<()> 
             op::adesha("3.4.109", p, i, "jus");
         } else if prev.has_tag(T::Dhatu) {
             if prev.has_antya('A') {
-                if la == La::Lan {
+                if la == Lakara::Lan {
                     op::optional_adesha("3.4.111", p, i, "jus");
                 } else {
                     op::adesha("3.4.110", p, i, "jus");
                 }
-            } else if prev.has_text("dviz") && la == La::Lan {
+            } else if prev.has_text("dviz") && la == Lakara::Lan {
                 op::optional_adesha("3.4.112", p, i, "jus");
             }
         }
@@ -119,8 +119,8 @@ fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: La) -> Option<()> 
     Some(())
 }
 
-fn maybe_do_lut_siddhi(p: &mut Prakriya, i_la: usize, la: La) -> bool {
-    if p.has(i_la, |t| t.has_tag(T::Prathama) && la == La::Lut) {
+fn maybe_do_lut_siddhi(p: &mut Prakriya, i_la: usize, la: Lakara) -> bool {
+    if p.has(i_la, |t| t.has_tag(T::Prathama) && la == Lakara::Lut) {
         if let Some(tin) = p.get_mut(i_la) {
             let ending = if tin.has_tag(T::Ekavacana) {
                 "qA"
@@ -194,7 +194,7 @@ fn maybe_do_lot_only_siddhi(p: &mut Prakriya, i: usize) -> Option<()> {
     Some(())
 }
 
-fn maybe_do_lin_siddhi(p: &mut Prakriya, i_tin: usize, la: La) -> Result<(), Box<dyn Error>> {
+fn maybe_do_lin_siddhi(p: &mut Prakriya, i_tin: usize, la: Lakara) -> Result<(), Box<dyn Error>> {
     let mut i = i_tin;
 
     if !p.has(i, |t| t.has_lakshana("li~N")) {
@@ -204,7 +204,7 @@ fn maybe_do_lin_siddhi(p: &mut Prakriya, i_tin: usize, la: La) -> Result<(), Box
         p.insert_before(i, Term::make_agama("yAsu~w"));
         i += 1;
 
-        if la == La::AshirLin {
+        if la == Lakara::AshirLin {
             // Add kit to the pratyaya, not the Agama.
             p.op_term("3.4.104", i, op::add_tag(T::kit));
         } else {
@@ -249,13 +249,13 @@ fn yatha_optional(rule: Rule, p: &mut Prakriya, i: usize, old: &[&str], new: &[&
 }
 
 // Includes lo~w by 3.4.85
-fn maybe_do_lot_and_nit_siddhi(p: &mut Prakriya, la: La) {
+fn maybe_do_lot_and_nit_siddhi(p: &mut Prakriya, la: Lakara) {
     let i = match p.find_last(T::Tin) {
         Some(i) => i,
         None => return,
     };
 
-    if la == La::Lot || la.is_nit() {
+    if la == Lakara::Lot || la.is_nit() {
         let tas_thas = &["tas", "Tas", "Ta", "mip"];
         let taam_tam = &["tAm", "tam", "ta", "am"];
         if p.has(i, |t| t.has_u_in(tas_thas)) {
@@ -268,7 +268,7 @@ fn maybe_do_lot_and_nit_siddhi(p: &mut Prakriya, la: La) {
             }
 
             // lo~w excluded by existence of 3.4.86
-            if p.has(i, |t| t.text.ends_with('i')) && la != La::Lot {
+            if p.has(i, |t| t.text.ends_with('i')) && la != Lakara::Lot {
                 p.op_term("3.4.100", i, op::antya(""));
             }
         }
@@ -279,7 +279,7 @@ fn maybe_do_lot_and_nit_siddhi(p: &mut Prakriya, la: La) {
 ///
 /// Due to rule 3.4.109 ("sic-abhyasta-vidibhyaH ca"), this should run after dvitva and the
 /// insertion of vikaraNas.
-pub fn siddhi(p: &mut Prakriya, la: La) -> Option<()> {
+pub fn siddhi(p: &mut Prakriya, la: Lakara) -> Option<()> {
     let i_dhatu = p.find_last(T::Dhatu)?;
     let i = p.find_last(T::Tin)?;
 

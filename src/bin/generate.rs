@@ -4,21 +4,22 @@
 use serde::Serialize;
 use std::io;
 use std::path::Path;
+use vidyut_prakriya::args::{Lakara, Prayoga, Purusha, Vacana};
 use vidyut_prakriya::dhatupatha as D;
-use vidyut_prakriya::{Ashtadhyayi, La, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::Ashtadhyayi;
 
-const LAKARA: &[La] = &[
-    La::Lat,
-    La::Lit,
-    La::Lut,
-    La::Lrt,
-    La::Let,
-    La::Lot,
-    La::Lan,
-    La::AshirLin,
-    La::VidhiLin,
-    La::Lun,
-    La::Lrn,
+const LAKARA: &[Lakara] = &[
+    Lakara::Lat,
+    Lakara::Lit,
+    Lakara::Lut,
+    Lakara::Lrt,
+    Lakara::Let,
+    Lakara::Lot,
+    Lakara::Lan,
+    Lakara::AshirLin,
+    Lakara::VidhiLin,
+    Lakara::Lun,
+    Lakara::Lrn,
 ];
 
 const TIN_SEMANTICS: &[(Purusha, Vacana)] = &[

@@ -1,6 +1,6 @@
 //! ardhadhatuka
 
-use crate::arguments::La;
+use crate::args::Lakara;
 use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::operators as op;
@@ -38,7 +38,7 @@ fn will_cause_guna(n: &TermView) -> bool {
 ///
 /// These rules must run before we choose the verb pada because the results here affect which pada
 /// we choose.
-pub fn dhatu_adesha_before_pada(p: &mut Prakriya, la: La) {
+pub fn dhatu_adesha_before_pada(p: &mut Prakriya, la: Lakara) {
     let i = match p.find_first(T::Dhatu) {
         Some(i) => i,
         None => return,
@@ -51,7 +51,7 @@ pub fn dhatu_adesha_before_pada(p: &mut Prakriya, la: La) {
     // KyAY is Yit, which allow parasamipada.
     if p.has(i, |t| t.has_u("ca\\kzi~\\N")) {
         let mut use_khya = true;
-        if la == La::Lit {
+        if la == Lakara::Lit {
             if p.is_allowed("2.4.55") {
                 use_khya = false
             } else {
@@ -76,7 +76,7 @@ pub fn dhatu_adesha_before_pada(p: &mut Prakriya, la: La) {
 ///
 /// These rules must run before we choose the vikarana because the results here affect which
 /// vikarana we add.
-pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) -> Option<()> {
+pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: Lakara) -> Option<()> {
     // Rules are under 2.4.35 "ArdhadhAtuke".
     if la.is_sarvadhatuka() {
         return None;
@@ -176,8 +176,8 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: La) -> Option<()> {
         // As a crude fix, just check for endings that we expect will start with
         // vowels.
         let n = p.get(j)?;
-        let will_yasut = la == La::AshirLin && p.has_tag(T::Parasmaipada);
-        let is_lit_ajadi = la == La::Lit && p.terms().last()?.has_adi(&*AC);
+        let will_yasut = la == Lakara::AshirLin && p.has_tag(T::Parasmaipada);
+        let is_lit_ajadi = la == Lakara::Lit && p.terms().last()?.has_adi(&*AC);
         let will_have_valadi = !(will_yasut || is_lit_ajadi);
         if n.has_adi(&*VAL) && will_have_valadi {
             if p.is_allowed("2.4.56.v2") {
@@ -290,7 +290,7 @@ pub fn run_am_agama(p: &mut Prakriya) -> Option<()> {
     Some(())
 }
 
-pub fn run_before_vikarana(p: &mut Prakriya, la: La) {
+pub fn run_before_vikarana(p: &mut Prakriya, la: Lakara) {
     dhatu_adesha_before_vikarana(p, la);
 }
 

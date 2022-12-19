@@ -37,10 +37,10 @@ Overview
    program is easier to run and test, which means that we can produce a larger
    word list at a higher standard of quality.
 
-3. *Portability*. This crate compiles to native code and can be bound to most
-   other progamming languages with some effort. In particular, this crate can
-   be combined to WebAssembly, which means that it can run in a modern web
-   browser.
+3. *Portability*. This crate compiles to fast native code and can be bound to
+   most other progamming languages with a bit of effort. In particular, this
+   crate can be compiled to WebAssembly, which means that it can run in a
+   modern web browser.
 
 `vidyut-prakriya` currently has strong support for basic verbs. For future plans,
 see our [roadmap](#roadmap).

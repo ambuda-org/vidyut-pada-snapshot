@@ -1,7 +1,7 @@
 use crate::ac_sandhi;
 use crate::angasya;
 use crate::ardhadhatuka;
-use crate::arguments::{La, Prayoga, Purusha, Vacana};
+use crate::args::{Lakara, Prayoga, Purusha, Vacana};
 use crate::atidesha;
 use crate::atmanepada;
 use crate::dhatu_karya;
@@ -73,7 +73,7 @@ fn derive_tinanta(
     p: &mut Prakriya,
     dhatu: &str,
     code: &str,
-    la: La,
+    la: Lakara,
     prayoga: Prayoga,
     purusha: Purusha,
     vacana: Vacana,
@@ -92,7 +92,7 @@ fn derive_tinanta(
     samjna::run(p);
 
     // Do lit-siddhi and AzIrlin-siddhi first to support the valAdi vArttika for aj -> vi.
-    let is_lit_or_ashirlin = matches!(la, La::Lit | La::AshirLin);
+    let is_lit_or_ashirlin = matches!(la, Lakara::Lit | Lakara::AshirLin);
     if is_lit_or_ashirlin {
         tin_pratyaya::siddhi(p, la);
     }
@@ -139,6 +139,7 @@ pub struct AshtadhyayiBuilder {
     a: Ashtadhyayi,
 }
 
+/// A buildef ro creating an `Ashtadhyayi` struct.
 impl AshtadhyayiBuilder {
     /// Creates a new builder.
     fn new() -> Self {
@@ -147,9 +148,13 @@ impl AshtadhyayiBuilder {
         }
     }
 
-    /// Whether to log individual steps of the prakriya or not.
-    /// - If `true`, each `Prakriya` will contain a full history.
-    /// - If `false`, the program will run faster.
+    /// Controls whether or not to log individual steps of the prakriya.
+    ///
+    /// - If `true`, each `Prakriya` will contain a full history, but the program will run more
+    ///   slowly. This is the default value and is best for most use cases.
+    ///
+    /// - If `false`, the program will run faster, but only the final output of the `Prakriya` will
+    ///   be available. This is best used when you just need to generate a word list.
     pub fn log_steps(mut self, value: bool) -> Self {
         self.a.log_steps = value;
         self
@@ -167,24 +172,25 @@ impl Ashtadhyayi {
         Ashtadhyayi { log_steps: true }
     }
 
-    /// Returns a builder that lets you better configure how the engine runs rules and saves
-    /// derivational data.
+    /// Returns a builder that exposes configuration options for how the engine runs rules and
+    /// saves prakriya data.
     pub fn builder() -> AshtadhyayiBuilder {
         AshtadhyayiBuilder::new()
     }
 
+    /// Returns all possible prakriyas that can be derived with the given initial conditions.
     pub fn derive_tinantas(
         &self,
         dhatu: &str,
         code: &str,
-        la: La,
+        lakara: Lakara,
         prayoga: Prayoga,
         purusha: Purusha,
         vacana: Vacana,
     ) -> Vec<Prakriya> {
         let mut stack = PrakriyaStack::new();
         stack.find_all(
-            |p| derive_tinanta(p, dhatu, code, la, prayoga, purusha, vacana).unwrap(),
+            |p| derive_tinanta(p, dhatu, code, lakara, prayoga, purusha, vacana).unwrap(),
             self.log_steps,
         );
         stack.prakriyas()

@@ -1,4 +1,4 @@
-use crate::arguments::{Vacana, Vibhakti};
+use crate::args::{Vacana, Vibhakti};
 use crate::constants::Tag as T;
 use crate::it_samjna;
 use crate::prakriya::Prakriya;
