@@ -219,21 +219,25 @@ concept from  traditional grammar. For details, see the `tag` module.
 
 In general, our rules are implemented as simple if-else statements. For example:
 
-```ignore
-let tin = p.get_if(i, |t| t.has_adi('J'))?;
+```rust,ignore
+fn rules(p: &mut Prakriya, i: usize) -> Option<()> {
+    let tin = p.get_if(i, |t| t.has_adi('J'))?;
 
-let i_base = p.find_prev_where(i, |t| !t.is_empty())?;
-let base = p.get(i_base)?;
+    let i_base = p.find_prev_where(i, |t| !t.is_empty())?;
+    let base = p.get(i_base)?;
 
-if base.has_tag(T::Abhyasta) {
-    // juhvati
-    p.op_term("7.1.4", i, op::adi("at"));
-} else if !base.has_antya('a') && tin.has_tag(T::Atmanepada) {
-    // kurvate
-    p.op_term("7.1.5", i, op::adi("at"));
-} else {
-    // Bavanti
-    p.op_term("7.1.3", i, op::adi("ant"));
+    if base.has_tag(T::Abhyasta) {
+        // juhvati
+        p.op_term("7.1.4", i, op::adi("at"));
+    } else if !base.has_antya('a') && tin.has_tag(T::Atmanepada) {
+        // kurvate
+        p.op_term("7.1.5", i, op::adi("at"));
+    } else {
+        // Bavanti
+        p.op_term("7.1.3", i, op::adi("ant"));
+    }
+
+    Some(())
 }
 ```
 
