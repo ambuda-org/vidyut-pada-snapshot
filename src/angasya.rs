@@ -84,6 +84,21 @@ fn maybe_do_jha_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
     Some(())
 }
 
+fn replace_pha_dha_and_others(t: &Term) -> Option<&'static str> {
+    if t.has_adi(&*PHA_DHA_KHA_CHA_GHA) {
+        let sub = match t.adi()? {
+            'P' => "Ayan",
+            'Q' => "ey",
+            'K' => "In",
+            'C' => "Iy",
+            'G' => "in",
+            _ => return None,
+        };
+        return Some(sub);
+    }
+    None
+}
+
 /// Applies rules that replace one or more sounds in a pratyaya.
 ///
 /// Usually, these sounds are it letters ("J") or otherwise aupadeshika (e.g. "yu").
@@ -105,15 +120,7 @@ pub fn try_pratyaya_adesha(p: &mut Prakriya) -> Option<()> {
         } else {
             p.op_term("7.1.1", i, op::text("aka"));
         }
-    } else if last.has_adi(&*PHA_DHA_KHA_CHA_GHA) {
-        let sub = match last.adi()? {
-            'P' => "Ayan",
-            'Q' => "ey",
-            'K' => "In",
-            'C' => "Iy",
-            'G' => "in",
-            _ => panic!("Unexpected"),
-        };
+    } else if let Some(sub) = replace_pha_dha_and_others(last) {
         p.op_term("7.1.2", i, op::adi(sub));
     } else if last.has_adi('J') {
         maybe_do_jha_adesha(p, i);

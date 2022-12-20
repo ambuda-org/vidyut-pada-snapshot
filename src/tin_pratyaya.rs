@@ -119,20 +119,18 @@ fn maybe_replace_jhi_with_jus(p: &mut Prakriya, i: usize, la: Lakara) -> Option<
     Some(())
 }
 
-fn maybe_do_lut_siddhi(p: &mut Prakriya, i_la: usize, la: Lakara) -> bool {
-    if p.has(i_la, |t| t.has_tag(T::Prathama) && la == Lakara::Lut) {
-        if let Some(tin) = p.get_mut(i_la) {
-            let ending = if tin.has_tag(T::Ekavacana) {
-                "qA"
-            } else if tin.has_tag(T::Dvivacana) {
-                "rO"
-            } else if tin.has_tag(T::Bahuvacana) {
-                "ras"
-            } else {
-                panic!("Unknown state");
-            };
-            op::adesha("2.4.85", p, i_la, ending);
-        }
+fn maybe_do_lut_siddhi(p: &mut Prakriya, i_la: usize, la: Lakara, vacana: Vacana) -> bool {
+    let tin = match p.get(i_la) {
+        Some(t) => t,
+        _ => return false,
+    };
+    if tin.has_tag(T::Prathama) && la == Lakara::Lut {
+        let ending = match vacana {
+            Vacana::Eka => "qA",
+            Vacana::Dvi => "rO",
+            Vacana::Bahu => "ras",
+        };
+        op::adesha("2.4.85", p, i_la, ending);
         true
     } else {
         false
@@ -279,12 +277,12 @@ fn maybe_do_lot_and_nit_siddhi(p: &mut Prakriya, la: Lakara) {
 ///
 /// Due to rule 3.4.109 ("sic-abhyasta-vidibhyaH ca"), this should run after dvitva and the
 /// insertion of vikaraNas.
-pub fn siddhi(p: &mut Prakriya, la: Lakara) -> Option<()> {
+pub fn siddhi(p: &mut Prakriya, la: Lakara, vacana: Vacana) -> Option<()> {
     let i_dhatu = p.find_last(T::Dhatu)?;
     let i = p.find_last(T::Tin)?;
 
     // Special case: handle lut_siddhi first.
-    if maybe_do_lut_siddhi(p, i, la) {
+    if maybe_do_lut_siddhi(p, i, la, vacana) {
         return None;
     }
 
