@@ -121,7 +121,6 @@ fn maybe_replace_cli_with_ksa(p: &mut Prakriya, i: usize) -> Option<()> {
                 to_ksa(p);
                 // Needed if we use "ksa" with a veT root.
                 p.add_tag(T::FlagHasAnitKsa);
-                p.step("added ksa");
             });
             p.add_tag(T::FlagHagSetSic);
         } else {

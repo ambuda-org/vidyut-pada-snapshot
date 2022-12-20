@@ -31,7 +31,7 @@ create_test_files:
 test_all:
 	RUST_BACKTRACE=1 cargo run --release --bin eval -- \
 				   --test-cases test-files/tinanta.csv \
-				   --hash "bf906cec17e58e84da96a30d38131f29a004b444eac6581e3679966dafec2482"
+				   --hash "a5879aeeb40e770bbf92204bd682e30521505d654f1168fc1097c6df1c6b3d54"
 
 # Performance
 # ~~~~~~~~~~~

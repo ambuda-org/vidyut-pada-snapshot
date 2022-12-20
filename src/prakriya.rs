@@ -3,7 +3,19 @@ use crate::term::{Term, TermView};
 use compact_str::CompactString;
 use enumset::EnumSet;
 
-/// A string code for some grammar rule. All rule codes are static strings.
+/// A simple string label for some rule in the grammar.
+///
+/// Usually, these labels use the normal citation format for rules in the Ashtadhyayi, i.e.
+/// `<adhyaya>.<pada>.<rule>`. If the rule is from a specific commentary on some standard
+/// Ashtadhyayi rule, we use the format `<adhyaya>.<pada>.<rule>.<tag>` where `tag` is an ad-hoc
+/// descriptor of the rule, e.g. `k` for the Kashika Vrtti, `sk` for the Siddhanta Kaumudi, etc.
+///
+/// In addition, we use adhoc labels at times to represent rules outside of the Ashtadhyayi. For
+/// example, we use `"AkusmIya"` to represent that a dhatu in the AkusmIya-antargaNa is always
+/// Atmanepada.
+///
+/// We have not yet standardized how we represent rules outside the primary rules of the
+/// Ashtadhyayi, and we welcome suggestions on how to represent these rules clearly.
 pub type Rule = &'static str;
 
 /// Represents a step of the derivation.

@@ -223,7 +223,7 @@ pub fn run(p: &mut Prakriya) -> Option<()> {
         p.op("1.3.60", op_atmanepada);
     } else if dhatu.has_u("mf\\N") {
         if !(is_sarvadhatuka || is_lun_lin) {
-            p.op_optional("1.3.61", op_parasmaipada);
+            p.op("1.3.61", op_parasmaipada);
         }
     } else if dhatu.has_u_in(DYUT_ADI) && dhatu.has_gana(1) && la.has_u("lu~N") {
         p.op_optional("1.3.91", op_parasmaipada);

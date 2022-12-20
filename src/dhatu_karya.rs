@@ -46,12 +46,12 @@ fn gana_sutras(p: &mut Prakriya, i: usize) -> Option<()> {
     if p.has(i, |t| {
         t.has_u_in(gana::AAKUSMADI) && (192..=236).contains(&num)
     }) {
-        p.op("AkusmAdi", |p| p.add_tag(T::Atmanepada));
+        p.op("AkusmIya", |p| p.add_tag(T::Atmanepada));
     }
     if p.has(i, |t| {
         t.has_u_in(gana::AAGARVADI) && (440..=449).contains(&num)
     }) {
-        p.op("AgarvAdi", |p| p.add_tag(T::Atmanepada));
+        p.op("AgarvIya", |p| p.add_tag(T::Atmanepada));
     }
 
     Some(())

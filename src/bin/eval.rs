@@ -27,10 +27,40 @@ fn calculate_sha256_file_hash(path: &Path) -> std::io::Result<String> {
     Ok(format!("{:x}", hash))
 }
 
-fn run(args: Args) -> Result<(), Box<dyn Error>> {
+fn check_file_hash(args: &Args) {
     // Check that the test file is as expected.
-    let hash = calculate_sha256_file_hash(&args.test_cases)?;
+    let hash = match calculate_sha256_file_hash(&args.test_cases) {
+        Ok(x) => x,
+        Err(err) => {
+            println!("We could not create a hash for {}", args.test_cases.display());
+            println!("Error was: {}", err);
+            std::process::exit(1);
+        }
+    };
+    if hash != args.hash {
+        println!();
+        println!("The test file has test cases that differ from the ones we were expecting.");
+        println!("We know this because the test file has an unexpected hash value:");
+        println!();
+        println!("    Path to test file: {}", args.test_cases.display());
+        println!("    Expected hash    : {}", args.hash);
+        println!("    Actual hash      : {}", hash);
+        println!();
+        println!("If you are intentionally trying to change the test file -- for example, because you");
+        println!("are changing the implementation of some rule -- then please open `Makefile` and");
+        println!("replace the hash value in the `test_all` command with the `Actual hash` value above.");
+        println!();
+        println!("If you have not changed any core code, please file a GitHub issue so that we can help");
+        println!("you debug the issue (https://github.com/ambuda-org/vidyut/issues/).");
+        println!();
+        std::process::exit(1);
+    }
+
     assert_eq!(hash, args.hash);
+}
+
+fn run(args: Args) -> Result<(), Box<dyn Error>> {
+    check_file_hash(&args);
 
     let a = Ashtadhyayi::builder().log_steps(false).build();
 
