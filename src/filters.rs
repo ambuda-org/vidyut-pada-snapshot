@@ -99,11 +99,6 @@ pub fn atmanepada(t: &Term) -> bool {
     t.has_tag(T::Atmanepada)
 }
 
-/// Returns whether the term is a sup pratyaya.
-pub fn sup(t: &Term) -> bool {
-    t.has_tag(T::Sup)
-}
-
 /// Returns whether the term's text is exactly `x`.
 pub fn text(x: &'static str) -> impl Fn(&Term) -> bool {
     move |t| t.text == x

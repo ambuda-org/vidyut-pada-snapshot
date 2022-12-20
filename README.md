@@ -78,17 +78,19 @@ To generate prakriyas programmatically, you can use the starter code below:
 
 ```rust
 use vidyut_prakriya::Ashtadhyayi;
-use vidyut_prakriya::args::{Dhatu, Lakara, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::args::{tinanta, Dhatu, Lakara, Prayoga, Purusha, Vacana};
 
 let a = Ashtadhyayi::new();
+
 let dhatu = Dhatu::new("BU", 1, None);
-let prakriyas = a.derive_tinantas(
-    &dhatu,
-    Lakara::Lat,
-    Prayoga::Kartari,
-    Purusha::Prathama,
-    Vacana::Eka,
-);
+let args = tinanta()
+    .lakara(Lakara::Lat)
+    .prayoga(Prayoga::Kartari)
+    .purusha(Purusha::Prathama)
+    .vacana(Vacana::Eka)
+    .build().unwrap();
+
+let prakriyas = a.derive_tinantas(&dhatu, &args);
 
 for p in prakriyas {
     println!("{}", p.text());
@@ -135,7 +137,6 @@ to learn more about these rules.
 The right column shows the in-progress prakriya. We use an output convention
 that is common on other Ashtadhyayi websites. The encoding foromat for this
 text is SLP1, which is the encoding format we use throughout the crate.
-
 
 [install-rust]: https://www.rust-lang.org/tools/install
 [sv]: https://github.com/drdhaval2785/SanskritVerb

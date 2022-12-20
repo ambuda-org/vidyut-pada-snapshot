@@ -10,6 +10,7 @@ on which strings are valid arguments in `from_str`, please read the source code 
 */
 use crate::tag::Tag;
 use compact_str::CompactString;
+use derive_builder::Builder;
 use std::str::FromStr;
 
 /// Defines an antargana.
@@ -191,10 +192,50 @@ impl FromStr for Vacana {
     }
 }
 
+/// The gender of some subanta.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Linga {
+    /// The masculine.
+    Pum,
+    /// The feminine.
+    Stri,
+    /// The neuter.
+    Napumsaka,
+}
+impl Linga {
+    pub(crate) fn as_tag(&self) -> Tag {
+        match self {
+            Self::Pum => Tag::Pum,
+            Self::Stri => Tag::Stri,
+            Self::Napumsaka => Tag::Napumsaka,
+        }
+    }
+    /// Returns a simple human-readable string that represents this enum's value.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Pum => "pum",
+            Self::Stri => "stri",
+            Self::Napumsaka => "napumsaka",
+        }
+    }
+}
+impl FromStr for Linga {
+    type Err = &'static str;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let res = match s {
+            "pum" => Self::Pum,
+            "stri" => Self::Stri,
+            "napumsaka" => Self::Napumsaka,
+            &_ => return Err("Could not parse Linga"),
+        };
+        Ok(res)
+    }
+}
+
 /// The case ending of some subanta.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Vibhakti {
-    /// The first vibhakti. Sometimes called the *nominative case*.
+    /// The first vibhakti . Sometimes called the *nominative case*.
     Prathama,
     /// The second vibhakti. Sometimes called the *accusative case*.
     Dvitiya,
@@ -208,6 +249,57 @@ pub enum Vibhakti {
     Sasthi,
     /// The seventh vibhakti. Sometimes called the *locative case*.
     Saptami,
+    /// The first vibhakti used in the sense of *sambodhana*. Sometimes called the *vocative case*.
+    ///
+    /// *Sambodhana* is technically not a *vibhakti but rather an additional semantic condition
+    /// that conditions the first vibhakti. But we felt that users would find it more convenient to
+    /// have this condition available on `Vibhakti` directly rather than have to define the
+    /// *sambodhana* condition separately.
+    Sambodhana,
+}
+impl Vibhakti {
+    pub(crate) fn as_tag(&self) -> Tag {
+        match self {
+            Self::Prathama => Tag::V1,
+            Self::Dvitiya => Tag::V2,
+            Self::Trtiya => Tag::V3,
+            Self::Caturthi => Tag::V4,
+            Self::Panchami => Tag::V5,
+            Self::Sasthi => Tag::V6,
+            Self::Saptami => Tag::V7,
+            Self::Sambodhana => Tag::V1,
+        }
+    }
+    /// Returns a simple human-readable string that represents this enum's value.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Prathama => "1",
+            Self::Dvitiya => "2",
+            Self::Trtiya => "3",
+            Self::Caturthi => "4",
+            Self::Panchami => "5",
+            Self::Sasthi => "6",
+            Self::Saptami => "7",
+            Self::Sambodhana => "s",
+        }
+    }
+}
+impl FromStr for Vibhakti {
+    type Err = &'static str;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let res = match s {
+            "1" => Self::Prathama,
+            "2" => Self::Dvitiya,
+            "3" => Self::Trtiya,
+            "4" => Self::Caturthi,
+            "5" => Self::Panchami,
+            "6" => Self::Sasthi,
+            "7" => Self::Saptami,
+            "s" => Self::Sambodhana,
+            &_ => return Err("Could not parse Vibhakti"),
+        };
+        Ok(res)
+    }
 }
 
 /// The tense/mood of some tinanta.
@@ -295,4 +387,63 @@ impl FromStr for Lakara {
         };
         Ok(res)
     }
+}
+
+/// The information required to derive a subanta in the grammar.
+#[derive(Builder)]
+pub struct SubantaArgs {
+    linga: Linga,
+    vacana: Vacana,
+    vibhakti: Vibhakti,
+}
+
+impl SubantaArgs {
+    /// The linga to use in the derivation.
+    pub fn linga(&self) -> Linga {
+        self.linga
+    }
+    /// The vacana to use in the derivation.
+    pub fn vacana(&self) -> Vacana {
+        self.vacana
+    }
+    /// The vibhakti to use in the derivation.
+    pub fn vibhakti(&self) -> Vibhakti {
+        self.vibhakti
+    }
+}
+
+pub fn subanta() -> SubantaArgsBuilder {
+    SubantaArgsBuilder::default()
+}
+
+/// The information required to derive a subanta in the grammar.
+#[derive(Builder)]
+pub struct TinantaArgs {
+    prayoga: Prayoga,
+    purusha: Purusha,
+    lakara: Lakara,
+    vacana: Vacana,
+}
+
+impl TinantaArgs {
+    /// The linga to use in the derivation.
+    pub fn prayoga(&self) -> Prayoga {
+        self.prayoga
+    }
+    /// The purusha to use in the derivation.
+    pub fn purusha(&self) -> Purusha {
+        self.purusha
+    }
+    /// The lakara to use in the derivation.
+    pub fn lakara(&self) -> Lakara {
+        self.lakara
+    }
+    /// The vacana to use in the derivation.
+    pub fn vacana(&self) -> Vacana {
+        self.vacana
+    }
+}
+
+pub fn tinanta() -> TinantaArgsBuilder {
+    TinantaArgsBuilder::default()
 }

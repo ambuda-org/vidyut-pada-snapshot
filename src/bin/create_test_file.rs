@@ -1,8 +1,9 @@
 //! Usage: `make generate_test_file`
 use serde::Serialize;
+use std::error::Error;
 use std::io;
 use std::path::Path;
-use vidyut_prakriya::args::{Dhatu, Lakara, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::args::{tinanta, Dhatu, Lakara, Prayoga, Purusha, Vacana};
 use vidyut_prakriya::dhatupatha as D;
 use vidyut_prakriya::Ashtadhyayi;
 
@@ -44,15 +45,22 @@ struct Row<'a> {
     vacana: &'static str,
 }
 
-fn run(dhatus: Vec<(Dhatu, u16)>) -> Result<(), io::Error> {
+fn run(dhatus: Vec<(Dhatu, u16)>) -> Result<(), Box<dyn Error>> {
     let mut wtr = csv::Writer::from_writer(io::stdout());
     let a = Ashtadhyayi::builder().log_steps(false).build();
 
     for (dhatu, number) in dhatus {
-        for la in LAKARA {
+        for lakara in LAKARA {
             for (purusha, vacana) in TIN_SEMANTICS {
                 let prayoga = Prayoga::Kartari;
-                let prakriyas = a.derive_tinantas(&dhatu, *la, prayoga, *purusha, *vacana);
+                let tinanta_args = tinanta()
+                    .prayoga(prayoga)
+                    .purusha(*purusha)
+                    .vacana(*vacana)
+                    .lakara(*lakara)
+                    .build()?;
+
+                let prakriyas = a.derive_tinantas(&dhatu, &tinanta_args);
 
                 let dhatu_text = &dhatu.upadesha;
                 let mut padas: Vec<_> = prakriyas.iter().map(|p| p.text()).collect();
@@ -64,7 +72,7 @@ fn run(dhatus: Vec<(Dhatu, u16)>) -> Result<(), io::Error> {
                     dhatu: dhatu_text,
                     gana: dhatu.gana,
                     number,
-                    lakara: la.as_str(),
+                    lakara: lakara.as_str(),
                     purusha: purusha.as_str(),
                     vacana: vacana.as_str(),
                     prayoga: prayoga.as_str(),
@@ -90,8 +98,6 @@ fn main() {
 
     match run(dhatus) {
         Ok(()) => (),
-        // FIXME: match doesn't seem to work on osx?
-        Err(err) if err.kind() == std::io::ErrorKind::BrokenPipe => (),
         Err(err) => {
             eprintln!("{}", err);
             std::process::exit(1);

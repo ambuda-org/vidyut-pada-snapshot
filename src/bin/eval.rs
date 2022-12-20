@@ -6,6 +6,7 @@ use sha2::{Digest, Sha256};
 use std::error::Error;
 use std::fs::File;
 use std::path::{Path, PathBuf};
+use vidyut_prakriya::args::tinanta;
 use vidyut_prakriya::dhatupatha;
 use vidyut_prakriya::Ashtadhyayi;
 
@@ -84,11 +85,18 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         let dhatu = dhatupatha::resolve(&r[1], &r[2], &r[3])?;
 
         let prayoga = r[4].parse()?;
-        let la = r[5].parse()?;
+        let lakara = r[5].parse()?;
         let purusha = r[6].parse()?;
         let vacana = r[7].parse()?;
 
-        let prakriyas = a.derive_tinantas(&dhatu, la, prayoga, purusha, vacana);
+        let tinanta_args = tinanta()
+            .prayoga(prayoga)
+            .purusha(purusha)
+            .vacana(vacana)
+            .lakara(lakara)
+            .build()?;
+
+        let prakriyas = a.derive_tinantas(&dhatu, &tinanta_args);
         let mut actual: Vec<_> = prakriyas.iter().map(|p| p.text()).collect();
         actual.sort();
 
@@ -96,12 +104,12 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         if expected == actual {
             num_matches += 1;
         } else {
-            let la = &r[5];
+            let lakara = &r[5];
             let purusha = &r[6];
             let vacana = &r[7];
             let code = dhatu.code();
             let upadesha = dhatu.upadesha;
-            println!("[ FAIL ]  {code:<10} {upadesha:<10} {la:<10} {purusha:<10} {vacana:<10}");
+            println!("[ FAIL ]  {code:<10} {upadesha:<10} {lakara:<10} {purusha:<10} {vacana:<10}");
             println!("          Expected: {:?}", expected);
             println!("          Actual  : {:?}", actual);
         }

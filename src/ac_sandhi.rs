@@ -122,21 +122,25 @@ pub fn apply_general_ac_sandhi(p: &mut Prakriya) {
     );
 }
 
-fn sup_sandhi_before_angasya(p: &mut Prakriya) {
-    let y = p.terms().len() - 1;
-    if p.has(y, |t| !t.has_tag(T::Sup)) {
-        return;
-    }
-    let x = y - 1;
+pub fn try_sup_sandhi_before_angasya(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_last(T::Sup)?;
+    if i == 0 {
+        return None;
+    };
 
-    if p.has(x, |t| t.has_antya('o')) || p.has(y, f::u_in(&["am", "Sas"])) {
-        p.set(x, op::antya("A"));
-        p.set(y, op::adi(""));
-        p.step("6.1.93");
+    let sup = p.get(i)?;
+    let purva = p.get(i - 1)?;
+    if purva.has_antya('o') && sup.has_u_in(&["am", "Sas"]) {
+        p.op("6.1.93", |p| {
+            p.set(i - 1, op::antya("A"));
+            p.set(i, op::adi(""));
+        });
     }
+
+    Some(())
 }
 
-fn try_sup_sandhi_after_angasya(p: &mut Prakriya) -> Option<()> {
+pub fn try_sup_sandhi_after_angasya(p: &mut Prakriya) -> Option<()> {
     let i = p.find_last(T::Sup)?;
     if i == 0 {
         return None;
@@ -150,7 +154,7 @@ fn try_sup_sandhi_after_angasya(p: &mut Prakriya) -> Option<()> {
             p.op_term("6.1.107", i, op::adi(""));
         } else if anga.has_antya('a') && sup.has_adi(&*IC) {
             p.step("6.1.104");
-        } else if f::is_dirgha(anga) && sup.has_adi(&*IC) || sup.has_u("jas") {
+        } else if f::is_dirgha(anga) && (sup.has_adi(&*IC) || sup.has_u("jas")) {
             p.step("6.1.105");
         } else if sup.has_adi(&*AC) {
             let sub = al::to_dirgha(anga.antya()?)?;
@@ -229,7 +233,7 @@ fn hacky_apply_ni_asiddhavat_rules(p: &mut Prakriya) -> Option<()> {
     Some(())
 }
 
-fn run_common(p: &mut Prakriya) {
+pub fn run_common(p: &mut Prakriya) {
     for i in 0..p.terms().len() {
         apply_ac_sandhi_at_term_boundary(p, i);
     }
@@ -240,6 +244,6 @@ fn run_common(p: &mut Prakriya) {
 
 pub fn run(p: &mut Prakriya) {
     run_common(p);
-    sup_sandhi_before_angasya(p);
+    try_sup_sandhi_before_angasya(p);
     try_sup_sandhi_after_angasya(p);
 }

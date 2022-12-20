@@ -15,13 +15,14 @@ fn yatha(needle: &str, old: &'static [&str], new: &'static [&str]) -> Option<&'s
 
 /// Tries adesha rules for stems ending in 'a'.
 fn try_adanta_adesha(p: &mut Prakriya, i_anga: usize, i: usize) -> Option<()> {
+    let anga = p.get_if(i_anga, |t| t.has_antya('a'))?;
+    let sup = p.get(i)?;
+
     let nasi_ni = &["Nasi~", "Ni"];
     let smat_smin = &["smAt", "smin"];
     let ta_nasi_nas = &["wA", "Nasi~", "Nas"];
     let ina_at_sya = &["ina", "At", "sya"];
 
-    let anga = p.get(i_anga)?;
-    let sup = p.get(i)?;
     let is_sarvanama = anga.has_tag(T::Sarvanama);
     let sup_u = match &sup.u {
         Some(u) => u.to_string(),
@@ -35,15 +36,10 @@ fn try_adanta_adesha(p: &mut Prakriya, i_anga: usize, i: usize) -> Option<()> {
             // narEH
             p.op_term("7.1.9", i, op::text("Es"));
         }
-    } else if is_sarvanama && anga.has_u_in(nasi_ni) {
+    } else if is_sarvanama && sup.has_u_in(nasi_ni) {
         let mut do_sub = true;
         if anga.has_text_in(gana::PURVA_ADI) {
-            if p.is_allowed("7.1.16") {
-                p.step("7.1.16");
-                do_sub = false
-            } else {
-                p.decline("7.1.16");
-            }
+            do_sub = !p.op_optional("7.1.16", |_| {});
         }
 
         if do_sub {
@@ -76,43 +72,52 @@ fn try_adanta_adesha(p: &mut Prakriya, i_anga: usize, i: usize) -> Option<()> {
     Some(())
 }
 
-/// Tries adesha rules for `asmad` and `yuzmad`.
-fn try_yusmad_asmad_sup_adesha(p: &mut Prakriya, i_anga: usize, i: usize) -> Option<()> {
+/// Tries adesha rules for the bases `asmad` and `yuzmad`.
+///
+/// Ordering: must come after 7.1.52 which creates "sAm"
+fn try_yusmad_asmad_sup_adesha(p: &mut Prakriya, i_anga: usize) -> Option<()> {
     if !p.has(i_anga, f::text_in(&["yuzmad", "asmad"])) {
         return None;
     }
 
-    let sup = p.get(i)?;
+    let i = i_anga + 1;
+    let sup = p.view(i_anga + 1)?;
 
     if sup.has_u("Nas") {
         // mama, tava
-        p.op_term("7.1.27", i, op::text("a"));
+        p.op("7.1.27", |p| op::upadesha(p, i, "aS"));
     } else if sup.has_u("Ne") || sup.has_tag_in(&[T::V1, T::V2]) {
         if sup.has_u("Sas") {
             // asmAn, yuzmAn
-            p.op_term("7.1.29", i, op::text("n"));
+            p.op("7.1.29", |p| op::upadesha(p, i, "n"));
         } else {
             // mahyam; aham, AvAm, vayam, mAm
             // tuByam; tvam, yuvAm, yUyam, tvAm
-            p.op_term("7.1.28", i, op::text("am"));
+            p.op("7.1.28", |p| op::upadesha(p, i, "am"));
         }
     } else if sup.has_u("Byas") {
         if sup.has_tag(T::V5) {
             // asmat, yuzmat
-            p.op_term("7.1.31", i, op::text("at"));
+            p.op("7.1.31", |p| op::upadesha(p, i, "at"));
         } else {
             // asmaByam, yuzmaByam
-            p.op_term("7.1.30", i, op::text("Byam"));
+            p.op("7.1.30", |p| op::upadesha(p, i, "Byam"));
         }
     } else if sup.all(&[T::V5, T::Ekavacana]) {
         // mat, tvat
-        p.op_term("7.1.32", i, op::text("at"));
+        p.op("7.1.32", |p| op::upadesha(p, i, "at"));
+    } else if sup.first()?.has_text("s") && sup.last()?.has_text("Am") {
+        let start = sup.start();
+        p.op("7.1.33", |p| {
+            p.terms_mut().remove(start);
+            p.set(i, |t| t.set_text("Akam"));
+        });
     }
-    // TODO: 7.1.33
 
     Some(())
 }
 
+/// Tries adesha rules for `Ni` (saptamI-ekavacana).
 fn try_ni_adesha(p: &mut Prakriya, i_anga: usize, i: usize) -> Option<()> {
     let anga = p.get(i_anga)?;
     let sup = p.get(i)?;
@@ -132,41 +137,43 @@ fn try_ni_adesha(p: &mut Prakriya, i_anga: usize, i: usize) -> Option<()> {
 }
 
 /// (7.1.19 - 7.1.32)
-pub fn run(p: &mut Prakriya) {
-    let i = p.terms().len() - 1;
-    if !p.has(i, f::sup) {
-        return;
-    }
-    let i_anga = i - 1;
+pub fn run(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_last(T::Pratipadika)?;
+    let i_sup = i + 1;
 
-    try_ni_adesha(p, i_anga, i);
+    try_ni_adesha(p, i, i_sup);
 
-    let is_napumsaka = p.has(i_anga, f::tag(T::Napumsaka));
-    let is_jas_shas = p.has(i, f::u_in(&["jas", "Sas"]));
+    let anga = p.get(i)?;
+    let sup = p.get(i_sup)?;
 
-    if p.has(i_anga, f::u_in(&["dAp", "wAp", "cAp"])) && p.has(i, f::text("O")) {
-        p.op("7.1.18", |p| op::upadesha(p, i, "SI"));
-    } else if is_napumsaka && p.has(i, f::text("O")) {
-        p.op("7.1.19", |p| op::upadesha(p, i, "SI"));
+    let is_napumsaka = p.has(i, f::tag(T::Napumsaka));
+    let is_jas_shas = p.has(i_sup, f::u_in(&["jas", "Sas"]));
+
+    if p.has(i, f::u_in(&["dAp", "wAp", "cAp"])) && p.has(i_sup, f::text("O")) {
+        p.op("7.1.18", |p| op::upadesha(p, i_sup, "SI"));
+    } else if is_napumsaka && sup.has_text("O") {
+        p.op("7.1.19", |p| op::upadesha(p, i_sup, "SI"));
     } else if is_napumsaka && is_jas_shas {
-        p.op("7.1.20", |p| op::upadesha(p, i, "Si"));
-    } else if p.has(i_anga, |t| t.has_text("azwA") && t.has_u("azwan")) && is_jas_shas {
-        p.op("7.1.21", |p| op::upadesha(p, i, "OS"));
-    } else if p.has(i_anga, f::text("zaz")) && is_jas_shas {
-        p.op_term("7.1.22", i, op::luk);
-    } else if is_napumsaka && p.has(i, f::u_in(&["su~", "am"])) {
-        if p.has(i_anga, |t| t.has_antya('a')) {
-            if p.has(i_anga, |t| t.has_text_in(gana::DATARA_ADI)) {
-                p.op_term("7.1.25", i, op::text("adq"));
+        p.op("7.1.20", |p| op::upadesha(p, i_sup, "Si"));
+    } else if anga.has_text("azwA") && anga.has_u("azwan") && is_jas_shas {
+        p.op("7.1.21", |p| op::upadesha(p, i_sup, "OS"));
+    } else if anga.has_text("zaz") && is_jas_shas {
+        p.op_term("7.1.22", i_sup, op::luk);
+    } else if is_napumsaka && sup.has_u_in(&["su~", "am"]) {
+        if anga.has_antya('a') {
+            if anga.has_text_in(gana::DATARA_ADI) {
+                p.op_term("7.1.25", i_sup, op::text("adq"));
             } else {
-                p.op_term("7.1.24", i, op::text("am"));
+                p.op("7.1.24", |p| op::upadesha(p, i_sup, "am"));
             }
         } else {
-            p.op_term("7.1.23", i, op::luk);
+            p.op_term("7.1.23", i_sup, op::luk);
         }
     } else {
-        try_adanta_adesha(p, i_anga, i);
+        try_adanta_adesha(p, i, i_sup);
     }
 
-    try_yusmad_asmad_sup_adesha(p, i_anga, i);
+    try_yusmad_asmad_sup_adesha(p, i);
+
+    Some(())
 }

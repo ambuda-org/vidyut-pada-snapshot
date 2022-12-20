@@ -1,17 +1,16 @@
-from padmini import operations as op
-from padmini.constants import Tag as T
-from padmini.dhatu_gana import CUR_MIT, KUSMADI, GARVADI
-from padmini.prakriya import Term, Prakriya
-from . import it_samjna
+use crate::args::SubantaArgs;
+use crate::prakriya::Prakriya;
+use crate::tag::Tag as T;
+use crate::term::Term;
 
+pub fn run(p: &mut Prakriya, pratipadika: &str, args: &SubantaArgs) {
+    // The prAtipadika enters the prakriyA
+    let pratipadika = Term::make_upadesha(pratipadika);
+    p.push(pratipadika);
 
-fn run(p: Prakriya, pratipadika: str, linga: str):
-    pratipadika = Term.make_term(pratipadika)
-
-    # The prAtipadika enters the prakriyA
-    p.terms = [pratipadika]
-    p.step("start")
-
-    # Samjna rules
-    op.samjna("1.2.45", p, pratipadika, T.PRATIPADIKA)
-    pratipadika.add_tags(linga)
+    // Add samjnas
+    p.op_term("1.2.45", 0, |t| {
+        t.add_tag(T::Pratipadika);
+    });
+    p.add_tag(args.linga().as_tag());
+}

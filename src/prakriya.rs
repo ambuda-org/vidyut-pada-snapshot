@@ -45,7 +45,7 @@ pub enum RuleChoice {
     Decline(Rule),
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Config {
     pub rule_choices: Vec<RuleChoice>,
     pub log_steps: bool,
@@ -58,7 +58,7 @@ impl Config {
 }
 
 /// Models a Paninian derivation.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Prakriya {
     terms: Vec<Term>,
     tags: EnumSet<Tag>,

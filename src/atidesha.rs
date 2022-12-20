@@ -31,7 +31,7 @@ fn run_before_attva_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
     let n_is_lit = n.has_lakshana("li~w");
 
     let gan_kutadi = cur.has_u("gAN") || cur.has_antargana(Antargana::Kutadi);
-    if gan_kutadi && !n.any(&[T::Rit, T::Yit]) {
+    if gan_kutadi && !n.has_tag_in(&[T::Rit, T::Yit]) {
         p.op_term("1.2.1", i + 1, add_nit);
     } else if cur.has_u_in(&["o~vijI~\\", "o~vijI~"]) && iti {
         // Just for this `vij` per the Kashika.

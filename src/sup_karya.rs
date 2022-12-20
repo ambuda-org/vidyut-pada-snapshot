@@ -1,4 +1,4 @@
-use crate::args::{Vacana, Vibhakti};
+use crate::args::{SubantaArgs, Vacana, Vibhakti};
 use crate::it_samjna;
 use crate::prakriya::Prakriya;
 use crate::tag::Tag as T;
@@ -28,17 +28,31 @@ fn find_sup(vibhakti: Vibhakti, vacana: Vacana) -> &'static str {
         (Vibhakti::Saptami, Vacana::Eka) => "Ni",
         (Vibhakti::Saptami, Vacana::Dvi) => "os",
         (Vibhakti::Saptami, Vacana::Bahu) => "sup",
+
+        (Vibhakti::Sambodhana, Vacana::Eka) => "su~",
+        (Vibhakti::Sambodhana, Vacana::Dvi) => "O",
+        (Vibhakti::Sambodhana, Vacana::Bahu) => "jas",
     }
 }
 
 #[allow(unused)]
-pub fn run(p: &mut Prakriya, vibhakti: Vibhakti, vacana: Vacana) -> Option<()> {
-    let sup = find_sup(vibhakti, vacana);
+pub fn run(p: &mut Prakriya, args: &SubantaArgs) -> Option<()> {
+    let sup = find_sup(args.vibhakti(), args.vacana());
     let mut sup = Term::make_upadesha(sup);
 
     sup.add_tag(T::Pratyaya);
+    sup.add_tag(T::Vibhakti);
     sup.add_tag(T::Sup);
-    p.terms_mut().push(sup);
+    sup.add_tag(args.vibhakti().as_tag());
+    sup.add_tag(args.vacana().as_tag());
+
+    p.add_tag(args.linga().as_tag());
+    p.add_tag(args.vacana().as_tag());
+    if args.vibhakti() == Vibhakti::Sambodhana {
+        p.add_tag(T::Sambodhana);
+    }
+
+    p.push(sup);
     p.step("4.1.2");
 
     let i = p.terms().len() - 1;

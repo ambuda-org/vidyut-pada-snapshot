@@ -9,7 +9,7 @@ use clap::Parser;
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::path::Path;
-use vidyut_prakriya::args::{Lakara, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::args::{tinanta, Lakara, Prayoga, Purusha, Vacana};
 use vidyut_prakriya::dhatupatha as D;
 use vidyut_prakriya::Ashtadhyayi;
 use vidyut_prakriya::Prakriya;
@@ -75,14 +75,21 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         if !(dhatu.gana == gana && *dhatu_number == number) {
             continue;
         }
-        for (i, la) in LAKARA.iter().enumerate() {
+        for (i, lakara) in LAKARA.iter().enumerate() {
             let mut words = vec![];
             for (purusha, vacana) in PURUSHA_VACANA {
-                let ps = a.derive_tinantas(dhatu, *la, Prayoga::Kartari, *purusha, *vacana);
+                let tinanta_args = tinanta()
+                    .prayoga(Prayoga::Kartari)
+                    .purusha(*purusha)
+                    .vacana(*vacana)
+                    .lakara(*lakara)
+                    .build()?;
+
+                let ps = a.derive_tinantas(dhatu, &tinanta_args);
                 for p in ps {
                     words.push(p.text());
                     if p.text() == args.pada {
-                        println!("{:?} {:?} {:?}", la, purusha, vacana);
+                        println!("{:?} {:?} {:?}", lakara, purusha, vacana);
                         pretty_print_prakriya(&p);
                     }
                 }

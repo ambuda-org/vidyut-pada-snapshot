@@ -93,7 +93,7 @@ fn run_kniti_ardhadhatuka(p: &mut Prakriya, i: usize) -> Option<()> {
     let n = p.view(i + 1)?;
 
     let aat = dhatu.has_antya('A');
-    let kniti_ardha = n.any(&[T::kit, T::Nit]) && n.has_tag(T::Ardhadhatuka);
+    let kniti_ardha = n.has_tag_in(&[T::kit, T::Nit]) && n.has_tag(T::Ardhadhatuka);
 
     if kniti_ardha && dhatu.has_u("dI\\N") && n.has_adi(&*AC) {
         op::append_agama("6.4.63", p, i, "yu~w");
@@ -140,7 +140,7 @@ fn try_run_kniti_for_dhatu(p: &mut Prakriya, i: usize) -> Option<()> {
     let j = p.find_next_where(i, |t| !t.is_empty())?;
     let n = p.view(j)?;
 
-    if !n.any(&[T::kit, T::Nit]) {
+    if !n.has_tag_in(&[T::kit, T::Nit]) {
         return None;
     }
 
@@ -164,7 +164,7 @@ fn try_run_kniti(p: &mut Prakriya, i: usize) -> Option<()> {
     let j = p.find_next_where(i, |t| !t.is_empty())?;
     let n = p.view(j)?;
 
-    if !n.any(&[T::kit, T::Nit]) {
+    if !n.has_tag_in(&[T::kit, T::Nit]) {
         return None;
     }
 
@@ -425,7 +425,7 @@ fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
     let n = p.view(i + 1)?;
     let anidit_hal = !anga.has_tag(T::idit) && anga.has_antya(&*HAL);
-    let is_kniti = n.any(&[T::kit, T::Nit]);
+    let is_kniti = n.has_tag_in(&[T::kit, T::Nit]);
 
     if anidit_hal && is_kniti && anga.has_upadha('n') {
         let mut can_run = true;
@@ -644,7 +644,10 @@ fn run_for_final_i_or_u(p: &mut Prakriya, i: usize) -> Option<()> {
         } else {
             p.op_term("6.4.81", i, op::antya("y"));
         }
-    } else if anga.has_antya(&*II) && is_anekac(p, i) && is_asamyogapurva {
+    } else if anga.has_antya(&*II) && is_anekac(p, i) && anga.has_tag(T::Dhatu) && is_asamyogapurva
+    {
+        // `Dhatu` is understood here even if not stated in the rule.
+        // ("dhātoḥ iti vartate" -- Kashika)
         if anga.has_text("suDI") {
             p.step("6.4.85");
         } else {

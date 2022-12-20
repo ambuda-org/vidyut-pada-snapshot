@@ -1,7 +1,7 @@
 use crate::ac_sandhi;
 use crate::angasya;
 use crate::ardhadhatuka;
-use crate::args::{Dhatu, Lakara, Prayoga, Purusha, Vacana};
+use crate::args::{Dhatu, Lakara, SubantaArgs, TinantaArgs};
 use crate::atidesha;
 use crate::atmanepada;
 use crate::dhatu_karya;
@@ -9,9 +9,11 @@ use crate::dvitva;
 use crate::it_agama;
 use crate::la_karya;
 use crate::prakriya::{Prakriya, PrakriyaStack};
+use crate::pratipadika_karya;
 use crate::samjna;
 use crate::samprasarana;
 use crate::sanadi;
+use crate::sup_karya;
 use crate::tin_pratyaya;
 use crate::tripadi;
 use crate::vikarana;
@@ -72,38 +74,40 @@ fn dhatu_samprasarana_tasks(p: &mut Prakriya) {
 fn derive_tinanta(
     p: &mut Prakriya,
     dhatu: &Dhatu,
-    la: Lakara,
-    prayoga: Prayoga,
-    purusha: Purusha,
-    vacana: Vacana,
+    args: &TinantaArgs,
 ) -> Result<(), Box<dyn Error>> {
+    let prayoga = args.prayoga();
+    let lakara = args.lakara();
+    let purusha = args.purusha();
+    let vacana = args.vacana();
+
     p.add_tags(&[prayoga.as_tag(), purusha.as_tag(), vacana.as_tag()]);
 
     // Create the dhatu.
     dhatu_karya::run(p, dhatu)?;
-    sanadi::run(p, la);
+    sanadi::run(p, lakara);
 
     // Add the lakAra and convert it to a basic tin ending.
-    la_karya::run(p, la)?;
-    ardhadhatuka::dhatu_adesha_before_pada(p, la);
+    la_karya::run(p, lakara)?;
+    ardhadhatuka::dhatu_adesha_before_pada(p, lakara);
     atmanepada::run(p);
     tin_pratyaya::adesha(p, purusha, vacana);
     samjna::run(p);
 
     // Do lit-siddhi and AzIrlin-siddhi first to support the valAdi vArttika for aj -> vi.
-    let is_lit_or_ashirlin = matches!(la, Lakara::Lit | Lakara::AshirLin);
+    let is_lit_or_ashirlin = matches!(lakara, Lakara::Lit | Lakara::AshirLin);
     if is_lit_or_ashirlin {
-        tin_pratyaya::siddhi(p, la);
+        tin_pratyaya::siddhi(p, lakara);
     }
 
     // Add necessary vikaranas.
-    ardhadhatuka::run_before_vikarana(p, la);
+    ardhadhatuka::run_before_vikarana(p, lakara);
     vikarana::run(p)?;
     samjna::run(p);
 
     // --- Code below this line needs to be cleaned up. ---
 
-    if !la.is_sarvadhatuka() {
+    if !lakara.is_sarvadhatuka() {
         dhatu_samprasarana_tasks(p)
     }
 
@@ -112,10 +116,10 @@ fn derive_tinanta(
     samprasarana::run_for_abhyasa(p);
 
     if !is_lit_or_ashirlin {
-        tin_pratyaya::siddhi(p, la);
+        tin_pratyaya::siddhi(p, lakara);
     }
 
-    if la.is_sarvadhatuka() {
+    if lakara.is_sarvadhatuka() {
         dhatu_samprasarana_tasks(p)
     }
 
@@ -132,6 +136,22 @@ fn derive_tinanta(
     tripadi::run(p);
 
     Ok(())
+}
+
+fn derive_subanta(p: &mut Prakriya, pratipadika: &str, args: &SubantaArgs) {
+    pratipadika_karya::run(p, pratipadika, args);
+
+    sup_karya::run(p, args);
+    samjna::run(p);
+
+    ac_sandhi::try_sup_sandhi_before_angasya(p);
+
+    angasya::run_remainder(p);
+
+    ac_sandhi::try_sup_sandhi_after_angasya(p);
+    ac_sandhi::run_common(p);
+
+    tripadi::run(p);
 }
 
 /// A builder for creating an `Ashtadhyayi` struct.
@@ -181,19 +201,19 @@ impl Ashtadhyayi {
     /// conditions.
     ///
     /// TODO: add support for upasargas and sanAdi-pratyayas.
-    pub fn derive_tinantas(
-        &self,
-        dhatu: &Dhatu,
-        lakara: Lakara,
-        prayoga: Prayoga,
-        purusha: Purusha,
-        vacana: Vacana,
-    ) -> Vec<Prakriya> {
+    pub fn derive_tinantas(&self, dhatu: &Dhatu, args: &TinantaArgs) -> Vec<Prakriya> {
         let mut stack = PrakriyaStack::new();
-        stack.find_all(
-            |p| derive_tinanta(p, dhatu, lakara, prayoga, purusha, vacana).unwrap(),
-            self.log_steps,
-        );
+        stack.find_all(|p| derive_tinanta(p, dhatu, args).unwrap(), self.log_steps);
+        stack.prakriyas()
+    }
+
+    /// Returns all possible tinanta prakriyas that can be derived with the given initial
+    /// conditions.
+    ///
+    /// TODO: add support for upasargas and sanAdi-pratyayas.
+    pub fn derive_subantas(&self, pratipadika: &str, args: &SubantaArgs) -> Vec<Prakriya> {
+        let mut stack = PrakriyaStack::new();
+        stack.find_all(|p| derive_subanta(p, pratipadika, args), self.log_steps);
         stack.prakriyas()
     }
 }

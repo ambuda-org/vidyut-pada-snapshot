@@ -125,6 +125,10 @@ impl Term {
         }
     }
 
+    pub fn has_any_lakshana(&self) -> bool {
+        !self.lakshana.is_empty()
+    }
+
     pub fn has_lakshana(&self, u: &str) -> bool {
         self.lakshana.iter().any(|s| s == &u)
     }
@@ -394,13 +398,13 @@ impl<'a> TermView<'a> {
         true
     }
 
-    pub fn any(&self, tags: &[Tag]) -> bool {
+    pub fn has_tag_in(&self, tags: &[Tag]) -> bool {
         tags.iter()
             .any(|tag| self.slice().iter().any(|t| t.has_tag(*tag)))
     }
 
     pub fn is_knit(&self) -> bool {
-        self.any(&[Tag::kit, Tag::Nit])
+        self.has_tag_in(&[Tag::kit, Tag::Nit])
     }
 }
 

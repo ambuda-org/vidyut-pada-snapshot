@@ -1,13 +1,14 @@
 /// 1.1.27 sarvAdIni sarvanAmAni
 ///
 /// TODO: add others
-#[allow(unused)]
 pub const SARVA_ADI: &[&str] = &[
     "sarva", "viSva", "uBa", "uBaya", "qatara", "qatama", "anya", "anyatara", "itara", "tvat",
     "tva", "nema", "sama", "sima", "pUrva", "para", "avara", "dakziRa", "uttara", "apara", "aDara",
     "sva", "antara", "tyad", "tad", "yad", "etad", "idam", "adas", "eka", "dvi", "yuzmad", "asmad",
     "Bavatu~", "kim",
 ];
+
+pub const TYAD_ADI: &[&str] = &["tyad", "tad", "yad", "etad", "idam", "adas", "eka", "dvi"];
 
 #[allow(unused)]
 pub const USES_DATARA_DATAMA: &[&str] = &[

@@ -75,7 +75,7 @@ pub fn run_for_dhatu(p: &mut Prakriya) -> Option<()> {
         } else {
             try_vaci_svapi_samprasarana("6.1.15", p, i);
         }
-    } else if is_grahi_jya(dhatu) && n.any(&[T::kit, T::Nit]) {
+    } else if is_grahi_jya(dhatu) && n.has_tag_in(&[T::kit, T::Nit]) {
         try_grahi_jya_samprasarana("6.1.16", p, i);
         if p.has(i, |t| t.has_text("uy") && t.has_u("vayi~")) {
             p.op_optional("6.1.39", op::t(i, op::text("uv")));

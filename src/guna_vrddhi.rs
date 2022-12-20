@@ -26,7 +26,7 @@ fn op_antya_guna(t: &mut Term) {
 /// Tests whether a term can use guna and vrddhi in the general case.
 fn can_use_guna_or_vrddhi(anga: &Term, n: &TermView) -> bool {
     // 1.1.5 kNiti ca
-    let kniti = n.any(&[T::kit, T::Nit]);
+    let kniti = n.has_tag_in(&[T::kit, T::Nit]);
 
     // 1.1.6 dIdhI-vevI-iTAm
     let didhi_vevi_itam =
@@ -64,7 +64,7 @@ fn try_nnit_vrddhi(p: &mut Prakriya, i: usize) -> Option<()> {
     let anga = p.get(i)?;
     let n = p.view(i + 1)?;
 
-    if !n.any(&[T::Yit, T::Rit]) || !can_use_guna_or_vrddhi(anga, &n) {
+    if !n.has_tag_in(&[T::Yit, T::Rit]) || !can_use_guna_or_vrddhi(anga, &n) {
         // Allow RiN even though it is Nit and will be excluded by `can_use_guna_or_vrddhi`.
         if !n.has_u("RiN") {
             return None;
@@ -100,7 +100,7 @@ fn try_guna_adesha(p: &mut Prakriya, i: usize) -> Option<()> {
     let n = p.view(j)?;
 
     let can_use_guna = can_use_guna_or_vrddhi(anga, &n);
-    let is_sarva_ardha = n.any(&[T::Sarvadhatuka, T::Ardhadhatuka]);
+    let is_sarva_ardha = n.has_tag_in(&[T::Sarvadhatuka, T::Ardhadhatuka]);
     let piti_sarvadhatuke = n.all(&[T::pit, T::Sarvadhatuka]);
     let is_ik = anga.has_antya(&*IK);
 
