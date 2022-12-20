@@ -253,7 +253,7 @@ fn add_lun_vikarana(p: &mut Prakriya) {
 }
 
 fn add_kr_after_am_pratyaya(p: &mut Prakriya) {
-    let mut kf = Term::make_dhatu("qukf\\Y", 8, 10);
+    let mut kf = Term::make_dhatu("qukf\\Y", 8, None);
     kf.set_text("kf");
     kf.add_tag(T::Dhatu);
 

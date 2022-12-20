@@ -3,16 +3,8 @@
 /// Roots that are `mit`, meaning that they will use a hrasva vowel per 6.4.92.
 pub const CUR_MIT: &[&str] = &["jYapa~", "yama~", "caha~", "capa~", "raha~", "bala~", "ciY"];
 
-// Roots that are always Atmanepada.
-pub const AAKUSMADI: &[&str] = &[
-    "cita~", "daSi~", "dasi~", "dasa~", "qapa~", "qipa~", "tatri~", "matri~", "spaSa~", "tarja~",
-    "Bartsa~", "basta~", "ganDa~", "vasta~", "hasta~", "vizka~", "hizka~", "nizka~", "lala~",
-    "kURa~", "tURa~", "BrURa~", "SaWa~", "yakza~", "syama~", "gUra~", "Sama~", "lakza~", "kutsa~",
-    "truwa~", "kuwa~", "gala~", "Bala~", "kUwa~", "kuwwa~", "vancu~", "vfza~", "mada~", "divu~",
-    "gf", "vida~", "mana~", "mAna~", "yu", "kusma~",
-];
-
-pub const AAGARVADI: &[&str] = &[
+/// Dhatus of the AgarvIya antargaNa.
+pub const AAGARVIYA: &[&str] = &[
     "pada", "gfha", "mfga", "kuha", "SUra", "vIra", "sTUla", "arTa", "satra", "garva",
 ];
 

@@ -1,3 +1,4 @@
+use crate::args::Antargana;
 use crate::args::Dhatu;
 use crate::dhatu_gana as gana;
 use crate::it_samjna;
@@ -13,7 +14,7 @@ fn init(p: &mut Prakriya, dhatu: &Dhatu) -> Result<(), Box<dyn Error>> {
     p.push(Term::make_dhatu(
         &dhatu.upadesha,
         dhatu.gana,
-        dhatu.number.into(),
+        dhatu.antargana,
     ));
     p.step("start");
 
@@ -36,21 +37,14 @@ fn add_samjnas(p: &mut Prakriya, i: usize) -> Result<(), Box<dyn Error>> {
 fn gana_sutras(p: &mut Prakriya, i: usize) -> Option<()> {
     let dhatu = p.get_if(i, |t| t.has_gana(10))?;
 
-    let num = dhatu.number?;
     if dhatu.has_u_in(gana::CUR_MIT) {
         p.op_term("cur-mit", i, op::add_tag(T::mit));
     }
 
-    // Need to check range explicitly because some of these roots appear
-    // multiple times in the gana, e.g. lakza~
-    if p.has(i, |t| {
-        t.has_u_in(gana::AAKUSMADI) && (192..=236).contains(&num)
-    }) {
+    let dhatu = p.get(i)?;
+    if dhatu.has_antargana(Antargana::Akusmiya) {
         p.op("AkusmIya", |p| p.add_tag(T::Atmanepada));
-    }
-    if p.has(i, |t| {
-        t.has_u_in(gana::AAGARVADI) && (440..=449).contains(&num)
-    }) {
+    } else if dhatu.has_u_in(gana::AAGARVIYA) {
         p.op("AgarvIya", |p| p.add_tag(T::Atmanepada));
     }
 
@@ -146,7 +140,7 @@ mod tests {
 
     fn check(text: &str, code: &str) -> Term {
         let (gana, number) = code.split_once('.').unwrap();
-        let dhatu = Dhatu::new(text, gana.parse().unwrap(), number.parse().unwrap());
+        let dhatu = Dhatu::new(text, gana.parse().unwrap(), None);
 
         let mut p = Prakriya::new();
         run(&mut p, &dhatu).unwrap();

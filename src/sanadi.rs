@@ -86,13 +86,13 @@ pub fn run(p: &mut Prakriya, la: Lakara) -> Option<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::args::Dhatu;
     use crate::dhatu_karya;
+    use crate::dhatupatha;
 
     fn check(upadesha: &str, code: &str) -> (Term, Term) {
         let mut p = Prakriya::new();
         let (gana, number) = code.split_once('.').unwrap();
-        let dhatu = Dhatu::new(upadesha, gana.parse().unwrap(), number.parse().unwrap());
+        let dhatu = dhatupatha::resolve(upadesha, gana, number).unwrap();
 
         dhatu_karya::run(&mut p, &dhatu).unwrap();
 

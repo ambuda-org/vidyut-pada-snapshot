@@ -6,7 +6,7 @@ use sha2::{Digest, Sha256};
 use std::error::Error;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use vidyut_prakriya::args::Dhatu;
+use vidyut_prakriya::dhatupatha;
 use vidyut_prakriya::Ashtadhyayi;
 
 #[derive(Parser)]
@@ -32,7 +32,10 @@ fn check_file_hash(args: &Args) {
     let hash = match calculate_sha256_file_hash(&args.test_cases) {
         Ok(x) => x,
         Err(err) => {
-            println!("We could not create a hash for {}", args.test_cases.display());
+            println!(
+                "We could not create a hash for {}",
+                args.test_cases.display()
+            );
             println!("Error was: {}", err);
             std::process::exit(1);
         }
@@ -46,11 +49,17 @@ fn check_file_hash(args: &Args) {
         println!("    Expected hash    : {}", args.hash);
         println!("    Actual hash      : {}", hash);
         println!();
-        println!("If you are intentionally trying to change the test file -- for example, because you");
+        println!(
+            "If you are intentionally trying to change the test file -- for example, because you"
+        );
         println!("are changing the implementation of some rule -- then please open `Makefile` and");
-        println!("replace the hash value in the `test_all` command with the `Actual hash` value above.");
+        println!(
+            "replace the hash value in the `test_all` command with the `Actual hash` value above."
+        );
         println!();
-        println!("If you have not changed any core code, please file a GitHub issue so that we can help");
+        println!(
+            "If you have not changed any core code, please file a GitHub issue so that we can help"
+        );
         println!("you debug the issue (https://github.com/ambuda-org/vidyut/issues/).");
         println!();
         std::process::exit(1);
@@ -72,7 +81,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
     for maybe_row in rdr.records() {
         let r = maybe_row?;
         let expected: Vec<_> = r[0].split('|').collect();
-        let dhatu = Dhatu::new(&r[1], r[2].parse()?, r[3].parse()?);
+        let dhatu = dhatupatha::resolve(&r[1], &r[2], &r[3])?;
 
         let prayoga = r[4].parse()?;
         let la = r[5].parse()?;

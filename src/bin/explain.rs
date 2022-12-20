@@ -61,13 +61,18 @@ const PURUSHA_VACANA: &[(Purusha, Vacana)] = &[
 ];
 
 fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    let dhatus = D::load_dhatus(Path::new("data/dhatupatha.tsv"));
+    let dhatus = D::load_all(Path::new("data/dhatupatha.tsv"));
 
     let mut ordered_words = BTreeMap::new();
     let a = Ashtadhyayi::new();
 
-    for dhatu in dhatus?.iter() {
-        if dhatu.code() != args.code {
+    let (gana, number) = match args.code.split_once('.') {
+        Some((x, y)) => (x.parse::<u8>()?, y.parse::<u16>()?),
+        _ => return Ok(()),
+    };
+
+    for (dhatu, dhatu_number) in dhatus?.iter() {
+        if !(dhatu.gana == gana && *dhatu_number == number) {
             continue;
         }
         for (i, la) in LAKARA.iter().enumerate() {

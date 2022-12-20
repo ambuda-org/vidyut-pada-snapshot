@@ -44,11 +44,11 @@ struct Row<'a> {
     vacana: &'static str,
 }
 
-fn run(dhatus: Vec<Dhatu>) -> Result<(), io::Error> {
+fn run(dhatus: Vec<(Dhatu, u16)>) -> Result<(), io::Error> {
     let mut wtr = csv::Writer::from_writer(io::stdout());
     let a = Ashtadhyayi::builder().log_steps(false).build();
 
-    for dhatu in dhatus {
+    for (dhatu, number) in dhatus {
         for la in LAKARA {
             for (purusha, vacana) in TIN_SEMANTICS {
                 let prayoga = Prayoga::Kartari;
@@ -63,7 +63,7 @@ fn run(dhatus: Vec<Dhatu>) -> Result<(), io::Error> {
                     padas,
                     dhatu: dhatu_text,
                     gana: dhatu.gana,
-                    number: dhatu.number,
+                    number,
                     lakara: la.as_str(),
                     purusha: purusha.as_str(),
                     vacana: vacana.as_str(),
@@ -80,7 +80,7 @@ fn run(dhatus: Vec<Dhatu>) -> Result<(), io::Error> {
 }
 
 fn main() {
-    let dhatus = match D::load_dhatus(Path::new("data/dhatupatha.tsv")) {
+    let dhatus = match D::load_all(Path::new("data/dhatupatha.tsv")) {
         Ok(res) => res,
         Err(err) => {
             println!("{}", err);

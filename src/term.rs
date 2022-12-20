@@ -1,3 +1,4 @@
+use crate::args::Antargana;
 use crate::sounds::Pattern;
 use crate::tag::Tag;
 use compact_str::CompactString;
@@ -13,7 +14,7 @@ pub struct Term {
     pub text: CompactString,
     tags: EnumSet<Tag>,
     gana: Option<u8>,
-    pub number: Option<u32>,
+    antargana: Option<Antargana>,
     lakshana: Vec<CompactString>,
 }
 
@@ -28,7 +29,7 @@ impl Term {
             text: CompactString::from(s),
             tags: EnumSet::new(),
             gana: None,
-            number: None,
+            antargana: None,
             lakshana: Vec::new(),
         }
     }
@@ -40,16 +41,16 @@ impl Term {
             text: CompactString::from(s),
             tags: EnumSet::new(),
             gana: None,
-            number: None,
+            antargana: None,
             lakshana: Vec::new(),
         }
     }
 
     /// Creates a new dhatu.
-    pub fn make_dhatu(s: &str, gana: u8, number: u32) -> Self {
+    pub fn make_dhatu(s: &str, gana: u8, antargana: Option<Antargana>) -> Self {
         let mut t = Term::make_upadesha(s);
         t.gana = Some(gana);
-        t.number = Some(number);
+        t.antargana = antargana;
         t
     }
 
@@ -147,6 +148,13 @@ impl Term {
     /// Returns whether the term has the given root gaNa. If the gaNa is undefined, returns false.
     pub fn has_gana(&self, gana: u8) -> bool {
         self.gana == Some(gana)
+    }
+
+    pub fn has_antargana(&self, antargana: Antargana) -> bool {
+        match self.antargana {
+            Some(x) => x == antargana,
+            _ => false,
+        }
     }
 
     /// Returns whethre the term's text is empty.

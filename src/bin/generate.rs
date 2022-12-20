@@ -38,19 +38,19 @@ const TIN_SEMANTICS: &[(Purusha, Vacana)] = &[
 struct Row<'a> {
     pada: String,
     dhatu: &'a str,
-    gana: i32,
-    number: i32,
+    gana: u8,
+    number: u16,
     prayoga: &'static str,
     lakara: &'static str,
     purusha: &'static str,
     vacana: &'static str,
 }
 
-fn run(dhatus: Vec<Dhatu>) -> Result<(), io::Error> {
+fn run(dhatus: Vec<(Dhatu, u16)>) -> Result<(), io::Error> {
     let mut wtr = csv::Writer::from_writer(io::stdout());
     let a = Ashtadhyayi::builder().log_steps(false).build();
 
-    for dhatu in dhatus {
+    for (dhatu, number) in dhatus {
         for la in LAKARA {
             for (purusha, vacana) in TIN_SEMANTICS {
                 let prayoga = Prayoga::Kartari;
@@ -61,8 +61,8 @@ fn run(dhatus: Vec<Dhatu>) -> Result<(), io::Error> {
                     let row = Row {
                         pada: p.text().to_string(),
                         dhatu: dhatu_text,
-                        gana: dhatu.gana as i32,
-                        number: dhatu.number as i32,
+                        gana: dhatu.gana,
+                        number,
                         lakara: la.as_str(),
                         purusha: purusha.as_str(),
                         vacana: vacana.as_str(),
@@ -80,7 +80,7 @@ fn run(dhatus: Vec<Dhatu>) -> Result<(), io::Error> {
 }
 
 fn main() {
-    let dhatus = match D::load_dhatus(Path::new("data/dhatupatha.tsv")) {
+    let dhatus = match D::load_all(Path::new("data/dhatupatha.tsv")) {
         Ok(res) => res,
         Err(err) => {
             println!("{}", err);

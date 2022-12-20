@@ -1,17 +1,44 @@
 /*!
-Common arguments for this crate's main functions.
+Common arguments for the crate's main functions.
 
-To use the Ashtadhyayi, we must declare various kinds of semantic information up-front, such are
-our desired purush and vacana, the dhatu we wish to use, and so on. To better document the API and
-to avoid common typos for end users, we model most arguments through this module.
+Before we begin a prakriya, we must declare certain morphological information up-front, such as our
+desired purusha and vacana, the dhatu we wish to use, and so on. To better document the API and to
+help users avoid common typos, we model this information through the enums and structs in this module.
 
-To give callers extra flexibility, all of the enums here provides `as_str` and `from_str` methods.
-For details on which strings are valid arguments in `from_str`, please read the source code
-directly.
+For extra flexibility, all of the enums here provides `as_str` and `from_str` methods. For details
+on which strings are valid arguments in `from_str`, please read the source code directly.
 */
 use crate::tag::Tag;
 use compact_str::CompactString;
 use std::str::FromStr;
+
+/// Defines an antargana.
+///
+/// The dhatus in the Dhatupatha are organized in ten large *gaṇa*s or classes. Within these larger
+/// *gaṇa*s, certain *antargaṇa*s or subclasses have extra properties that affect the derivations
+/// they produce. For example, dhatus in the *kuṭādi antargaṇa* generally do not allow *guṇa* vowel
+/// changes.
+///
+/// Since most dhatus appear exactly once per *gaṇa*, this crate can usually infer whether a dhatu
+/// is in a specific *antargaṇa*. However, some *gaṇa*s have dhatus that repeat, and these
+/// repeating dhatus cause ambiguities for our code. (Examples: `juqa~` appears twice in
+/// *tudādigaṇa*, once in *kuṭādi* and once outside of it.)
+///
+/// To avoid this ambiguity, we require that certain *antargaṇa*s are declared up-front.
+///
+/// (Can't we disambiguate by checking the dhatu's index within its gana? Unfortunately, no. There
+/// is no canonical version of the Dhatupatha, and we cannot expect that a dhatu's index is
+/// consistent across all of these versions. So we thought it better to avoid hard-coding indices
+/// or requiring callers to follow our specific conventions.)
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum Antargana {
+    /// Antargana of *tud* gana. Pratyayas that follow dhatus in kut-Adi will generally be marked
+    /// Nit per 1.2.1. Required because of duplicates like `juqa~`.
+    Kutadi,
+    /// Antargana of *cur* gana ending with `kusma~`. A dhatu in this antargana is always
+    /// ātmanepadī. Required because of duplicates like `daSi~`.
+    Akusmiya,
+}
 
 /// The verb root to use for the derivation.
 #[derive(Debug)]
@@ -22,25 +49,24 @@ pub struct Dhatu {
     pub upadesha: CompactString,
     /// The dhatu's gana. This should be a number between 1 and 10, inclusive.
     pub gana: u8,
-    /// The position of this dhatu within the gana, starting at 1.
-    /// (TODO: deprecate this fragile argument.)
-    pub number: u16,
+    /// The antargana this Dhatu belongs to.
+    pub antargana: Option<Antargana>,
 }
 
 impl Dhatu {
     /// Creates a new `Dhatu`.
-    pub fn new(upadesha: impl AsRef<str>, gana: u8, number: u16) -> Self {
+    pub fn new(upadesha: impl AsRef<str>, gana: u8, antargana: Option<Antargana>) -> Self {
         Dhatu {
             upadesha: CompactString::from(upadesha.as_ref()),
             gana,
-            number,
+            antargana,
         }
     }
 
     /// Creates a convenient human-readable code for this dhatu. This code matches the format used
     /// on sites like ashtadhyayi.com.
     pub fn code(&self) -> String {
-        format!("{:0>2}.{:0>4}", self.gana, self.number)
+        format!("{:0>2}.{:?}", self.gana, self.antargana)
     }
 }
 

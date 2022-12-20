@@ -3,7 +3,7 @@ atidesha (1.2.1 - 1.2.17)
 =========================
 */
 
-use crate::dhatupatha::is_kutadi;
+use crate::args::Antargana;
 use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
@@ -30,7 +30,7 @@ fn run_before_attva_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
     let apit = !n.has_tag(T::pit);
     let n_is_lit = n.has_lakshana("li~w");
 
-    let gan_kutadi = p.has(i, |t| t.has_u("gAN") || is_kutadi(t));
+    let gan_kutadi = cur.has_u("gAN") || cur.has_antargana(Antargana::Kutadi);
     if gan_kutadi && !n.any(&[T::Rit, T::Yit]) {
         p.op_term("1.2.1", i + 1, add_nit);
     } else if cur.has_u_in(&["o~vijI~\\", "o~vijI~"]) && iti {

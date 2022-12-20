@@ -130,7 +130,7 @@ fn test_bhu() {
 
         let a = Ashtadhyayi::new();
 
-        let dhatu = Dhatu::new("BU", 1, 1);
+        let dhatu = Dhatu::new("BU", 1, None);
         for (purusha, vacana) in PURUSHA_VACANA {
             let prakriyas = a.derive_tinantas(&dhatu, la, Prayoga::Kartari, *purusha, *vacana);
             actual.extend(prakriyas.iter().map(|t| t.text()));
@@ -190,7 +190,7 @@ fn test_lat() {
     for (dhatu, gana, padas) in tests {
         let a = Ashtadhyayi::new();
         let prakriyas = a.derive_tinantas(
-            &Dhatu::new(dhatu, gana, 1),
+            &Dhatu::new(dhatu, gana, None),
             Lakara::Lat,
             Prayoga::Kartari,
             Purusha::Prathama,

@@ -58,14 +58,14 @@ First, install Rust on your computer. You can find installation instructions
 Second, download `vidyut-prakriya` to your computer and enter the project
 directory:
 
-```
-$ git clone git@github.com:ambuda-org/vidyut-pada-snapshot.git
+```shell
+$ git clone https://github.com/ambuda-org/vidyut-pada-snapshot.git
 $ cd vidyut-pada-snapshot
 ```
 
 To generate all basic tinantas in kartari prayoga, run:
 
-```
+```shell
 $ make create_tinantas > output.csv
 ```
 
@@ -81,7 +81,7 @@ use vidyut_prakriya::Ashtadhyayi;
 use vidyut_prakriya::args::{Dhatu, Lakara, Prayoga, Purusha, Vacana};
 
 let a = Ashtadhyayi::new();
-let dhatu = Dhatu::new("BU", 1, 1);
+let dhatu = Dhatu::new("BU", 1, None);
 let prakriyas = a.derive_tinantas(
     &dhatu,
     Lakara::Lat,
@@ -157,7 +157,7 @@ error.
 First, see if you can run our existing code on your machine. We suggest
 that you start by running our integration tests:
 
-```
+```shell
 $ make create_test_files
 $ make test_all
 ```
@@ -165,8 +165,8 @@ $ make test_all
 Next, try using our prakriya debugger, which shows exactly how a given word was
 derived:
 
-```
-cargo run --bin explain -- --code 01.0001 --pada Bavati
+```shell
+$ cargo run --bin explain -- --code 01.0001 --pada Bavati
 ```
 
 Once you've confirmed that your setup works, we suggest that you read through
@@ -185,7 +185,7 @@ If you are satisfied with your changes, you will need to update our integration
 test file. This process has three steps. First, run the steps below and confirm
 that your tests fail:
 
-```
+```shell
 $ make create_test_files
 $ make test_all
 ```
@@ -218,7 +218,7 @@ concept from  traditional grammar. For details, see the `tag` module.
 
 In general, our rules are implemented as simple if-else statements. For example:
 
-```rust
+```ignore
 let tin = p.get_if(i, |t| t.has_adi('J'))?;
 
 let i_base = p.find_prev_where(i, |t| !t.is_empty())?;
