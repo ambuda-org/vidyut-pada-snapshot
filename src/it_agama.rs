@@ -380,7 +380,10 @@ fn try_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
         let is_pit = n.has_tag(T::pit) && !n.has_tag(T::Nit);
         let is_aprkta = n.slice().iter().map(|t| t.text.len()).sum::<usize>() == 1;
         if n.has_adi(&*HAL) && n.has_tag(T::Sarvadhatuka) && is_pit && is_aprkta {
-            p.op("7.3.98", |p| op::insert_agama_before(p, i_n, "Iw"));
+            let use_at = p.op_optional("7.3.99", |p| op::insert_agama_before(p, i_n, "aw"));
+            if !use_at {
+                p.op("7.3.98", |p| op::insert_agama_before(p, i_n, "Iw"));
+            }
             it_samjna::run(p, i_n).ok()?;
         } else {
             // roditi, svapiti, Svasiti, aniti, jakziti
