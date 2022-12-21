@@ -19,34 +19,6 @@ use crate::tripadi;
 use crate::vikarana;
 use std::error::Error;
 
-/// An interface to the rules of the Ashtadhyayi.
-///
-/// This lightweight struct contains configuration options that might affect how a word is derived,
-/// such as:
-///
-/// - whether to store the full derivation history or to disable it for performance reasons.
-/// - whether to disable certain optional rules
-///
-/// To run with our suggested defaults, use:
-///
-/// ```
-/// use vidyut_prakriya::Ashtadhyayi;
-///
-/// let a = Ashtadhyayi::new();
-/// ```
-///
-/// For tighter control over options, use `Ashtadhyayi::builder`:
-///
-/// ```no_run
-/// use vidyut_prakriya::Ashtadhyayi;
-///
-/// let a = Ashtadhyayi::builder().log_steps(false).build();
-/// ```
-#[derive(Debug)]
-pub struct Ashtadhyayi {
-    log_steps: bool,
-}
-
 /// Samprasarana of the dhatu is conditioned on several other operations, which we must execute
 /// first:
 ///
@@ -85,7 +57,7 @@ fn derive_tinanta(
 
     // Create the dhatu.
     dhatu_karya::run(p, dhatu)?;
-    sanadi::run(p, lakara);
+    sanadi::run(p, lakara.is_ardhadhatuka());
 
     // Add the lakAra and convert it to a basic tin ending.
     la_karya::run(p, lakara)?;
@@ -123,11 +95,12 @@ fn derive_tinanta(
         dhatu_samprasarana_tasks(p)
     }
 
-    angasya::iit_agama(p);
-
     // Must follow tin-siddhi (for valAdi)
     ardhadhatuka::run_am_agama(p);
 
+    // --- Code above this line needs to be cleaned up. ---
+
+    angasya::iit_agama(p);
     angasya::run_remainder(p);
 
     // Apply sandhi rules and return.
@@ -154,34 +127,37 @@ fn derive_subanta(p: &mut Prakriya, pratipadika: &str, args: &SubantaArgs) {
     tripadi::run(p);
 }
 
-/// A builder for creating an `Ashtadhyayi` struct.
-pub struct AshtadhyayiBuilder {
-    a: Ashtadhyayi,
+/// An interface to the rules of the Ashtadhyayi.
+///
+/// This lightweight struct contains configuration options that might affect how a word is derived,
+/// such as:
+///
+/// - whether to store the full derivation history or to disable it for performance reasons.
+/// - whether to disable certain optional rules
+///
+/// To run with our suggested defaults, use:
+///
+/// ```
+/// use vidyut_prakriya::Ashtadhyayi;
+///
+/// let a = Ashtadhyayi::new();
+/// ```
+///
+/// For tighter control over options, use `Ashtadhyayi::builder`:
+///
+/// ```no_run
+/// use vidyut_prakriya::Ashtadhyayi;
+///
+/// let a = Ashtadhyayi::builder().log_steps(false).build();
+/// ```
+#[derive(Debug)]
+pub struct Ashtadhyayi {
+    log_steps: bool,
 }
 
-impl AshtadhyayiBuilder {
-    /// Creates a new builder.
-    fn new() -> Self {
-        Self {
-            a: Ashtadhyayi::new(),
-        }
-    }
-
-    /// Controls whether or not to log individual steps of the prakriya.
-    ///
-    /// - If `true`, each `Prakriya` will contain a full history, but the program will run more
-    ///   slowly. This is the default value and is best for most use cases.
-    ///
-    /// - If `false`, the program will run faster, but only the final output of the `Prakriya` will
-    ///   be available. This is best used when you just need to generate a word list.
-    pub fn log_steps(mut self, value: bool) -> Self {
-        self.a.log_steps = value;
-        self
-    }
-
-    /// Creates an `Ashtadhyayi` object.
-    pub fn build(self) -> Ashtadhyayi {
-        self.a
+impl Default for Ashtadhyayi {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -216,8 +192,33 @@ impl Ashtadhyayi {
     }
 }
 
-impl Default for Ashtadhyayi {
-    fn default() -> Self {
-        Self::new()
+/// A builder for creating an `Ashtadhyayi` struct.
+pub struct AshtadhyayiBuilder {
+    a: Ashtadhyayi,
+}
+
+impl AshtadhyayiBuilder {
+    /// Creates a new builder.
+    fn new() -> Self {
+        Self {
+            a: Ashtadhyayi::new(),
+        }
+    }
+
+    /// Controls whether or not to log individual steps of the prakriya.
+    ///
+    /// - If `true`, each `Prakriya` will contain a full history, but the program will run more
+    ///   slowly. This is the default value and is best for most use cases.
+    ///
+    /// - If `false`, the program will run faster, but only the final output of the `Prakriya` will
+    ///   be available. This is best used when you just need to generate a word list.
+    pub fn log_steps(mut self, value: bool) -> Self {
+        self.a.log_steps = value;
+        self
+    }
+
+    /// Creates an `Ashtadhyayi` object.
+    pub fn build(self) -> Ashtadhyayi {
+        self.a
     }
 }

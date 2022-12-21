@@ -1,4 +1,3 @@
-use crate::args::Lakara;
 use crate::dhatu_gana as gana;
 use crate::it_samjna;
 use crate::operators as op;
@@ -26,7 +25,7 @@ fn add_sanadi(rule: Rule, p: &mut Prakriya, i_dhatu: usize, upadesha: &str) {
 
 // TODO: 3.1.8 - 3.1.24
 // TODO: 3.1.26 - 3.1.27
-pub fn run(p: &mut Prakriya, la: Lakara) -> Option<()> {
+pub fn run(p: &mut Prakriya, is_ardhadhatuka: bool) -> Option<()> {
     let i = p.find_first(T::Dhatu)?;
     let dhatu = p.get(i)?;
 
@@ -46,7 +45,7 @@ pub fn run(p: &mut Prakriya, la: Lakara) -> Option<()> {
     } else if dhatu.has_u_in(AYADAYA) {
         let mut add_pratyaya = true;
 
-        if la.is_ardhadhatuka() {
+        if is_ardhadhatuka {
             if p.is_allowed("3.1.31") {
                 add_pratyaya = false;
                 // TODO: not sure where to do this.

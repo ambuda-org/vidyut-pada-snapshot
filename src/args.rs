@@ -89,8 +89,8 @@ impl Dhatu {
 
     /// Creates a convenient human-readable code for this dhatu. This code matches the format used
     /// on sites like ashtadhyayi.com.
-    pub fn code(&self) -> String {
-        format!("{:0>2}.{:?}", self.gana, self.antargana)
+    pub fn code(&self, number: &str) -> String {
+        format!("{:0>2}.{:0>4}", self.gana, number)
     }
 }
 

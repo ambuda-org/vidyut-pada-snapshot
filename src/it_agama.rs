@@ -35,6 +35,7 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     static ref AC: SoundSet = s("ac");
+    static ref HAL: SoundSet = s("hal");
     static ref VAL: SoundSet = s("val");
     static ref VASH: SoundSet = s("vaS");
     static ref UK: SoundSet = s("uk");
@@ -367,8 +368,24 @@ fn try_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
 
     let rudh_adi = &["rudi~r", "Yizva\\pa~", "Svasa~", "ana~", "jakza~"];
     if anga.has_u_in(rudh_adi) {
-        // roditi, svapiti, Svasiti, aniti, jakziti
-        add_it_before("7.2.76", p, i_n);
+        // First, check if we should use It-agama instead.
+        //
+        // This rule is placed here somewhat awkwardly to avoid a complex interdependency:
+        //
+        // - it-Agama --> atidesha of kittva & nittva
+        // - atidesha --> dvitva
+        // - dvitva --> tin siddhi
+        // - tin siddhi --> possible aprkta
+        // - possible aprkta --> It agama in the rule below.
+        let is_pit = n.has_tag(T::pit) && !n.has_tag(T::Nit);
+        let is_aprkta = n.slice().iter().map(|t| t.text.len()).sum::<usize>() == 1;
+        if n.has_adi(&*HAL) && n.has_tag(T::Sarvadhatuka) && is_pit && is_aprkta {
+            p.op("7.3.98", |p| op::insert_agama_before(p, i_n, "Iw"));
+            it_samjna::run(p, i_n).ok()?;
+        } else {
+            // roditi, svapiti, Svasiti, aniti, jakziti
+            add_it_before("7.2.76", p, i_n);
+        }
     } else if anga.has_text("IS") && n.has_adi('s') {
         // ISize, ISizva
         add_it_before("7.2.77", p, i_n);

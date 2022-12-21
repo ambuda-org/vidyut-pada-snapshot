@@ -1,12 +1,12 @@
 //! One of the largest sections of the Ashtadhyayi starts with 6.4.1 and extends to the end of 7.4.
 //! Rule 6.4.1, *angasya*, declares that all rules within its scope apply to an *anga*, i.e. an
 //! inflection base followed by a prefix.
-//! 
+//!
 //! The *angasya* section of the Ashtadhyayi contains the grammar's core operations, such as:
 //!
 //! - guna and vrddhi changes
-//! - the introduction of the *it*-Agama 
-//! - changes to an *abhyAsa* 
+//! - the introduction of the *it*-Agama
+//! - changes to an *abhyAsa*
 //! - changes to a *prAtipadika* when certain case endings follow.
 //!
 //! To manage the complexity and scope of this section, we break it into smaller modules.
@@ -319,6 +319,11 @@ fn try_add_num_agama(p: &mut Prakriya) -> Option<()> {
 ///
 /// (7.3.93 - 7.3.99)
 ///
+/// Constraints:
+/// - must run after tin-siddhi because of 7.3.96 (astisico 'prkte).
+/// - must run after pratyaya-adesha because we condition on a following consonant and rule
+///   7.1.3 (jho 'ntaH) changes the following sound to a vowel.
+///
 /// Skipped: 7.3.97 ("bahulam chandasi")
 /// TODO: 7.3.99 - 100
 pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
@@ -333,6 +338,7 @@ pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
     if n.has_adi(&*HAL) && n.has_tag(T::Sarvadhatuka) {
         // HACK to avoid yAsut and prevent bruvIyAt, etc.
         let piti = n.has_tag(T::pit) && !n.has_tag(T::Nit);
+
         let mut rule = None;
         if anga.has_text("brU") && piti {
             rule = Some("7.3.93");
@@ -341,10 +347,9 @@ pub fn iit_agama(p: &mut Prakriya) -> Option<()> {
         } else if anga.has_u_in(&["tu\\", "ru", "zwu\\Y", "Samu~", "ama~"]) {
             rule = maybe_rule(p, "7.3.95");
         } else if is_aprkta {
+            // 7.3.98 overrides 7.2.76 in the it-Agama section, so it's placed there.
             if anga.has_u_in(&["asa~", "si~c"]) {
                 rule = Some("7.3.96");
-            } else if anga.has_u_in(&["rud", "svap", "Svas", "praR", "jakz"]) {
-                rule = Some("7.3.98");
             }
         }
 

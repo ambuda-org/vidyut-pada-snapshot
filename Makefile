@@ -31,7 +31,7 @@ create_test_files:
 test_all:
 	RUST_BACKTRACE=1 cargo run --release --bin test_tinantas -- \
 				   --test-cases test-files/tinanta.csv \
-				   --hash "132fe6e53160a407ec0cc6b52c542031e7ffd40db8efc32b4476fe0d3112cc12"
+				   --hash "adbbfc7975741f6938f8498324d2da15eb01593f062c70973fb1b963f0fdf45f"
 
 # Work-in-progress test function for subantas.
 test_subantas:

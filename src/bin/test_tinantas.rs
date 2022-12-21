@@ -107,7 +107,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
             let lakara = &r[5];
             let purusha = &r[6];
             let vacana = &r[7];
-            let code = dhatu.code();
+            let code = dhatu.code(&r[3]);
             let upadesha = dhatu.upadesha;
             println!("[ FAIL ]  {code:<10} {upadesha:<10} {lakara:<10} {purusha:<10} {vacana:<10}");
             println!("          Expected: {:?}", expected);
