@@ -1,5 +1,5 @@
 use std::error::Error;
-use vidyut_prakriya::args::{subanta, Linga, Vacana, Vibhakti};
+use vidyut_prakriya::args::{Linga, SubantaArgs, Vibhakti};
 use vidyut_prakriya::Ashtadhyayi;
 
 const fn pum(s: &'static str) -> (&'static str, Linga) {
@@ -141,7 +141,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         let vacana = &r[3].parse()?;
         let expected = &r[4];
 
-        let args = subanta()
+        let args = SubantaArgs::builder()
             .linga(*linga)
             .vibhakti(*vibhakti)
             .vacana(*vacana)

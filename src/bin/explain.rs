@@ -9,7 +9,7 @@ use clap::Parser;
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::path::Path;
-use vidyut_prakriya::args::{tinanta, Lakara, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::args::{Lakara, Prayoga, Purusha, TinantaArgs, Vacana};
 use vidyut_prakriya::dhatupatha as D;
 use vidyut_prakriya::Ashtadhyayi;
 use vidyut_prakriya::Prakriya;
@@ -78,7 +78,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         for (i, lakara) in LAKARA.iter().enumerate() {
             let mut words = vec![];
             for (purusha, vacana) in PURUSHA_VACANA {
-                let tinanta_args = tinanta()
+                let tinanta_args = TinantaArgs::builder()
                     .prayoga(Prayoga::Kartari)
                     .purusha(*purusha)
                     .vacana(*vacana)

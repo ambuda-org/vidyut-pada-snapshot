@@ -29,9 +29,13 @@ create_test_files:
 # the SHA-256 hash of the test file. We use `hash` to verify test file
 # integrity and ensure that our test cases are stable.
 test_all:
-	RUST_BACKTRACE=1 cargo run --release --bin eval -- \
+	RUST_BACKTRACE=1 cargo run --release --bin test_tinantas -- \
 				   --test-cases test-files/tinanta.csv \
 				   --hash "a5879aeeb40e770bbf92204bd682e30521505d654f1168fc1097c6df1c6b3d54"
+
+# Work-in-progress test function for subantas.
+test_subantas:
+	RUST_BACKTRACE=1 cargo run --release --bin test_subantas
 
 # Performance
 # ~~~~~~~~~~~

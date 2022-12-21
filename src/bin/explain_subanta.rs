@@ -7,7 +7,7 @@
 //! ```
 use clap::Parser;
 use std::error::Error;
-use vidyut_prakriya::args::{subanta, Linga, SubantaArgs, Vacana, Vibhakti};
+use vidyut_prakriya::args::{Linga, SubantaArgs, Vacana, Vibhakti};
 use vidyut_prakriya::Ashtadhyayi;
 use vidyut_prakriya::Prakriya;
 
@@ -60,7 +60,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
 
     for vibhakti in VIBHAKTIS {
         for vacana in VACANAS {
-            let subanta_args = subanta()
+            let subanta_args = SubantaArgs::builder()
                 .linga(args.linga)
                 .vibhakti(*vibhakti)
                 .vacana(*vacana)
@@ -84,5 +84,5 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
 
 fn main() {
     let args = Args::parse();
-    run(args);
+    run(args).ok();
 }

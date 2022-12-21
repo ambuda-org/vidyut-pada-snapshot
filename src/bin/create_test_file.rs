@@ -3,7 +3,7 @@ use serde::Serialize;
 use std::error::Error;
 use std::io;
 use std::path::Path;
-use vidyut_prakriya::args::{tinanta, Dhatu, Lakara, Prayoga, Purusha, Vacana};
+use vidyut_prakriya::args::{Dhatu, Lakara, Prayoga, Purusha, TinantaArgs, Vacana};
 use vidyut_prakriya::dhatupatha as D;
 use vidyut_prakriya::Ashtadhyayi;
 
@@ -53,7 +53,7 @@ fn run(dhatus: Vec<(Dhatu, u16)>) -> Result<(), Box<dyn Error>> {
         for lakara in LAKARA {
             for (purusha, vacana) in TIN_SEMANTICS {
                 let prayoga = Prayoga::Kartari;
-                let tinanta_args = tinanta()
+                let tinanta_args = TinantaArgs::builder()
                     .prayoga(prayoga)
                     .purusha(*purusha)
                     .vacana(*vacana)

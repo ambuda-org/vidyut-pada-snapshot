@@ -6,7 +6,7 @@ use sha2::{Digest, Sha256};
 use std::error::Error;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use vidyut_prakriya::args::tinanta;
+use vidyut_prakriya::args::TinantaArgs;
 use vidyut_prakriya::dhatupatha;
 use vidyut_prakriya::Ashtadhyayi;
 
@@ -89,7 +89,7 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         let purusha = r[6].parse()?;
         let vacana = r[7].parse()?;
 
-        let tinanta_args = tinanta()
+        let tinanta_args = TinantaArgs::builder()
             .prayoga(prayoga)
             .purusha(purusha)
             .vacana(vacana)

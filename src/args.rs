@@ -10,8 +10,30 @@ on which strings are valid arguments in `from_str`, please read the source code 
 */
 use crate::tag::Tag;
 use compact_str::CompactString;
-use derive_builder::Builder;
+use std::error::Error;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::str::FromStr;
+
+/// Indicates a failure to parse a string representation of some `semantics` enum.
+#[derive(Debug, Clone)]
+pub struct ArgumentError {
+    /// The error message.
+    msg: String,
+}
+
+impl ArgumentError {
+    fn new(s: &str) -> Self {
+        ArgumentError { msg: s.to_owned() }
+    }
+}
+
+impl Error for ArgumentError {}
+
+impl Display for ArgumentError {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "{}", self.msg)
+    }
+}
 
 /// Defines an antargana.
 ///
@@ -390,7 +412,6 @@ impl FromStr for Lakara {
 }
 
 /// The information required to derive a subanta in the grammar.
-#[derive(Builder)]
 pub struct SubantaArgs {
     linga: Linga,
     vacana: Vacana,
@@ -410,14 +431,60 @@ impl SubantaArgs {
     pub fn vibhakti(&self) -> Vibhakti {
         self.vibhakti
     }
+
+    /// Returns a new builder for this struct.
+    pub fn builder() -> SubantaArgsBuilder {
+        SubantaArgsBuilder::default()
+    }
 }
 
-pub fn subanta() -> SubantaArgsBuilder {
-    SubantaArgsBuilder::default()
+/// Convenience struct for building a `SubantaArgs` object.
+#[derive(Default)]
+pub struct SubantaArgsBuilder {
+    linga: Option<Linga>,
+    vacana: Option<Vacana>,
+    vibhakti: Option<Vibhakti>,
 }
 
-/// The information required to derive a subanta in the grammar.
-#[derive(Builder)]
+impl SubantaArgsBuilder {
+    /// Sets the linga to use in the derivation.
+    pub fn linga(&mut self, val: Linga) -> &mut Self {
+        self.linga = Some(val);
+        self
+    }
+    /// Sets the vacana to use in the derivation.
+    pub fn vacana(&mut self, val: Vacana) -> &mut Self {
+        self.vacana = Some(val);
+        self
+    }
+    /// Sets the vibhakti to use in the derivation.
+    pub fn vibhakti(&mut self, val: Vibhakti) -> &mut Self {
+        self.vibhakti = Some(val);
+        self
+    }
+
+    /// Converts the arguments in this builder into a `SubantaArgs` struct.
+    ///
+    /// `build()` will fail if any args are missing.
+    pub fn build(&self) -> Result<SubantaArgs, ArgumentError> {
+        Ok(SubantaArgs {
+            linga: match self.linga {
+                Some(x) => x,
+                _ => return Err(ArgumentError::new("foo")),
+            },
+            vacana: match self.vacana {
+                Some(x) => x,
+                _ => return Err(ArgumentError::new("foo")),
+            },
+            vibhakti: match self.vibhakti {
+                Some(x) => x,
+                _ => return Err(ArgumentError::new("foo")),
+            },
+        })
+    }
+}
+
+/// The information required to derive a tinanta in the grammar.
 pub struct TinantaArgs {
     prayoga: Prayoga,
     purusha: Purusha,
@@ -442,8 +509,65 @@ impl TinantaArgs {
     pub fn vacana(&self) -> Vacana {
         self.vacana
     }
+
+    /// Returns a new builder for this struct.
+    pub fn builder() -> TinantaArgsBuilder {
+        TinantaArgsBuilder::default()
+    }
 }
 
-pub fn tinanta() -> TinantaArgsBuilder {
-    TinantaArgsBuilder::default()
+/// Convenience struct for building a `TinantaArgs` object.
+#[derive(Default)]
+pub struct TinantaArgsBuilder {
+    prayoga: Option<Prayoga>,
+    purusha: Option<Purusha>,
+    lakara: Option<Lakara>,
+    vacana: Option<Vacana>,
+}
+
+impl TinantaArgsBuilder {
+    /// Sets the prayoga to use in the derivation.
+    pub fn prayoga(&mut self, val: Prayoga) -> &mut Self {
+        self.prayoga = Some(val);
+        self
+    }
+    /// Sets the purusha to use in the derivation.
+    pub fn purusha(&mut self, val: Purusha) -> &mut Self {
+        self.purusha = Some(val);
+        self
+    }
+    /// Sets the lakara to use in the derivation.
+    pub fn lakara(&mut self, val: Lakara) -> &mut Self {
+        self.lakara = Some(val);
+        self
+    }
+    /// Sets the vacana to use in the derivation.
+    pub fn vacana(&mut self, val: Vacana) -> &mut Self {
+        self.vacana = Some(val);
+        self
+    }
+
+    /// Converts the arguments in this builder into a `TinantaArgs` struct.
+    ///
+    /// `build()` will fail if any args are missing.
+    pub fn build(&self) -> Result<TinantaArgs, ArgumentError> {
+        Ok(TinantaArgs {
+            prayoga: match self.prayoga {
+                Some(x) => x,
+                _ => return Err(ArgumentError::new("foo")),
+            },
+            purusha: match self.purusha {
+                Some(x) => x,
+                _ => return Err(ArgumentError::new("foo")),
+            },
+            lakara: match self.lakara {
+                Some(x) => x,
+                _ => return Err(ArgumentError::new("foo")),
+            },
+            vacana: match self.vacana {
+                Some(x) => x,
+                _ => return Err(ArgumentError::new("foo")),
+            },
+        })
+    }
 }
