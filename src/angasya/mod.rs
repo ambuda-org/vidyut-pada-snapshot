@@ -1,24 +1,30 @@
-//! angasya
-//! =======
-//! (6.4.1 - end of 7.4)
+//! One of the largest sections of the Ashtadhyayi starts with 6.4.1 and extends to the end of 7.4.
+//! Rule 6.4.1, *angasya*, declares that all rules within its scope apply to an *anga*, i.e. an
+//! inflection base followed by a prefix.
+//! 
+//! The *angasya* section of the Ashtadhyayi contains the grammar's core operations, such as:
 //!
-//! Rules that modify the sounds and terms in an aṅga.
+//! - guna and vrddhi changes
+//! - the introduction of the *it*-Agama 
+//! - changes to an *abhyAsa* 
+//! - changes to a *prAtipadika* when certain case endings follow.
 //!
-//! This section of the text is massive, so we break it down into several smaller prakaraṇas.
+//! To manage the complexity and scope of this section, we break it into smaller modules.
 
-use crate::abhyasasya;
-use crate::asiddhavat;
+mod abhyasasya;
+mod asiddhavat;
+mod guna_vrddhi;
+mod sup_adesha;
+
 use crate::char_view::{char_rule, get_at, set_at, xy};
 use crate::dhatu_gana as gana;
 use crate::filters as f;
-use crate::guna_vrddhi;
 use crate::it_samjna;
 use crate::operators as op;
 use crate::prakriya::{Prakriya, Rule};
 use crate::sounds as al;
 use crate::sounds::{s, SoundSet};
 use crate::stem_gana;
-use crate::sup_adesha;
 use crate::tag::Tag as T;
 use crate::term::Term;
 use lazy_static::lazy_static;

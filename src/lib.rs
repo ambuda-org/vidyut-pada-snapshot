@@ -23,18 +23,15 @@ mod filters;
 mod operators;
 
 // Rules
-mod abhyasasya;
 mod ac_sandhi;
 mod angasya;
 mod ardhadhatuka;
 mod ashtadhyayi;
-mod asiddhavat;
 mod atidesha;
 mod atmanepada;
 mod dhatu_gana;
 mod dhatu_karya;
 mod dvitva;
-mod guna_vrddhi;
 mod it_agama;
 mod it_samjna;
 mod la_karya;
@@ -43,7 +40,6 @@ mod samjna;
 mod samprasarana;
 mod sanadi;
 mod stem_gana;
-mod sup_adesha;
 mod sup_karya;
 mod tin_pratyaya;
 mod tripadi;

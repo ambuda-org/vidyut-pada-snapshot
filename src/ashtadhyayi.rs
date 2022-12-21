@@ -209,8 +209,6 @@ impl Ashtadhyayi {
 
     /// Returns all possible tinanta prakriyas that can be derived with the given initial
     /// conditions.
-    ///
-    /// TODO: add support for upasargas and sanAdi-pratyayas.
     pub fn derive_subantas(&self, pratipadika: &str, args: &SubantaArgs) -> Vec<Prakriya> {
         let mut stack = PrakriyaStack::new();
         stack.find_all(|p| derive_subanta(p, pratipadika, args), self.log_steps);

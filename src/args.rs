@@ -3,7 +3,8 @@ Common arguments for the crate's main functions.
 
 Before we begin a prakriya, we must declare certain morphological information up-front, such as our
 desired purusha and vacana, the dhatu we wish to use, and so on. To better document the API and to
-help users avoid common typos, we model this information through the enums and structs in this module.
+help users avoid configuration mistakes, we model this information through the enums and structs in
+this module.
 
 For extra flexibility, all of the enums here provides `as_str` and `from_str` methods. For details
 on which strings are valid arguments in `from_str`, please read the source code directly.
@@ -485,6 +486,16 @@ impl SubantaArgsBuilder {
 }
 
 /// The information required to derive a tinanta in the grammar.
+///
+/// If a tinanta were just a matter of prayoga/purusha/lakara/vacana, a struct like this would not
+/// be necessary. However, a tinanta's derivation can have many other constraints, including:
+///
+/// - specific upasargas or other prefixes
+/// - specific sanAdi pratyayas
+/// - other constraints on the overall derivation
+///
+/// Since we want to keep these args manageable and don't want to repeatedly break our main API, we
+/// decided to wrap args in this struct.
 pub struct TinantaArgs {
     prayoga: Prayoga,
     purusha: Purusha,
