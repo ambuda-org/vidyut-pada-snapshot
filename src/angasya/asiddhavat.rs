@@ -147,7 +147,8 @@ fn try_run_kniti_for_dhatu(p: &mut Prakriya, i: usize) -> Option<()> {
     let next_is_hi = n.first()?.has_text("hi");
     if anga.has_text_in(&["gam", "han", "jan", "Kan", "Gas"]) && n.has_adi(&*AC) && !n.has_u("aN") {
         p.op_term("6.4.98", i, op::upadha(""));
-    } else if (anga.has_text("hu") || anga.has_antya(&*JHAL)) && next_is_hi {
+    } else if (anga.has_text("hu") || anga.has_antya(&*JHAL) || anga.has_u("SAsu~")) && next_is_hi {
+        // HACK to allow SAsu~ so that we can derive SADi.
         p.op_term("6.4.101", n.start(), op::text("Di"));
     } else if anga.has_u("ciR") {
         p.op_term("6.4.104", n.start(), op::luk);
@@ -224,10 +225,13 @@ fn try_run_kniti_sarvadhatuke_for_shna_and_abhyasta(p: &mut Prakriya, i: usize) 
                     p.op_optional("6.4.116", op::t(i, op::antya("i")));
                 }
             }
-        } else if !anga.has_tag(T::Ghu) && n_is_haladi {
-            p.op_term("6.4.113", i, op::antya("I"));
-        } else {
-            p.op_term("6.4.112", i, op::antya(""));
+        // HACK to ignore SAsu~ so that we can derive SADi.
+        } else if !anga.has_u("SAsu~") {
+            if !anga.has_tag(T::Ghu) && n_is_haladi {
+                p.op_term("6.4.113", i, op::antya("I"));
+            } else {
+                p.op_term("6.4.112", i, op::antya(""));
+            }
         }
     }
 
@@ -418,13 +422,15 @@ pub fn run_dirgha(p: &mut Prakriya) -> Option<()> {
 }
 
 fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
+    let i_n = p.find_next_where(i, |t| !t.is_empty())?;
+
     let anga = p.get(i)?;
     if anga.has_tag(T::Snam) && anga.has_upadha('n') {
         p.op_term("6.4.23", i, op::upadha(""));
     }
 
     let anga = p.get(i)?;
-    let n = p.view(i + 1)?;
+    let n = p.view(i_n)?;
     let anidit_hal = !anga.has_tag(T::idit) && anga.has_antya(&*HAL);
     let is_kniti = n.has_tag_in(&[T::kit, T::Nit]);
 
@@ -456,12 +462,14 @@ fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
         }
     } else if anga.has_text("syad") && n.has_u("GaY") {
         p.op_optional("6.4.28", op::t(i, op::upadha("")));
-    } else if anga.has_u("SAsu~") && is_kniti && (n.has_u("aN") || n.has_adi(&*HAL)) {
-        // "āṅaḥ śāsu icchāyām iti asya na bhavati" -- kashika
-        p.op_term("6.4.34", i, op::upadha("i"));
-    } else if anga.has_u("SAsu~") && n.last()?.has_text("hi") {
-        // SAs + hi -> SAhi (-> SADi)
-        p.op_term("6.4.35", i, op::text("SA"));
+    } else if anga.has_u("SAsu~") {
+        if n.last()?.has_text("hi") {
+            // SAs + hi -> SAhi (-> SADi)
+            p.op_term("6.4.35", i, op::text("SA"));
+        } else if is_kniti && (n.has_u("aN") || n.has_adi(&*HAL)) {
+            // "āṅaḥ śāsu icchāyām iti asya na bhavati" -- kashika
+            p.op_term("6.4.34", i, op::upadha("i"));
+        }
     }
 
     Some(())
