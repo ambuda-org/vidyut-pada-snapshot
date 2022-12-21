@@ -45,7 +45,7 @@ fn run_before_attva_at_index(p: &mut Prakriya, i: usize) -> Option<()> {
     } else if cur.has_text_in(&["BU", "inD"]) && n_is_lit && apit {
         p.op_term("1.2.6", n.end(), add_kit);
     } else if n_is_lit && cur.has_text_in(&["SranT", "granT", "danB", "svanj"]) && apit {
-        // TODO: rule seems obligatory; where is optionality defined?
+        // Optional per Siddhanta-kaumudi.
         p.op_optional("1.2.6.v1", op::t(n.end(), add_kit));
     } else if cur.has_text_in(&["mfq", "mfd", "guD", "kuz", "kliS", "vad", "vas"])
         && n.has_u("ktvA")

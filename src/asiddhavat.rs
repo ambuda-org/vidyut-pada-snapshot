@@ -302,8 +302,9 @@ fn try_et_adesha_and_abhyasa_lopa_for_lit(p: &mut Prakriya, i: usize) -> Option<
     } else if dhatu.has_text("graT") {
         // TODO: attested, but can't find the rule for it.
         p.op("???", op_et_abhyasa_lopa);
-    } else if dhatu.has_text("rAD") {
-        p.op_optional("6.4.123", op_et_abhyasa_lopa);
+    } else if dhatu.has_text("rAD") && dhatu.has_gana(5) {
+        // TODO: why gana 5? For now, just follow what ashtadhyayi.com does.
+        p.op("6.4.123", op_et_abhyasa_lopa);
     } else if dhatu.has_u("jF") || dhatu.has_text_in(&["Bram", "tras"]) {
         p.op_optional("6.4.124", op_et_abhyasa_lopa);
     } else if dhatu.has_u_in(gana::PHAN_ADI) {
@@ -443,6 +444,7 @@ fn try_upadha_nalopa(p: &mut Prakriya, i: usize) -> Option<()> {
         if can_run {
             p.op_term("6.4.24", i, op::upadha(""));
         }
+        p.step("canrun");
     } else if anga.has_text_in(&["danS", "sanj", "svanj"]) && n.has_u("Sap") {
         // daSati
         p.op_term("6.4.25", i, op::upadha(""));
