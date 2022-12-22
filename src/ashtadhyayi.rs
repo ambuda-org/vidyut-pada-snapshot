@@ -1,3 +1,7 @@
+/// The Ashtadhyayi and its rules.
+///
+/// The main struct here is `Ashtadhyayi`, which accepts different config options that controls how
+/// words are derived in the system.
 use crate::ac_sandhi;
 use crate::angasya;
 use crate::ardhadhatuka;
@@ -152,6 +156,15 @@ fn derive_subanta(p: &mut Prakriya, pratipadika: &str, args: &SubantaArgs) {
 /// ```
 #[derive(Debug)]
 pub struct Ashtadhyayi {
+    // Options we hope to add in the future:
+    // - `nlp_mode` -- if set, preserve the final `s` and `r` of a pada, since these are important
+    //   to preserve for certain NLP use cases.
+    // - `chandasa` -- if set, also generate chaandasa forms.
+    // - `svara`    -- if set, enable accent rules.
+    // - `extended` -- if set, enable rare rules that are less useful, such as 8.4.48 (aco
+    //   rahAbhyAM dve), which creates words like *kAryyate*, *brahmmA*, etc.
+    // - `disable`  -- if set, disable the rules provided. To implement this, we should make
+    //   `Prakriya::step` private and add a check statement with `Prakriya::op`.
     log_steps: bool,
 }
 
@@ -175,8 +188,6 @@ impl Ashtadhyayi {
 
     /// Returns all possible tinanta prakriyas that can be derived with the given initial
     /// conditions.
-    ///
-    /// TODO: add support for upasargas and sanAdi-pratyayas.
     pub fn derive_tinantas(&self, dhatu: &Dhatu, args: &TinantaArgs) -> Vec<Prakriya> {
         let mut stack = PrakriyaStack::new();
         stack.find_all(|p| derive_tinanta(p, dhatu, args).unwrap(), self.log_steps);
@@ -205,13 +216,14 @@ impl AshtadhyayiBuilder {
         }
     }
 
-    /// Controls whether or not to log individual steps of the prakriya.
+    /// *(default: true)* Controls whether or not to log individual steps of the prakriya.
     ///
     /// - If `true`, each `Prakriya` will contain a full history, but the program will run more
-    ///   slowly. This is the default value and is best for most use cases.
+    ///   slowly. We recommend this setting for most use cases.
     ///
     /// - If `false`, the program will run faster, but only the final output of the `Prakriya` will
-    ///   be available. This is best used when you just need to generate a word list.
+    ///   be available. This is best used when you want to generate a word list and don't need the
+    ///   underlying derivation.
     pub fn log_steps(mut self, value: bool) -> Self {
         self.a.log_steps = value;
         self

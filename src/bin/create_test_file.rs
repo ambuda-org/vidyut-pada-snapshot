@@ -1,4 +1,7 @@
-//! Usage: `make generate_test_file`
+/*!
+Creates a test file containing the inputs to `Ashtadhyayi`'s derivation functions and all of the
+padas produced by those inputs.
+*/
 use serde::Serialize;
 use std::error::Error;
 use std::io;

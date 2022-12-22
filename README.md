@@ -145,11 +145,15 @@ text is SLP1, which is the encoding format we use throughout the crate.
 Contributing
 ------------
 
+`vidyut-prakriya` is an ambitious project, and your contributions can help it
+grow.
+
 ### Reporting errors
 
-`vidyut-prakriya` is an ambitious project, and you can help it grow. The
-easiest way to help is to [file a GitHub issue][gh-issue] if you notice an
-error.
+The easiest way to help is to [file a GitHub issue][gh-issue] if you notice an
+error. Please let us know what form you expected to see. We would also greatly
+appreciate relevant citations from the grammatical literature so that we can
+better understand and resolve the issue.
 
 [gh-issue]: https://github.com/ambuda-org/vidyut-pada-snapshot/issues
 

@@ -584,7 +584,8 @@ fn try_change_cu_to_ku(p: &mut Prakriya, i: usize) -> Option<()> {
         Some(ret)
     }
 
-    let niyama = if anga.has_adi(&*KU) {
+    let has_c_j_antya = anga.has_antya('c') || anga.has_antya('j');
+    let niyama = if anga.has_adi(&*KU) && has_c_j_antya {
         Some("7.3.59")
     } else if anga.has_text_in(&["aj", "vraj"]) {
         Some("7.3.60")
@@ -598,7 +599,7 @@ fn try_change_cu_to_ku(p: &mut Prakriya, i: usize) -> Option<()> {
         return None;
     }
 
-    if (anga.has_antya('c') || anga.has_antya('j')) && (n.has_tag(T::Git) || n.has_u("Ryat")) {
+    if has_c_j_antya && (n.has_tag(T::Git) || n.has_u("Ryat")) {
         let sub = convert(anga.antya()?)?;
         p.op_term("7.3.52", i, op::antya(sub));
     } else if anga.has_text_in(&["han", "hn"]) {

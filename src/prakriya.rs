@@ -393,6 +393,7 @@ impl PrakriyaStack {
         Self::default()
     }
 
+    /// Creates a new `Prakriya` according to upstream options.
     fn new_prakriya(rule_choices: Vec<RuleChoice>, log_steps: bool) -> Prakriya {
         Prakriya::with_config(Config {
             rule_choices,
