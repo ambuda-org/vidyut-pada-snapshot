@@ -241,9 +241,3 @@ pub fn run_common(p: &mut Prakriya) {
     apply_general_ac_sandhi(p);
     hacky_apply_ni_asiddhavat_rules(p);
 }
-
-pub fn run(p: &mut Prakriya) {
-    run_common(p);
-    try_sup_sandhi_before_angasya(p);
-    try_sup_sandhi_after_angasya(p);
-}

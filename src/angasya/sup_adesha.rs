@@ -76,7 +76,7 @@ fn try_adanta_adesha(p: &mut Prakriya, i_anga: usize, i: usize) -> Option<()> {
 ///
 /// Ordering: must come after 7.1.52 which creates "sAm"
 fn try_yusmad_asmad_sup_adesha(p: &mut Prakriya, i_anga: usize) -> Option<()> {
-    if !p.has(i_anga, f::text_in(&["yuzmad", "asmad"])) {
+    if !p.has(i_anga, |t| t.has_text_in(&["yuzmad", "asmad"])) {
         return None;
     }
 
@@ -149,7 +149,7 @@ pub fn run(p: &mut Prakriya) -> Option<()> {
     let is_napumsaka = p.has(i, f::tag(T::Napumsaka));
     let is_jas_shas = p.has(i_sup, f::u_in(&["jas", "Sas"]));
 
-    if p.has(i, f::u_in(&["dAp", "wAp", "cAp"])) && p.has(i_sup, f::text("O")) {
+    if p.has(i, f::u_in(&["dAp", "wAp", "cAp"])) && sup.has_text("O") {
         p.op("7.1.18", |p| op::upadesha(p, i_sup, "SI"));
     } else if is_napumsaka && sup.has_text("O") {
         p.op("7.1.19", |p| op::upadesha(p, i_sup, "SI"));

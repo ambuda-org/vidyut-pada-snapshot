@@ -15,7 +15,7 @@ fn add_sanadi(rule: Rule, p: &mut Prakriya, i_dhatu: usize, upadesha: &str) {
     p.op(rule, |p| {
         let mut pratyaya = Term::make_upadesha(upadesha);
         pratyaya.add_tags(&[T::Pratyaya]);
-        p.insert_after(i_dhatu, pratyaya)
+        p.insert_after(i_dhatu, pratyaya);
     });
 
     let i_pratyaya = i_dhatu + 1;
@@ -95,7 +95,7 @@ mod tests {
 
         dhatu_karya::run(&mut p, &dhatu).unwrap();
 
-        run(&mut p, Lakara::Lat).unwrap();
+        run(&mut p, false).unwrap();
         let dhatu = p.get(0).unwrap();
         let pratyaya = p.get(1).unwrap();
         (dhatu.clone(), pratyaya.clone())

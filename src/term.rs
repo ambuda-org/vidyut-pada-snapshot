@@ -109,6 +109,11 @@ impl Term {
         self.matches_sound_pattern(self.upadha(), pattern)
     }
 
+    /// Returns whether the term has a sound at index `i` that matches the given pattern.
+    pub fn has_at(&self, i: usize, p: impl Pattern) -> bool {
+        self.matches_sound_pattern(self.get(i), p)
+    }
+
     /// Returns whether the term has a specific upadesha.
     pub fn has_u(&self, s: &str) -> bool {
         match &self.u {

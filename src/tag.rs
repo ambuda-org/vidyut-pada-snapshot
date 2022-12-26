@@ -48,7 +48,7 @@ pub enum Tag {
     fdit,
     /// (dhatu) indicates the use of aN-pratyaya in luN-lakAra per 3.1.55. (gamx~ -> agamat)
     xdit,
-    /// (dhatu) prevents vrddhi of the dhatu vowel when followed by it-Agama per 7.2.5
+    /// (dhatu) prevents vrddhi in luN-lakara when followed by it-Agama per 7.2.5
     edit,
     /// (dhatu) indicates replacement of the "t" of a nistha-pratyaya with "n" per 8.2.45 (lagta ->
     /// lagna).
@@ -92,6 +92,8 @@ pub enum Tag {
     /// (pratyaya) causes vrddhi per 7.2.115.
     Rit,
     /// (pratyaya)
+    tit,
+    /// (pratyaya)
     nit,
     /// (pratyaya) indicates anudatta accent per 3.1.4. For sarvadhatuka pratyayas, allows guna and
     /// vrddhi; all other sarvadhatuka pratyayas are marked as `Nit` per 1.2.4 and are thus blocked
@@ -104,6 +106,8 @@ pub enum Tag {
     /// (dhatu) indicates shortening of the dhatu's penultimate vowel when followed by a
     /// `RI`-pratyaya per 6.4.92.
     mit,
+    /// (pratyaya)
+    rit,
     lit,
     /// (adesha) indicates a total replacement per 1.1.55.
     ///
@@ -250,10 +254,12 @@ impl Tag {
             'q' => Tag::qit,
             'Q' => Tag::Qit,
             'R' => Tag::Rit,
+            't' => Tag::tit,
             'n' => Tag::nit,
             'p' => Tag::pit,
             'P' => Tag::Pit,
             'm' => Tag::mit,
+            'r' => Tag::rit,
             'l' => Tag::lit,
             'S' => Tag::Sit,
             'z' => Tag::zit,

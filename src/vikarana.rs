@@ -539,7 +539,7 @@ pub fn run(p: &mut Prakriya) -> Result<(), Box<dyn Error>> {
     };
     if p.has(i, |t| t.has_u("gA\\N")) && p.has(i + 1, |t| t.has_text("a")) {
         p.set(i + 1, |t| t.text.clear());
-        p.step("6.1.101")
+        p.step("6.1.101");
     }
 
     Ok(())

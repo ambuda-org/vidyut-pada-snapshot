@@ -82,7 +82,7 @@ use vidyut_prakriya::args::{TinantaArgs, Dhatu, Lakara, Prayoga, Purusha, Vacana
 
 let a = Ashtadhyayi::new();
 
-let dhatu = Dhatu::new("BU", 1, None);
+let dhatu = Dhatu::new("BU", 1);
 let args = TinantaArgs::builder()
     .lakara(Lakara::Lat)
     .prayoga(Prayoga::Kartari)
@@ -171,7 +171,11 @@ Next, try using our prakriya debugger, which shows exactly how a given word was
 derived:
 
 ```shell
-$ cargo run --bin explain -- --code 01.0001 --pada Bavati
+# Explain a tinanta
+$ cargo run --bin explain_tinanta -- --code 01.0001 --pada Bavati
+
+# Explain a krdanta
+$ cargo run --bin explain_tinanta -- --code 01.0001 --krt ktvA --pratipadika BUtvA
 ```
 
 Once you've confirmed that your setup works, we suggest that you read through

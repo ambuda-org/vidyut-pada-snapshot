@@ -122,12 +122,12 @@ pub fn run_for_abhyasa(p: &mut Prakriya) {
         // ityabhyāsasya api na bhavati -- kāśikā.
         if is_vaci_svapi(dhatu) && dhatu.text != "Svi" {
             if dhatu.has_u("ve\\Y") {
-                p.step("6.1.40")
+                p.step("6.1.40");
             } else {
-                try_vaci_svapi_samprasarana("6.1.17", p, i)
+                try_vaci_svapi_samprasarana("6.1.17", p, i);
             }
         } else if is_grahi_jya(dhatu) {
-            try_grahi_jya_samprasarana("6.1.17", p, i)
+            try_grahi_jya_samprasarana("6.1.17", p, i);
         }
     }
 }

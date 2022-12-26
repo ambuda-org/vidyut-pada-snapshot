@@ -1,40 +1,7 @@
-/*!
-Common arguments for the crate's main functions.
-
-Before we begin a prakriya, we must declare certain morphological information up-front, such as our
-desired purusha and vacana, the dhatu we wish to use, and so on. To better document the API and to
-help users avoid configuration mistakes, we model this information through the enums and structs in
-this module.
-
-For extra flexibility, all of the enums here provides `as_str` and `from_str` methods. For details
-on which strings are valid arguments in `from_str`, please read the source code directly.
-*/
+use crate::args::errors::*;
 use crate::tag::Tag;
 use compact_str::CompactString;
-use std::error::Error;
-use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::str::FromStr;
-
-/// Indicates a failure to parse a string representation of some `semantics` enum.
-#[derive(Debug, Clone)]
-pub struct ArgumentError {
-    /// The error message.
-    msg: String,
-}
-
-impl ArgumentError {
-    fn new(s: &str) -> Self {
-        ArgumentError { msg: s.to_owned() }
-    }
-}
-
-impl Error for ArgumentError {}
-
-impl Display for ArgumentError {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(f, "{}", self.msg)
-    }
-}
 
 /// Defines an antargana.
 ///
@@ -64,33 +31,65 @@ pub enum Antargana {
     Akusmiya,
 }
 
-/// The verb root to use for the derivation.
-#[derive(Debug)]
-pub struct Dhatu {
-    /// The dhatu as stated in its aupadeshka form. `upadesha` should be an SLP1 string that
-    /// includes any necessary svaras. For examples, see the `dhatu` column in the
-    /// `data/dhatupatha.tsv` file included in this crate.
-    pub upadesha: CompactString,
-    /// The dhatu's gana. This should be a number between 1 and 10, inclusive.
-    pub gana: u8,
-    /// The antargana this Dhatu belongs to.
-    pub antargana: Option<Antargana>,
+/// One of the three common *sanAdi* pratyayas.
+///
+/// The *sanAdi* pratyayas create new dhatus per 3.1.32. They are introduced in rules 3.1.7 -
+/// 3.1.30, and since rule 3.1.7 contains the word "dhAtoH", they can be called Ardhadhatuka by
+/// 3.4.114.
+///
+/// Of the sanAdi pratyayas, most are added after either subantas or a handful of dhatus. But
+/// three of these pratyayas are added after dhatus more generally: `san`, `yaN`, and `Ric`.
+///
+/// For details on what these pratyayas mean and what kinds of words they produce, see the comments
+/// below.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Sanadi {
+    /// `san`, which creates desiderative roots per 3.1.7.
+    ///
+    /// Examples: buBUzati, ninIzati.
+    San,
+    /// `yaN`, which creates intensive roots per 3.1.22. For certain dhatus, the semantics are
+    /// instead "crooked movement" (by 3.1.23) or "contemptible" action (by 3.1.24).
+    ///
+    /// Examples: boBUyate, nenIyate.
+    ///
+    /// Constraints: can be used only if the dhatu starts with a consonant and has exactly one
+    /// vowel. If this constraint is violated, our APIs will return an `ArgumentError`.
+    Yan,
+    /// `yaN`, with elision per 2.4.74. This is often listed separately due to its rarity and its
+    /// very different form.
+    ///
+    /// Examples: boBavIti, boBoti, nenayIti, neneti.
+    YanLuk,
+    /// `Nic`, which creates causal roots per 3.1.26.
+    ///
+    /// Examples: BAvayati, nAyayati.
+    Nic,
 }
 
-impl Dhatu {
-    /// Creates a new `Dhatu`.
-    pub fn new(upadesha: impl AsRef<str>, gana: u8, antargana: Option<Antargana>) -> Self {
-        Dhatu {
-            upadesha: CompactString::from(upadesha.as_ref()),
-            gana,
-            antargana,
+impl Sanadi {
+    /// Returns a simple human-readable string that represents this enum's value.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::San => "san",
+            Self::Yan => "yan",
+            Self::YanLuk => "yan-luk",
+            Self::Nic => "nic",
         }
     }
+}
 
-    /// Creates a convenient human-readable code for this dhatu. This code matches the format used
-    /// on sites like ashtadhyayi.com.
-    pub fn code(&self, number: &str) -> String {
-        format!("{:0>2}.{:0>4}", self.gana, number)
+impl FromStr for Sanadi {
+    type Err = ArgumentError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let res = match s {
+            "san" => Self::San,
+            "yan" => Self::Yan,
+            "yan-luk" => Self::YanLuk,
+            "nic" => Self::Nic,
+            &_ => return Err(ArgumentError::enum_parse_error("Sanadi", s)),
+        };
+        Ok(res)
     }
 }
 
@@ -105,6 +104,7 @@ pub enum Prayoga {
     /// bhAve prayoga generally produces the same forms as karmani prayoga.
     Bhave,
 }
+
 impl Prayoga {
     pub(crate) fn as_tag(&self) -> Tag {
         match self {
@@ -122,14 +122,15 @@ impl Prayoga {
         }
     }
 }
+
 impl FromStr for Prayoga {
-    type Err = &'static str;
+    type Err = ArgumentError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let res = match s {
             "kartari" => Self::Kartari,
             "karmani" => Self::Karmani,
             "bhave" => Self::Bhave,
-            &_ => return Err("Could not parse Prayoga"),
+            &_ => return Err(ArgumentError::enum_parse_error("Prayoga", s)),
         };
         Ok(res)
     }
@@ -145,6 +146,7 @@ pub enum Purusha {
     /// The first person.
     Uttama,
 }
+
 impl Purusha {
     pub(crate) fn as_tag(&self) -> Tag {
         match self {
@@ -162,14 +164,15 @@ impl Purusha {
         }
     }
 }
+
 impl FromStr for Purusha {
-    type Err = &'static str;
+    type Err = ArgumentError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let res = match s {
             "prathama" => Self::Prathama,
             "madhyama" => Self::Madhyama,
             "uttama" => Self::Uttama,
-            &_ => return Err("Could not parse Purusha"),
+            &_ => return Err(ArgumentError::enum_parse_error("Purusha", s)),
         };
         Ok(res)
     }
@@ -203,123 +206,13 @@ impl Vacana {
     }
 }
 impl FromStr for Vacana {
-    type Err = &'static str;
+    type Err = ArgumentError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let res = match s {
             "eka" => Self::Eka,
             "dvi" => Self::Dvi,
             "bahu" => Self::Bahu,
-            &_ => return Err("Could not parse Vacana"),
-        };
-        Ok(res)
-    }
-}
-
-/// The gender of some subanta.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Linga {
-    /// The masculine.
-    Pum,
-    /// The feminine.
-    Stri,
-    /// The neuter.
-    Napumsaka,
-}
-impl Linga {
-    pub(crate) fn as_tag(&self) -> Tag {
-        match self {
-            Self::Pum => Tag::Pum,
-            Self::Stri => Tag::Stri,
-            Self::Napumsaka => Tag::Napumsaka,
-        }
-    }
-    /// Returns a simple human-readable string that represents this enum's value.
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Pum => "pum",
-            Self::Stri => "stri",
-            Self::Napumsaka => "napumsaka",
-        }
-    }
-}
-impl FromStr for Linga {
-    type Err = &'static str;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let res = match s {
-            "pum" => Self::Pum,
-            "stri" => Self::Stri,
-            "napumsaka" => Self::Napumsaka,
-            &_ => return Err("Could not parse Linga"),
-        };
-        Ok(res)
-    }
-}
-
-/// The case ending of some subanta.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Vibhakti {
-    /// The first vibhakti . Sometimes called the *nominative case*.
-    Prathama,
-    /// The second vibhakti. Sometimes called the *accusative case*.
-    Dvitiya,
-    /// The third vibhakti. Sometimes called the *instrumental case*.
-    Trtiya,
-    /// The fourth vibhakti. Sometimes called the *dative case*.
-    Caturthi,
-    /// The fifth vibhakti. Sometimes called the *ablative case*.
-    Panchami,
-    /// The sixth vibhakti. Sometimes called the *genitive case*.
-    Sasthi,
-    /// The seventh vibhakti. Sometimes called the *locative case*.
-    Saptami,
-    /// The first vibhakti used in the sense of *sambodhana*. Sometimes called the *vocative case*.
-    ///
-    /// *Sambodhana* is technically not a *vibhakti but rather an additional semantic condition
-    /// that conditions the first vibhakti. But we felt that users would find it more convenient to
-    /// have this condition available on `Vibhakti` directly rather than have to define the
-    /// *sambodhana* condition separately.
-    Sambodhana,
-}
-impl Vibhakti {
-    pub(crate) fn as_tag(&self) -> Tag {
-        match self {
-            Self::Prathama => Tag::V1,
-            Self::Dvitiya => Tag::V2,
-            Self::Trtiya => Tag::V3,
-            Self::Caturthi => Tag::V4,
-            Self::Panchami => Tag::V5,
-            Self::Sasthi => Tag::V6,
-            Self::Saptami => Tag::V7,
-            Self::Sambodhana => Tag::V1,
-        }
-    }
-    /// Returns a simple human-readable string that represents this enum's value.
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Prathama => "1",
-            Self::Dvitiya => "2",
-            Self::Trtiya => "3",
-            Self::Caturthi => "4",
-            Self::Panchami => "5",
-            Self::Sasthi => "6",
-            Self::Saptami => "7",
-            Self::Sambodhana => "s",
-        }
-    }
-}
-impl FromStr for Vibhakti {
-    type Err = &'static str;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let res = match s {
-            "1" => Self::Prathama,
-            "2" => Self::Dvitiya,
-            "3" => Self::Trtiya,
-            "4" => Self::Caturthi,
-            "5" => Self::Panchami,
-            "6" => Self::Sasthi,
-            "7" => Self::Saptami,
-            "s" => Self::Sambodhana,
-            &_ => return Err("Could not parse Vibhakti"),
+            &_ => return Err(ArgumentError::enum_parse_error("Vacana", s)),
         };
         Ok(res)
     }
@@ -391,8 +284,9 @@ impl Lakara {
         !self.is_sarvadhatuka()
     }
 }
+
 impl FromStr for Lakara {
-    type Err = &'static str;
+    type Err = ArgumentError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let res = match s {
             "lat" => Self::Lat,
@@ -406,81 +300,108 @@ impl FromStr for Lakara {
             "ashir-lin" => Self::AshirLin,
             "lun" => Self::Lun,
             "lrn" => Self::Lrn,
-            &_ => return Err("Could not parse La"),
+            &_ => return Err(ArgumentError::enum_parse_error("Lakara", s)),
         };
         Ok(res)
     }
 }
 
-/// The information required to derive a subanta in the grammar.
-pub struct SubantaArgs {
-    linga: Linga,
-    vacana: Vacana,
-    vibhakti: Vibhakti,
+/// The verb root to use for the derivation.
+#[derive(Debug)]
+pub struct Dhatu {
+    /// The dhatu as stated in its aupadeshka form. `upadesha` should be an SLP1 string that
+    /// includes any necessary svaras. For examples, see the `dhatu` column in the
+    /// `data/dhatupatha.tsv` file included in this crate.
+    pub upadesha: CompactString,
+    /// The dhatu's gana. This should be a number between 1 and 10, inclusive.
+    pub gana: u8,
+    /// The antargana this Dhatu belongs to.
+    pub antargana: Option<Antargana>,
+    /// The sanAdi pratyayas to add after the dhatu.
+    pub sanadi: Vec<Sanadi>,
 }
 
-impl SubantaArgs {
-    /// The linga to use in the derivation.
-    pub fn linga(&self) -> Linga {
-        self.linga
-    }
-    /// The vacana to use in the derivation.
-    pub fn vacana(&self) -> Vacana {
-        self.vacana
-    }
-    /// The vibhakti to use in the derivation.
-    pub fn vibhakti(&self) -> Vibhakti {
-        self.vibhakti
+impl Dhatu {
+    /// Creates a new dhatu with its gana.
+    ///
+    /// This is a convenience function for simple, straightforward dhatus. For more customization,
+    /// use the `builder()` API instead.
+    pub fn new(upadesha: &str, gana: u8) -> Self {
+        Self {
+            upadesha: CompactString::from(upadesha),
+            gana,
+            antargana: None,
+            sanadi: Vec::new(),
+        }
     }
 
     /// Returns a new builder for this struct.
-    pub fn builder() -> SubantaArgsBuilder {
-        SubantaArgsBuilder::default()
+    pub fn builder() -> DhatuBuilder {
+        DhatuBuilder::default()
     }
 }
 
-/// Convenience struct for building a `SubantaArgs` object.
+/// Convenience struct for building a `Dhatu` object.
 #[derive(Default)]
-pub struct SubantaArgsBuilder {
-    linga: Option<Linga>,
-    vacana: Option<Vacana>,
-    vibhakti: Option<Vibhakti>,
+pub struct DhatuBuilder {
+    upadesha: Option<CompactString>,
+    gana: Option<u8>,
+    antargana: Option<Antargana>,
+    sanadi: Vec<Sanadi>,
 }
 
-impl SubantaArgsBuilder {
-    /// Sets the linga to use in the derivation.
-    pub fn linga(&mut self, val: Linga) -> &mut Self {
-        self.linga = Some(val);
-        self
-    }
-    /// Sets the vacana to use in the derivation.
-    pub fn vacana(&mut self, val: Vacana) -> &mut Self {
-        self.vacana = Some(val);
-        self
-    }
-    /// Sets the vibhakti to use in the derivation.
-    pub fn vibhakti(&mut self, val: Vibhakti) -> &mut Self {
-        self.vibhakti = Some(val);
+impl DhatuBuilder {
+    /// Sets the upadesha of the dhatu.
+    pub fn upadesha(mut self, text: &str) -> Self {
+        self.upadesha = Some(CompactString::from(text));
         self
     }
 
-    /// Converts the arguments in this builder into a `SubantaArgs` struct.
-    ///
-    /// `build()` will fail if any args are missing.
-    pub fn build(&self) -> Result<SubantaArgs, ArgumentError> {
-        Ok(SubantaArgs {
-            linga: match self.linga {
+    /// Sets the gana of the dhatu.
+    pub fn gana(mut self, value: u8) -> Self {
+        self.gana = Some(value);
+        self
+    }
+
+    /// Sets the antargana of the dhatu, if one is necessary.
+    pub fn antargana(mut self, value: Antargana) -> Self {
+        self.antargana = Some(value);
+        self
+    }
+
+    /// Sets the `sanAdi` pratyaya to add to the dhatu.
+    pub fn sanadi(mut self, values: &[Sanadi]) -> Self {
+        self.sanadi.clear();
+        self.sanadi.extend(values);
+        self
+    }
+
+    /// Helper function for creating error messages.
+    fn field_missing(name: &str) -> ArgumentError {
+        ArgumentError::new(&format!("Please define the `{name}` field."))
+    }
+
+    /// Converts the arguments in this builder into a `Dhatu` struct.
+    pub fn build(self) -> Result<Dhatu, ArgumentError> {
+        Ok(Dhatu {
+            upadesha: match self.upadesha {
                 Some(x) => x,
-                _ => return Err(ArgumentError::new("foo")),
+                _ => return Err(Self::field_missing("upadesha")),
             },
-            vacana: match self.vacana {
-                Some(x) => x,
-                _ => return Err(ArgumentError::new("foo")),
+            gana: match self.gana {
+                Some(x) => {
+                    if (1..=10).contains(&x) {
+                        x
+                    } else {
+                        return Err(ArgumentError::new(
+                            "Received invalid value for `gana` (must be between 1 and 10",
+                        ));
+                    }
+                }
+                _ => return Err(Self::field_missing("gana")),
             },
-            vibhakti: match self.vibhakti {
-                Some(x) => x,
-                _ => return Err(ArgumentError::new("foo")),
-            },
+            antargana: self.antargana,
+            sanadi: self.sanadi,
         })
     }
 }
@@ -495,7 +416,7 @@ impl SubantaArgsBuilder {
 /// - other constraints on the overall derivation
 ///
 /// Since we want to keep these args manageable and don't want to repeatedly break our main API, we
-/// decided to wrap args in this struct.
+/// decided to wrap args in this struct and expose its values through accessors.
 pub struct TinantaArgs {
     prayoga: Prayoga,
     purusha: Purusha,
@@ -538,46 +459,51 @@ pub struct TinantaArgsBuilder {
 
 impl TinantaArgsBuilder {
     /// Sets the prayoga to use in the derivation.
-    pub fn prayoga(&mut self, val: Prayoga) -> &mut Self {
+    pub fn prayoga(mut self, val: Prayoga) -> Self {
         self.prayoga = Some(val);
         self
     }
     /// Sets the purusha to use in the derivation.
-    pub fn purusha(&mut self, val: Purusha) -> &mut Self {
+    pub fn purusha(mut self, val: Purusha) -> Self {
         self.purusha = Some(val);
         self
     }
     /// Sets the lakara to use in the derivation.
-    pub fn lakara(&mut self, val: Lakara) -> &mut Self {
+    pub fn lakara(mut self, val: Lakara) -> Self {
         self.lakara = Some(val);
         self
     }
     /// Sets the vacana to use in the derivation.
-    pub fn vacana(&mut self, val: Vacana) -> &mut Self {
+    pub fn vacana(mut self, val: Vacana) -> Self {
         self.vacana = Some(val);
         self
+    }
+
+    /// Helper function for creating error messages.
+    fn field_missing(name: &str) -> ArgumentError {
+        ArgumentError::new(&format!("Please define the `{name}` field."))
     }
 
     /// Converts the arguments in this builder into a `TinantaArgs` struct.
     ///
     /// `build()` will fail if any args are missing.
-    pub fn build(&self) -> Result<TinantaArgs, ArgumentError> {
+    pub fn build(self) -> Result<TinantaArgs, ArgumentError> {
         Ok(TinantaArgs {
             prayoga: match self.prayoga {
                 Some(x) => x,
-                _ => return Err(ArgumentError::new("foo")),
+                _ => return Err(Self::field_missing("prayoga")),
             },
             purusha: match self.purusha {
                 Some(x) => x,
-                _ => return Err(ArgumentError::new("foo")),
+                _ => return Err(Self::field_missing("purusha")),
             },
             lakara: match self.lakara {
                 Some(x) => x,
-                _ => return Err(ArgumentError::new("foo")),
+                _ => return Err(Self::field_missing("lakara")),
             },
             vacana: match self.vacana {
                 Some(x) => x,
-                _ => return Err(ArgumentError::new("foo")),
+                _ => return Err(Self::field_missing("vacana")),
             },
         })
     }

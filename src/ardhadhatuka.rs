@@ -98,7 +98,7 @@ pub fn dhatu_adesha_before_vikarana(p: &mut Prakriya, la: Lakara) -> Option<()> 
             // jaGAsa
             op::optional_adesha("2.4.40", p, i, "Gasx~");
         } else if n.has_u("lyap") || (n.has_adi('t') && n.has_tag(T::kit)) {
-            // vijagDya
+            // jagDvA, vijagDya
             p.op("2.4.36", |p| op::upadesha(p, i, "jagDi~"));
         }
         // Skip 2.4.39 (bahulaM chandasi).

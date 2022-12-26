@@ -12,6 +12,7 @@ the tripādi applies rules in order and will never "go back" to apply an earlie
 */
 
 use crate::char_view::{char_at, char_rule, get_at, set_at, xy, xyz};
+use crate::dhatu_gana;
 use crate::filters as f;
 use crate::operators as op;
 use crate::prakriya::Prakriya;
@@ -24,7 +25,9 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     static ref AT_KU_PU_M: SoundSet = s("aw ku~ pu~ M");
+    static ref AA: SoundSet = s("a");
     static ref AN: SoundSet = s("aR");
+    static ref YAN: SoundSet = s("yaR");
     static ref AC: SoundSet = s("ac");
     static ref CU: SoundSet = s("cu~");
     static ref IN2: SoundSet = s("iR2");
@@ -509,6 +512,63 @@ fn xy_rule(
     Some(())
 }
 
+/// Runs rules that affect the "t" of a `Nistha` pratyaya.
+/// (8.2.42 - 8.2.61)
+fn run_rules_for_nistha_t(p: &mut Prakriya) -> Option<()> {
+    let k = p.find_last(T::Nistha)?;
+    let d = p.find_prev_where(k, |t| !t.is_empty())?;
+
+    let dhatu = p.get(d)?;
+    if dhatu.has_antya('r') || dhatu.has_antya('d') {
+        p.op("8.2.42", |p| {
+            if p.has(d, |t| t.has_antya('d')) {
+                p.set(d, op::antya("n"));
+            }
+            p.set(k, op::adi("n"));
+        });
+    }
+
+    let set_adi = |rule, p: &mut Prakriya, s| p.op_term(rule, k, op::adi(s));
+    let to_n = |rule, p: &mut Prakriya| set_adi(rule, p, "n");
+    let optional_to_n = |rule, p: &mut Prakriya| p.op_optional(rule, op::t(k, op::adi("n")));
+
+    let dhatu = p.get(d)?;
+    if f::is_samyogadi(dhatu) && dhatu.has_at(1, &*YAN) {
+        // mlAna, ...
+        to_n("8.2.43", p);
+    } else if dhatu.has_u_in(dhatu_gana::LU_ADI) {
+        // lUna, ...
+        to_n("8.2.44", p);
+    } else if dhatu.has_tag(T::odit) {
+        // lagna, ...
+        to_n("8.2.45", p);
+    } else if dhatu.has_text("kzI") {
+        // kzIRa
+        to_n("8.2.46", p);
+    } else if dhatu.has_u("SyE\\N") {
+        // SIna, SIta
+        optional_to_n("8.2.47", p);
+    } else if dhatu.has_u("ancu~") {
+        optional_to_n("8.2.48", p);
+    } else if dhatu.has_text("dyU") {
+        optional_to_n("8.2.49", p);
+    } else if dhatu.has_text("vA") && d > 0 && p.has(d - 1, |t| t.has_text("nis")) {
+        // Check for "nis" because this is before the rutva section.
+        optional_to_n("8.2.50", p);
+    } else if dhatu.has_text("Suz") {
+        // Suzka
+        set_adi("8.2.51", p, "k");
+    } else if dhatu.has_text("pac") {
+        // pakva
+        set_adi("8.2.52", p, "v");
+    } else if dhatu.has_text("kzA") {
+        // kzAma
+        set_adi("8.2.53", p, "m");
+    }
+
+    Some(())
+}
+
 fn per_term_1c(p: &mut Prakriya) -> Option<()> {
     xy_rule(
         p,
@@ -527,9 +587,11 @@ fn per_term_1c(p: &mut Prakriya) -> Option<()> {
         p,
         |x, y| (x.has_antya('z') || x.has_antya('Q')) && y.has_adi('s'),
         |p, i, _| {
-            p.op_term("8.2.40", i, op::antya("k"));
+            p.op_term("8.2.41", i, op::antya("k"));
         },
     );
+
+    run_rules_for_nistha_t(p);
 
     xy_rule(
         p,
@@ -805,7 +867,8 @@ fn try_dha_lopa(p: &mut Prakriya) -> Option<()> {
             let x = p.get(i)?;
             // matches aN (no f, x)
             if x.has_antya(&*AN) {
-                if x.has_u_in(&["zaha~\\", "va\\ha~^"]) {
+                if x.has_u_in(&["zaha~\\", "va\\ha~^"]) && x.has_antya(&*AA) {
+                    // soQA, voQA, ...
                     p.op_term("6.3.112", i, op::antya("o"));
                 } else {
                     let sub = al::to_dirgha(x.antya()?)?;

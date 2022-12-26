@@ -41,97 +41,192 @@ lazy_static! {
     static ref UK: SoundSet = s("uk");
 }
 
-#[derive(Debug, Eq, PartialEq)]
-enum It {
-    Set(Rule),
-    Anit(Rule),
-    None,
-}
-
 fn is_hacky_eka_ac(t: &Term) -> bool {
     // HACK to have ekac apply for am-Agama
     f::is_eka_ac(t) || t.text.contains("fa")
 }
 
-fn add_it(rule: Rule, p: &mut Prakriya, i: usize) {
-    let agama = Term::make_agama("iw");
-    p.insert_after(i, agama);
-    p.step(rule);
-    it_samjna::run(p, i + 1).unwrap();
-}
-
-fn add_it_before(rule: Rule, p: &mut Prakriya, i: usize) {
-    let agama = Term::make_agama("iw");
-    p.insert_before(i, agama);
-    p.step(rule);
-    it_samjna::run(p, i).unwrap();
-}
-
-/// Runs general rules that prevent iT-Agama. Returns whether the iT-Agama procedure is complete.
+/// Returns whether the given term is vet by 7.2.44.
 ///
-/// (7.2.8 - 7.2.34)
-fn try_general_anit(p: &mut Prakriya, i: usize) -> bool {
-    let dhatu = &p.terms()[i];
-    let n = match p.view(i + 1) {
-        Some(x) => x,
-        None => return false,
-    };
+/// We wrap this condition in its own function because other rules need to check it as well.
+fn is_vet(anga: &Term) -> bool {
+    anga.has_u_in(&["svf", "zUN", "DUY"]) || anga.has_tag(T::Udit)
+}
 
-    let mut it = It::None;
-    let sri_uk = dhatu.has_text("Sri") || dhatu.has_antya(&*UK);
-    if n.has_tag(T::Krt) && !n.has_adi(&*VASH) {
-        it = It::Anit("7.2.8");
-    } else if is_hacky_eka_ac(dhatu) && sri_uk && n.has_tag(T::Kit) {
-        it = It::Anit("7.2.11");
-    } else if n.has_u("san") && dhatu.has_text_in(&["Sri", "grah", "guh"]) {
-        it = It::Anit("7.2.12");
-    } else if n.has_tag(T::Nistha) {
-        if dhatu.has_text("Svi") || dhatu.has_tag(T::Idit) {
-            it = It::Anit("7.2.14");
-        } else if dhatu.has_tag(T::Adit) {
-            let code = "7.2.17";
-            if p.any(&[T::Bhave, T::Karmani]) && p.is_allowed(code) {
+/// A wrapper for `Prakriya` that allows at most one it-Agama rule to be added to the derivation.
+/// If the calling code tries to add a second rule, that rule will be ignored. In the future, we
+/// should assert that a rule is never added twice.
+struct ItPrakriya<'a> {
+    p: &'a mut Prakriya,
+    added: bool,
+}
+impl<'a> ItPrakriya<'a> {
+    fn new(p: &'a mut Prakriya) -> Self {
+        ItPrakriya { p, added: false }
+    }
+
+    #[allow(unused)]
+    fn has_upasarga_in(&self, i: usize, values: &[&str]) -> bool {
+        if i == 0 {
+            false
+        } else {
+            self.p.has(i - 1, |t| t.has_text_in(values))
+        }
+    }
+
+    /// Inserts it-Agama at index i and prevents further rules.
+    fn set(&mut self, rule: Rule, i: usize) {
+        if !self.added {
+            let agama = Term::make_agama("iw");
+            self.p.insert_before(i, agama);
+            self.p.step(rule);
+            it_samjna::run(self.p, i).unwrap();
+        }
+        self.added = true;
+    }
+
+    /// Optionally inserts it-Agama at index i.
+    fn optional_set(&mut self, rule: Rule, i: usize) {
+        if !self.added {
+            if self.p.is_allowed(rule) {
+                self.set(rule, i);
             } else {
-                p.decline(code);
-                it = It::Anit("7.2.16");
+                self.p.decline(rule);
             }
         }
-        // TODO: 7.2.15
+    }
+
+    // Blocks it-Agama and prevents further rules.
+    fn anit(&mut self, rule: Rule) {
+        if !self.added {
+            self.p.step(rule);
+        }
+        self.added = true;
+    }
+
+    // Optionally blocks it-Agama.
+    fn optional_anit(&mut self, rule: Rule) {
+        if !self.added {
+            if self.p.is_allowed(rule) {
+                self.anit(rule);
+            } else {
+                self.p.decline(rule);
+            }
+        }
+    }
+}
+
+/// Runs general rules that prevent iT-Agama.
+///
+/// (7.2.8 - 7.2.34)
+fn try_general_anit(wrap: &mut ItPrakriya, i: usize) -> Option<()> {
+    let j = wrap.p.find_next_where(i, |t| !t.is_empty())?;
+    let dhatu = wrap.p.get(i)?;
+    let n = wrap.p.get(j)?;
+
+    let ti_tu_tra = &[
+        "ti", "tu", "tra", "ta", "Ta", "si", "su", "sara", "ka", "sa",
+    ];
+
+    let is_uk = dhatu.has_antya(&*UK);
+    let sri_uk = dhatu.has_text("Sri") || is_uk;
+    let krti = n.has_tag(T::Krt);
+
+    if krti && n.has_adi(&*VASH) {
+        wrap.anit("7.2.8");
+    } else if krti && n.has_text_in(ti_tu_tra) && !n.has_u("kta") {
+        // dIpti, saktu, pattra, pota, kAzWa, kukzi, ikzu, akzara, Salka, vatsa, ...
+        // NOTE: exclude kta:
+        //
+        // > auṇādikasya eva taśabdasya grahaṇam iṣyate, na punaḥ ktasya
+        // -- Kashika Vrtti
+        wrap.anit("7.2.9");
+    } else if is_hacky_eka_ac(dhatu) && sri_uk && n.has_tag(T::kit) {
+        wrap.anit("7.2.11");
+    } else if n.has_u("san") && (dhatu.has_text_in(&["grah", "guh"]) || is_uk) {
+        // "Sri" is excluded from this condition because it is mentioned explicitly in 7.2.49.
+        wrap.anit("7.2.12");
+    } else if n.has_tag(T::Nistha) {
+        if dhatu.has_text("Svi") || dhatu.has_tag(T::Idit) {
+            wrap.anit("7.2.14");
+        } else if is_vet(dhatu) {
+            wrap.anit("7.2.15");
+        } else if dhatu.has_tag(T::Adit) {
+            let mut can_run = true;
+            // TODO: Adikarmani.
+            if wrap.p.any(&[T::Bhave]) {
+                can_run = wrap.p.op_optional("7.2.17", |_| {});
+            }
+            if can_run {
+                wrap.anit("7.2.16");
+            }
+        }
+        // skipped: 7.2.18 - 23.
     }
     // TODO: 7.2.18 - 7.2.34
 
-    match it {
-        It::Anit(code) => {
-            p.step(code);
-            true
-        }
-        It::None | It::Set(_) => false,
+    Some(())
+}
+
+/// Runs it rules specific to a following ktvA or nisthA pratyaya.
+///
+/// 7.2.51 - 7.2.56
+fn try_it_rules_for_ktva_and_nistha(wrap: &mut ItPrakriya, i: usize) -> Option<()> {
+    let i_n = wrap.p.find_next_where(i, |t| !t.is_empty())?;
+
+    let anga = wrap.p.get(i)?;
+    let n = wrap.p.view(i_n)?;
+    let ktvi = n.last()?.has_u("ktvA");
+
+    if !(ktvi || n.has_tag(T::Nistha)) {
+        return None;
     }
+
+    if anga.has_text("kliS") {
+        // kliSitvA, klizwvA
+        wrap.optional_set("7.2.50", i_n);
+        // kliS is Udit, so even if this option is declined, it could be accepted later by 7.2.44.
+        // So for derivational clarity, block 7.2.44.
+        wrap.added = true;
+    } else if anga.has_u("pUN") {
+        // pUtvA, pavitvA
+        wrap.optional_set("7.2.51", i_n);
+    } else if anga.has_u("va\\sa~") || anga.has_text("kzuD") {
+        // uzitvA, kzuDitvA
+        // Match specifically on "va\\sa~" from bhU-gana because "vasa~\" from ad-gana will get it
+        // by the normal rules.
+        wrap.set("7.2.52", i_n);
+    } else if anga.has_text("anc") {
+        // aYcita, akta
+        wrap.optional_set("7.2.53", i_n);
+    } else if anga.has_text("luB") {
+        // lubDvA, luBitvA
+        wrap.optional_set("7.2.54", i_n);
+    } else if ktvi && anga.has_text_in(&["jF", "vrasc"]) {
+        // jaritvA, jarItvA, vraScitvA
+        wrap.optional_anit("7.2.55");
+    } else if ktvi && anga.has_tag(T::udit) {
+        // SamitvA, SAntvA, ...
+        wrap.optional_anit("7.2.56");
+    }
+    Some(())
 }
 
 /// Runs iT rules specific to liT. Returns whether the iT-Agama procedure is complete.
-fn try_lit_it(p: &mut Prakriya, i: usize) -> bool {
-    let i_n = match p.find_next_where(i, |t| !t.is_empty()) {
-        Some(i) => i,
-        None => return false,
-    };
-    let n = match p.view(i_n) {
-        Some(x) => x,
-        None => return false,
-    };
+fn try_lit_it(wrap: &mut ItPrakriya, i: usize) -> Option<()> {
+    let i_n = wrap.p.find_next_where(i, |t| !t.is_empty())?;
+    let n = wrap.p.view(i_n)?;
 
     if !n.has_lakshana("li~w") {
-        return false;
+        return None;
     }
 
-    let mut it = It::None;
+    let anga = wrap.p.get(i)?;
+    let rule_7_2_10 = anga.has_tag(T::Anudatta) && is_hacky_eka_ac(anga);
 
-    let rule_7_2_10 = p.has(i, |t| t.has_tag(T::Anudatta) && is_hacky_eka_ac(t));
-
-    let anga = &p.terms()[i];
     // These rules are always aniT.
     if anga.has_text_in(&["kf", "sf", "Bf", "vf", "stu", "dru", "sru", "Sru"]) {
-        it = It::Anit("7.2.13");
+        wrap.anit("7.2.13");
     } else if anga.has_antya(&*AC) && n.has_u("Tal") && rule_7_2_10 {
         // Concise summary of rules:
         // - The roots in 7.2.13 are aniT. All others are seT by valAdi (7.2.35).
@@ -144,214 +239,158 @@ fn try_lit_it(p: &mut Prakriya, i: usize) -> bool {
         // other roots, this condition is optional:
         if !anga.has_antya('f') {
             let code = "7.2.63";
-            if p.is_allowed(code) {
-                it = It::Set(code);
+            if wrap.p.is_allowed(code) {
+                wrap.set(code, i_n);
             } else {
-                p.decline(code);
-                it = It::Anit("7.2.61");
+                wrap.p.decline(code);
+                wrap.anit("7.2.61");
             }
         // But for other anit roots, the condition is obligatory.
         } else if anga.has_u("f\\") {
-            it = It::Set("7.2.66");
+            wrap.set("7.2.66", i_n);
         } else {
-            it = It::Anit("7.2.61");
+            wrap.anit("7.2.61");
         }
     } else if anga.has_text_in(&["sfj", "dfS"]) && n.has_u("Tal") {
         // By default, these will be seT. So the option allows aniT.
-        let code = "7.2.65";
-        if p.is_allowed(code) {
-            it = It::Anit(code);
-        } else {
-            p.decline(code);
+        wrap.optional_anit("7.2.65");
+    }
+
+    if !wrap.added {
+        // The effect of 7.2.13 is that all other roots are considerd `sew` by
+        // default.
+        wrap.p.step("7.2.13");
+        let n = wrap.p.view(i + 1).unwrap();
+        if n.has_adi(&*VAL) {
+            wrap.set("7.2.35", i_n);
         }
     }
 
-    match it {
-        It::None => {
-            // The effect of 7.2.13 is that all other roots are considerd `sew` by
-            // default.
-            p.step("7.2.13");
-            let n = p.view(i + 1).unwrap();
-            if n.has_adi(&*VAL) {
-                add_it("7.2.35", p, i);
-            }
-        }
-        It::Anit(code) => {
-            p.step(code);
-        }
-        It::Set(code) => {
-            add_it(code, p, i);
-        }
-    }
-
-    true
-}
-
-fn optional_set(rule: Rule, p: &mut Prakriya) -> It {
-    if p.is_allowed(rule) {
-        It::Set(rule)
-    } else {
-        p.decline(rule);
-        It::None
-    }
-}
-
-fn optional_anit(rule: Rule, p: &mut Prakriya) -> It {
-    if p.is_allowed(rule) {
-        It::Anit(rule)
-    } else {
-        p.decline(rule);
-        It::None
-    }
+    Some(())
 }
 
 /// Runs iT rules that condition on a following ArdhadhAtuka suffix.
 ///
 /// (7.2.35 - 7.2.36 and 7.2.41 - 7.2.75)
-fn try_ardhadhatuke(p: &mut Prakriya, i: usize) -> bool {
-    let n = match p.view(i + 1) {
-        Some(x) => x,
-        None => {
-            return false;
-        }
-    };
+fn try_ardhadhatuke(wrap: &mut ItPrakriya, i: usize) -> Option<()> {
+    let n = wrap.p.view(i + 1)?;
     if !n.has_tag(T::Ardhadhatuka) {
-        return false;
+        return None;
     }
 
-    let mut it = It::None;
-    let anga = &p.terms()[i];
+    let i_n = wrap.p.find_next_where(i, |t| !t.is_empty())?;
+    let anga = wrap.p.get(i)?;
 
     // Special cases
-    let mut add_sak = false;
     if (anga.has_antya('f') || anga.has_text("han")) && n.has_u("sya") {
-        it = It::Set("7.2.70");
+        wrap.set("7.2.70", i_n);
     } else if n.has_u("si~c") {
         if anga.has_text("aYj") {
-            it = It::Set("7.2.71");
-        } else if p.terms().last().unwrap().has_tag(T::Parasmaipada) {
+            wrap.set("7.2.71", i_n);
+        } else if wrap.p.terms().last()?.has_tag(T::Parasmaipada) {
             if anga.has_u_in(&["zwu\\Y", "zu\\Y", "DUY"]) {
-                it = It::Set("7.2.72");
+                wrap.set("7.2.72", i_n);
             } else if anga.has_text_in(&["yam", "ram", "nam"]) {
-                add_sak = true;
-                it = It::Set("7.2.73");
+                wrap.p.set(i, |t| t.text += "s");
+                wrap.set("7.2.73", i_n);
             } else if anga.has_antya('A') {
                 // Handle this after running Attva. See `run_after_attva` for details.
-                return false;
+                return None;
             }
         } else if anga.has_u_in(&["zmi\\N", "pUN", "f\\", "anjU~", "asU~\\"]) && n.has_u("san") {
-            it = It::Set("7.2.74");
+            wrap.set("7.2.74", i_n);
         }
     } else if anga.has_u_in(&["kF", "gF", "df\\N", "Df\\N", "pra\\Ca~"]) && n.has_u("san") {
         // cikarizati, jigarizati, didarizate, diDarizate, papracCizati
-        it = It::Set("7.2.75");
+        wrap.set("7.2.75", i_n);
     }
 
-    let anga = &p.terms()[i];
-    let n = p.view(i + 1).unwrap();
-    let antya_para = p.terms().last().unwrap().has_tag(T::Parasmaipada);
+    try_it_rules_for_ktva_and_nistha(wrap, i);
+
+    let anga = wrap.p.get(i)?;
+    let n = wrap.p.view(i + 1)?;
+    let antya_para = wrap.p.terms().last()?.has_tag(T::Parasmaipada);
     let se = n.has_adi('s');
 
     let krta_crta = &["kft", "cft", "Cfd", "tfd", "nft"];
     let ishu_saha = &["izu~", "zaha~\\", "luBa~", "ruza~", "riza~"];
-    if matches!(it, It::Set(_) | It::Anit(_)) {
+
+    if wrap.added {
         // Do nothing
     } else if anga.has_u_in(gana::RADH_ADI) && n.has_adi(&*VAL) {
         // All of these roots are in scope for 7.2.10 (aniT).
         // So, this option allows seT.
-        it = optional_set("7.2.45", p);
+        wrap.optional_set("7.2.45", i_n);
     } else if anga.has_u_in(ishu_saha) && n.has_adi('t') {
-        it = optional_anit("7.2.48", p);
+        wrap.optional_anit("7.2.48");
     } else if anga.has_text_in(krta_crta) && se && !n.has_u("si~c") {
-        it = optional_anit("7.2.57", p);
+        wrap.optional_anit("7.2.57");
     } else if anga.has_text("gam") && antya_para && se {
         // gamizyati
-        it = It::Set("7.2.58");
+        wrap.set("7.2.58", i_n);
     } else if anga.has_u_in(gana::VRDBHYAH) && anga.has_gana(1) && antya_para && se {
         // vartsyati (vfd), vartsyati (vfD), Sftsyati, syantsyati
-        it = It::Anit("7.2.59");
+        wrap.anit("7.2.59");
     } else if anga.has_u("kfpU~\\") && antya_para && (se || n.has_u("tAsi~")) {
-        it = It::Anit("7.2.60");
+        wrap.anit("7.2.60");
     } else if anga.has_text_in(&["snu", "kram"]) && n.has_adi(&*VAL) {
         // TODO: not sure I undesrtand the scope of this rule.
         if n.has_tag(T::Atmanepada) && n.has_u("sIyu~w") {
-            it = It::Anit("7.2.36");
+            wrap.anit("7.2.36");
         }
     }
 
     // Optional rules (Udit and others)
-    let anga = &p.terms()[i];
-    let n = p.view(i + 1).unwrap();
-    let last = p.terms().last().unwrap();
-    if matches!(it, It::Set(_) | It::Anit(_)) {
-        // Do nothing
-    } else if n.has_adi(&*VAL) {
-        if anga.has_u_in(&["svf", "zUN", "DUY"]) || anga.has_tag(T::Udit) {
+    let anga = wrap.p.get(i)?;
+    let n = wrap.p.view(i + 1)?;
+    let last = wrap.p.terms().last()?;
+    if n.has_adi(&*VAL) && !wrap.added {
+        if is_vet(anga) {
             // Synchronize choice of "it" with the choice of lun-vikarana in 3.1.45:
             // - if lun and using ksa, must use anit.
             // - if lun and not using ksa, must use set.
             // - otherwise, vet.
-            if p.has_tag(T::FlagHasAnitKsa) {
-                it = It::Anit("7.2.44");
-            } else if p.has_tag(T::FlagHagSetSic) {
+            if wrap.p.has_tag(T::FlagHasAnitKsa) {
+                wrap.anit("7.2.44");
+            } else if wrap.p.has_tag(T::FlagHagSetSic) {
                 // Do nothing; the control flow will fall through and pick up 7.2.35 further below.
             } else {
-                it = optional_anit("7.2.44", p)
+                wrap.optional_anit("7.2.44")
             }
         } else if (n.has_lakshana("li~N") || n.has_u("si~c")) && last.has_tag(T::Atmanepada) {
             let vft = anga.has_text("vf") || anga.has_antya('F');
             if vft && n.has_tag(T::Ardhadhatuka) {
                 // By default, all of these roots are seT.
                 // So, the option allows anit.
-                it = optional_anit("7.2.42", p);
+                wrap.optional_anit("7.2.42");
             } else if anga.has_antya('f') && f::is_samyogadi(anga) {
                 if anga.has_tag(T::Anudatta) {
                     // For anit roots, optional seT.
-                    it = optional_set("7.2.43", p);
+                    wrap.optional_set("7.2.43", i_n);
                 } else {
                     // For seT roots, optional aniT.
-                    it = optional_anit("7.2.43", p);
+                    wrap.optional_anit("7.2.43");
                 }
             }
             // TODO
         }
     }
 
-    let anga = &p.terms()[i];
-    let n = p.view(i + 1).expect("");
-    if matches!(it, It::Set(_) | It::Anit(_)) {
+    let anga = wrap.p.get(i)?;
+    let n = wrap.p.view(i + 1)?;
+    if wrap.added {
         // Do nothing
     } else if anga.has_tag(T::Anudatta) && is_hacky_eka_ac(anga) && !n.has_lakshana("li~w") {
         // 7.2.10 is a niyama to the general rule, which applies only to
         // ArdhadhAtuka suffixes. So we add a check for ArdhadhAtukatva here.
         //
         // Any li~w root not explictly included in 7.2.13 is also iT.
-        it = It::Anit("7.2.10");
+        wrap.anit("7.2.10");
     } else if n.has_adi(&*VAL) && n.has_tag(T::Ardhadhatuka) {
-        it = It::Set("7.2.35");
+        wrap.set("7.2.35", i_n);
     }
 
-    match it {
-        It::Anit(code) => {
-            p.step(code);
-            true
-        }
-        It::Set(code) => {
-            if add_sak {
-                p.op(code, |p| {
-                    // TODO: properly set sak-Agama.
-                    p.set(i, |t| t.text += "s");
-                    op::insert_agama_after(p, i, "iw");
-                    p.step(code);
-                    it_samjna::run(p, i + 1).unwrap();
-                });
-            } else {
-                add_it(code, p, i);
-            }
-            false
-        }
-        It::None => false,
-    }
+    Some(())
 }
 
 /// Runs rules that introduce iw-Agama before a sArvadhAtuka-pratyaya.
@@ -387,11 +426,13 @@ fn try_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
             it_samjna::run(p, i_n).ok()?;
         } else {
             // roditi, svapiti, Svasiti, aniti, jakziti
-            add_it_before("7.2.76", p, i_n);
+            let mut wrap = ItPrakriya::new(p);
+            wrap.set("7.2.76", i_n);
         }
     } else if anga.has_text("IS") && n.has_adi('s') {
         // ISize, ISizva
-        add_it_before("7.2.77", p, i_n);
+        let mut wrap = ItPrakriya::new(p);
+        wrap.set("7.2.77", i_n);
     } else if anga.has_text_in(&["Iq", "jan", "IS"])
         && (n.has_adi('s') || (tin.has_u("Dvam") && !tin.has_lakshana("la~N")))
     {
@@ -400,13 +441,14 @@ fn try_sarvadhatuke(p: &mut Prakriya, i: usize) -> Option<()> {
         // See kAshika on 7.2.78 for inclusion of IS here.
         // > "kṛtaṭeretvasya grahaṇāt laṅi dhvami na bhavitavyamiṭā"
         // - kashika on why laN is excluded.
-        add_it_before("7.2.78", p, i_n);
+        let mut wrap = ItPrakriya::new(p);
+        wrap.set("7.2.78", i_n);
     }
 
     Some(())
 }
 
-/// Runs rules that lengthen the iṭ.
+/// Runs rules that lengthen the iṭ-Agama.
 ///
 /// (7.2.37 - 7.2.40)
 fn try_lengthen_it_agama(p: &mut Prakriya, i: usize) -> Option<()> {
@@ -444,15 +486,11 @@ pub fn run_before_attva(p: &mut Prakriya) {
         None => return,
     };
 
-    if try_lit_it(p, i) {
-        return;
-    }
-    if try_general_anit(p, i) {
-        return;
-    }
-    if try_ardhadhatuke(p, i) {
-        return;
-    }
+    let mut wrap = ItPrakriya::new(p);
+
+    try_lit_it(&mut wrap, i);
+    try_general_anit(&mut wrap, i);
+    try_ardhadhatuke(&mut wrap, i);
     try_sarvadhatuke(p, i);
 
     if let Some(i) = p.find_first_where(f::is_it_agama) {

@@ -1,5 +1,5 @@
 use std::error::Error;
-use vidyut_prakriya::args::{Linga, SubantaArgs, Vibhakti};
+use vidyut_prakriya::args::{Linga, SubantaArgs};
 use vidyut_prakriya::Ashtadhyayi;
 
 const fn pum(s: &'static str) -> (&'static str, Linga) {
@@ -18,6 +18,7 @@ const fn sarva_pum(s: &'static str) -> (&'static str, Linga) {
 /// Test cases are derived from the data on ashtadhyayi.com, fetched from [1].
 ///
 /// [1]: https://github.com/ashtadhyayi-com/data/blob/master/shabda/data.txt
+#[allow(unused)]
 const PRATIPADIKAS: &[(&str, Linga)] = &[
     pum("a"),
     pum("deva"),
@@ -99,17 +100,6 @@ const PRATIPADIKAS: &[(&str, Linga)] = &[
     na("payas"),
     pum("asmad"),
     pum("yuzmad"),
-];
-
-const VIBHAKTIS: &[Vibhakti] = &[
-    Vibhakti::Prathama,
-    Vibhakti::Dvitiya,
-    Vibhakti::Trtiya,
-    Vibhakti::Caturthi,
-    Vibhakti::Panchami,
-    Vibhakti::Sasthi,
-    Vibhakti::Saptami,
-    Vibhakti::Sambodhana,
 ];
 
 #[derive(Debug, Clone)]

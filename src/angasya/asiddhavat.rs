@@ -662,6 +662,7 @@ fn run_for_final_i_or_u(p: &mut Prakriya, i: usize) -> Option<()> {
             p.step("6.4.85");
         } else {
             p.op_term("6.4.82", i, op::antya("y"));
+            p.debug(format!("{:?}", p.terms()));
         }
     } else if anga.has_antya(&*UU) && n.has_tag(T::Sup) && is_anekac(p, i) && is_asamyogapurva {
         if anga.has_text("BU") {

@@ -155,10 +155,6 @@ fn try_shiti(p: &mut Prakriya) -> Option<()> {
     let i = p.find_last(T::Dhatu)?;
     let i_n = p.find_next_where(i, |t| !t.text.is_empty())?;
 
-    let sham_adi = &[
-        "Samu~", "tamu~", "damu~", "Sramu~", "Bramu~", "kzamU~", "klamu~", "madI~",
-    ];
-
     let pa_ghra = &[
         "pA\\", "GrA\\", "DmA\\", "zWA\\", "mnA\\", "dA\\R", "df\\Si~r", "f\\", "sf\\", "Sa\\dx~",
         "za\\dx~",
@@ -175,7 +171,7 @@ fn try_shiti(p: &mut Prakriya) -> Option<()> {
     if anga.has_antya('o') && n.has_u("Syan") {
         // Syati
         p.op_term("7.3.71", i, op::antya(""));
-    } else if anga.has_u_in(sham_adi) && n.has_u("Syan") && anga.has_gana(4) {
+    } else if anga.has_u_in(gana::SHAM_ADI) && n.has_u("Syan") && anga.has_gana(4) {
         // Check ganas to avoid `Bramu~ anavasTAne` (BrAmyati).
         p.op_term("7.3.74", i, op::upadha("A"));
     } else if anga.has_text_in(&["zWiv", "klam"]) {

@@ -8,9 +8,8 @@ pub fn get_at(p: &mut Prakriya, index: usize) -> Option<&Term> {
         let delta = t.text.len();
         if (cur..cur + delta).contains(&index) {
             return Some(t);
-        } else {
-            cur += delta;
         }
+        cur += delta;
     }
     None
 }
@@ -24,9 +23,8 @@ pub fn set_at(p: &mut Prakriya, index: usize, substitute: &str) {
             let t_offset = index - cur;
             t.text.replace_range(t_offset..=t_offset, substitute);
             return;
-        } else {
-            cur += delta;
         }
+        cur += delta;
     }
 }
 
@@ -57,9 +55,7 @@ pub fn char_rule(
         }
 
         counter += 1;
-        if counter > 10 {
-            panic!("Possible infinite loop: {:?}", p.history());
-        }
+        assert!(counter <= 10, "Possible infinite loop: {:?}", p.history());
     }
 }
 
@@ -88,7 +84,7 @@ pub fn xyz(
         let y = bytes.get(i + 1);
         let z = bytes.get(i + 2);
         let (x, y, z) = match (x, y, z) {
-            (Some(a), Some(b), Some(c)) => (*a as char, *b as char, *c as char),
+            (Some(x), Some(y), Some(z)) => (*x as char, *y as char, *z as char),
             _ => return false,
         };
         inner(x, y, z)

@@ -1,5 +1,5 @@
 #![doc = include_str!("../README.md")]
-#![warn(missing_docs)]
+#![deny(missing_docs)]
 
 pub use crate::ashtadhyayi::{Ashtadhyayi, AshtadhyayiBuilder};
 pub use crate::prakriya::{Prakriya, Rule, RuleChoice, Step};
@@ -8,8 +8,16 @@ pub use crate::prakriya::{Prakriya, Rule, RuleChoice, Step};
 // - `args` defines the API contract.
 // - `dhatupatha` defines convenience functions for reading our version of the Dhatupatha.
 //   These functions are used only in our binaries (in `src/bin`).
+// - `private` contains convenience functions for the code in `src/bin`.
 pub mod args;
 pub mod dhatupatha;
+
+mod binary_only;
+#[doc(hidden)]
+pub mod private {
+    // Common code for our binaries. Don't use or depend on this!
+    pub use crate::binary_only::*;
+}
 
 // Data structures
 mod char_view;
@@ -34,6 +42,7 @@ mod dhatu_karya;
 mod dvitva;
 mod it_agama;
 mod it_samjna;
+mod krt_pratyaya;
 mod la_karya;
 mod pratipadika_karya;
 mod samjna;

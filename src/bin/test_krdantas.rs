@@ -1,10 +1,10 @@
-//! Evaluates a list of tinantas.
+//! Evaluates a list of krdantas.
 use clap::Parser;
 use std::error::Error;
 use std::path::PathBuf;
-use vidyut_prakriya::args::TinantaArgs;
+use vidyut_prakriya::args::KrdantaArgs;
 use vidyut_prakriya::dhatupatha;
-use vidyut_prakriya::private::check_file_hash;
+// use vidyut_prakriya::private::check_file_hash;
 use vidyut_prakriya::Ashtadhyayi;
 
 #[derive(Parser)]
@@ -12,13 +12,12 @@ use vidyut_prakriya::Ashtadhyayi;
 struct Args {
     #[arg(long)]
     test_cases: PathBuf,
-
-    #[arg(long)]
-    hash: String,
+    // #[arg(long)]
+    // hash: String,
 }
 
 fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    check_file_hash(&args.test_cases, &args.hash);
+    // check_file_hash(&args.test_cases, &args.hash);
 
     let a = Ashtadhyayi::builder().log_steps(false).build();
 
@@ -34,19 +33,11 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         let number = &r[3];
         let dhatu = dhatupatha::resolve(&r[1], gana, number)?;
 
-        let prayoga = r[4].parse()?;
-        let lakara = r[5].parse()?;
-        let purusha = r[6].parse()?;
-        let vacana = r[7].parse()?;
+        let krt = r[4].parse()?;
 
-        let tinanta_args = TinantaArgs::builder()
-            .prayoga(prayoga)
-            .purusha(purusha)
-            .vacana(vacana)
-            .lakara(lakara)
-            .build()?;
+        let krdanta_args = KrdantaArgs::builder().krt(krt).build()?;
 
-        let prakriyas = a.derive_tinantas(&dhatu, &tinanta_args);
+        let prakriyas = a.derive_krdantas(&dhatu, &krdanta_args);
         let mut actual: Vec<_> = prakriyas.iter().map(|p| p.text()).collect();
         actual.sort();
 
@@ -54,12 +45,10 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         if expected == actual {
             num_matches += 1;
         } else {
-            let lakara = &r[5];
-            let purusha = &r[6];
-            let vacana = &r[7];
+            let krt = &r[4];
             let code = format!("{:0>2}.{:0>4}", gana, number);
             let upadesha = dhatu.upadesha;
-            println!("[ FAIL ]  {code:<10} {upadesha:<10} {lakara:<10} {purusha:<10} {vacana:<10}");
+            println!("[ FAIL ]  {code:<10} {upadesha:<10} {krt:<10}");
             println!("          Expected: {:?}", expected);
             println!("          Actual  : {:?}", actual);
         }

@@ -36,6 +36,7 @@ We chose SLP1 over something like [WX][wx] merely because we have more familiari
 */
 use lazy_static::lazy_static;
 use std::collections::HashMap;
+use std::fmt;
 
 type Sound = char;
 
@@ -71,17 +72,18 @@ impl SoundSet {
     pub fn contains(&self, c: Sound) -> bool {
         self.0[c as usize] == 1
     }
+}
 
-    /// Returns all chars in the given set in alphabetical order.
-    fn to_string(&self) -> String {
+impl fmt::Display for SoundSet {
+    /// Returns all chars in the given set in the traditional Sanskrit order.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut ret = String::new();
-        // Use Paninian order.
         for c in "aAiIuUfFxXeEoOMHkKgGNcCjJYwWqQRtTdDnpPbBmyrlvSzsh".chars() {
             if self.contains(c) {
                 ret.push(c);
             }
         }
-        ret
+        write!(f, "{ret}")
     }
 }
 

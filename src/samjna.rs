@@ -79,8 +79,8 @@ fn try_run_for_dhatu_pratyaya(p: &mut Prakriya, i: usize) -> Option<()> {
     Some(())
 }
 
-fn try_run_for_tinanta(p: &mut Prakriya) -> Option<()> {
-    p.find_first_where(|t| t.has_tag(T::Tin))?;
+fn try_run_for_dhatu(p: &mut Prakriya) -> Option<()> {
+    p.find_first_where(|t| t.has_tag(T::Dhatu))?;
 
     for i in 0..p.terms().len() {
         try_run_for_dhatu_pratyaya(p, i);
@@ -90,7 +90,7 @@ fn try_run_for_tinanta(p: &mut Prakriya) -> Option<()> {
 }
 
 pub fn run(p: &mut Prakriya) {
-    try_run_for_tinanta(p);
+    try_run_for_dhatu(p);
     try_run_for_pratipadika(p);
     try_run_for_sup(p);
 }

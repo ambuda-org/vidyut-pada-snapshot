@@ -244,3 +244,15 @@ pub const VRDBHYAH: &[&str] = &["vftu~\\", "vfDu~\\", "SfDu~\\", "SfDu~^", "syan
 /// These dhatus use san-pratyaya with a long abhyAsa.
 /// (3.1.6)
 pub const MAN_BADHA: &[&str] = &["mAna~\\", "baDa~\\", "dAna~^", "SAna~^"];
+
+pub const SHAM_ADI: &[&str] = &[
+    "Samu~", "tamu~", "damu~", "Sramu~", "Bramu~", "kzamU~", "klamu~", "madI~",
+];
+
+/// An antargana of kryAdi that uses -na for `Nistha`. For details, see 8.2.44.
+/// TODO: what is the extent of this? Commentaries suggest 21 roots, but that doesn't make sense
+/// in our dhatupatha because the [lU, vf] range is only around 4 roots.
+pub const LU_ADI: &[&str] = &[
+    "lUY", "stFY", "kFY", "vFY", "DUY", "SF", "pF", "vF", "BF", "mF", "dF", "jF", "JF", "DF", "nF",
+    "kF", "F", "gF", "jyA\\",
+];
