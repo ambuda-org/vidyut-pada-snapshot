@@ -833,7 +833,7 @@ pub fn hacky_before_dvitva(p: &mut Prakriya) {
     }
 }
 
-/// Rules conditioned on a following caN-pratyaya (luN-vikarana).
+/// Runs rules that condition on a following caN-pratyaya (luN-vikarana).
 ///
 /// (7.4.1 - 7.4.6)
 fn try_cani_after_guna(p: &mut Prakriya) -> Option<()> {
@@ -978,6 +978,8 @@ fn try_add_agama_before_ni(p: &mut Prakriya) -> Option<()> {
     Some(())
 }
 
+/// Runs rules that replace the first sounds of `asmad` and `yuzmad`, up to and including their `m`
+/// sound.
 fn try_maparyanta_for_asmad_and_yusmad(p: &mut Prakriya) -> Option<()> {
     let i = p.find_first_where(|t| t.has_u_in(&["asmad", "yuzmad"]))?;
     let sup = p.get_if(i + 1, |t| t.has_tag(T::Vibhakti))?;

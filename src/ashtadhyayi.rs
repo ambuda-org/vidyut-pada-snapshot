@@ -57,7 +57,7 @@ fn run_various_dhatu_tasks(p: &mut Prakriya) {
     it_agama::run_after_attva(p);
     atidesha::run_after_attva(p);
 
-    // F -> ir, ur
+    // Converts F to ir/ur
     angasya::hacky_before_dvitva(p);
 }
 
