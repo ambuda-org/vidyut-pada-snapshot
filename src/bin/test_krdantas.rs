@@ -4,7 +4,7 @@ use std::error::Error;
 use std::path::PathBuf;
 use vidyut_prakriya::args::KrdantaArgs;
 use vidyut_prakriya::dhatupatha;
-// use vidyut_prakriya::private::check_file_hash;
+use vidyut_prakriya::private::check_file_hash;
 use vidyut_prakriya::Ashtadhyayi;
 
 #[derive(Parser)]
@@ -12,12 +12,12 @@ use vidyut_prakriya::Ashtadhyayi;
 struct Args {
     #[arg(long)]
     test_cases: PathBuf,
-    // #[arg(long)]
-    // hash: String,
+    #[arg(long)]
+    hash: String,
 }
 
 fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    // check_file_hash(&args.test_cases, &args.hash);
+    check_file_hash(&args.test_cases, &args.hash);
 
     let a = Ashtadhyayi::builder().log_steps(false).build();
 

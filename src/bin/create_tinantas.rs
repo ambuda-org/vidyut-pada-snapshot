@@ -2,6 +2,7 @@
 Creates a test file containing the inputs to `Ashtadhyayi`'s derivation functions and all of the
 padas produced by those inputs.
 */
+use clap::Parser;
 use serde::Serialize;
 use std::error::Error;
 use std::io;
@@ -9,6 +10,13 @@ use std::path::Path;
 use vidyut_prakriya::args::{Dhatu, Lakara, Prayoga, Purusha, TinantaArgs, Vacana};
 use vidyut_prakriya::dhatupatha as D;
 use vidyut_prakriya::Ashtadhyayi;
+
+#[derive(Parser)]
+#[command(author, version, about)]
+struct Args {
+    #[arg(long)]
+    prayoga: Option<Prayoga>,
+}
 
 // TODO: reuse with other binaries?
 const LAKARA: &[Lakara] = &[
@@ -36,6 +44,8 @@ const TIN_SEMANTICS: &[(Purusha, Vacana)] = &[
     (Purusha::Uttama, Vacana::Bahu),
 ];
 
+const PRAYOGAS: &[Prayoga] = &[Prayoga::Kartari, Prayoga::Karmani];
+
 #[derive(Debug, Serialize)]
 struct Row<'a> {
     padas: String,
@@ -48,40 +58,48 @@ struct Row<'a> {
     vacana: &'static str,
 }
 
-fn run(dhatus: Vec<(Dhatu, u16)>) -> Result<(), Box<dyn Error>> {
+fn run(dhatus: Vec<(Dhatu, u16)>, args: Args) -> Result<(), Box<dyn Error>> {
     let mut wtr = csv::Writer::from_writer(io::stdout());
     let a = Ashtadhyayi::builder().log_steps(false).build();
 
     for (dhatu, number) in dhatus {
-        for lakara in LAKARA {
-            for (purusha, vacana) in TIN_SEMANTICS {
-                let prayoga = Prayoga::Kartari;
-                let tinanta_args = TinantaArgs::builder()
-                    .prayoga(prayoga)
-                    .purusha(*purusha)
-                    .vacana(*vacana)
-                    .lakara(*lakara)
-                    .build()?;
+        for prayoga in PRAYOGAS {
+            // Filter prayoga based on args
+            if let Some(p) = args.prayoga {
+                if *prayoga != p {
+                    continue;
+                }
+            }
 
-                let prakriyas = a.derive_tinantas(&dhatu, &tinanta_args);
+            for lakara in LAKARA {
+                for (purusha, vacana) in TIN_SEMANTICS {
+                    let tinanta_args = TinantaArgs::builder()
+                        .prayoga(*prayoga)
+                        .purusha(*purusha)
+                        .vacana(*vacana)
+                        .lakara(*lakara)
+                        .build()?;
 
-                let dhatu_text = &dhatu.upadesha;
-                let mut padas: Vec<_> = prakriyas.iter().map(|p| p.text()).collect();
-                padas.sort();
-                let padas = padas.join("|");
+                    let prakriyas = a.derive_tinantas(&dhatu, &tinanta_args);
 
-                let row = Row {
-                    padas,
-                    dhatu: dhatu_text,
-                    gana: dhatu.gana,
-                    number,
-                    lakara: lakara.as_str(),
-                    purusha: purusha.as_str(),
-                    vacana: vacana.as_str(),
-                    prayoga: prayoga.as_str(),
-                };
+                    let dhatu_text = &dhatu.upadesha;
+                    let mut padas: Vec<_> = prakriyas.iter().map(|p| p.text()).collect();
+                    padas.sort();
+                    let padas = padas.join("|");
 
-                wtr.serialize(row)?;
+                    let row = Row {
+                        padas,
+                        dhatu: dhatu_text,
+                        gana: dhatu.gana,
+                        number,
+                        lakara: lakara.as_str(),
+                        purusha: purusha.as_str(),
+                        vacana: vacana.as_str(),
+                        prayoga: prayoga.as_str(),
+                    };
+
+                    wtr.serialize(row)?;
+                }
             }
         }
     }
@@ -91,6 +109,8 @@ fn run(dhatus: Vec<(Dhatu, u16)>) -> Result<(), Box<dyn Error>> {
 }
 
 fn main() {
+    let args = Args::parse();
+
     let dhatus = match D::load_all(Path::new("data/dhatupatha.tsv")) {
         Ok(res) => res,
         Err(err) => {
@@ -99,7 +119,7 @@ fn main() {
         }
     };
 
-    match run(dhatus) {
+    match run(dhatus, args) {
         Ok(()) => (),
         Err(err) => {
             eprintln!("{}", err);

@@ -35,6 +35,9 @@ fn add_dhatu(p: &mut Prakriya, dhatu: &Dhatu, is_ardhadhatuka: bool) -> Result<(
 fn run_various_dhatu_tasks(p: &mut Prakriya) {
     // Needed transitively for dhatu-samprasarana.
     angasya::try_pratyaya_adesha(p);
+    // Must run before it-Agama.
+    angasya::try_cinvat_for_bhave_and_karmani_prayoga(p);
+
     // Depends on jha_adesha since it conditions on the first sound.
     it_agama::run_before_attva(p);
     // Depends on it_agama for certain rules.

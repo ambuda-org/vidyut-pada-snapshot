@@ -223,6 +223,8 @@ fn maybe_replace_cli_with_cin(p: &mut Prakriya, i: usize) -> Option<()> {
         } else if dhatu.has_text_in(&["dIp", "jan", "buD", "pUr", "tAy", "pyAy"]) {
             // adIpi, ajani, aboDi, ...
             p.op_optional("3.1.61", to_cin);
+        } else if p.has_tag(T::Karmani) {
+            p.op("3.1.66", to_cin);
         }
     }
 

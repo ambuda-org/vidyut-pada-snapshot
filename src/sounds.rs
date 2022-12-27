@@ -60,9 +60,9 @@ impl SoundSet {
     }
 
     /// Creates a set whose members are the characters in `string`.
-    pub fn from(string: &str) -> Self {
+    pub fn from(string: impl AsRef<str>) -> Self {
         let mut res = Self::new();
-        for c in string.chars() {
+        for c in string.as_ref().chars() {
             res.0[c as usize] = 1;
         }
         res

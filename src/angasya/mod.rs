@@ -16,6 +16,8 @@ mod asiddhavat;
 mod guna_vrddhi;
 mod sup_adesha;
 
+pub use asiddhavat::try_cinvat_for_bhave_and_karmani_prayoga;
+
 use crate::char_view::{char_rule, get_at, set_at, xy};
 use crate::dhatu_gana as gana;
 use crate::filters as f;

@@ -59,7 +59,7 @@ fn run(dhatus: Vec<(Dhatu, u16)>, args: Args) -> Result<(), Box<dyn Error>> {
 fn main() {
     let args = Args::parse();
 
-    let dhatus = match D::load_all(Path::new("data/subset.tsv")) {
+    let dhatus = match D::load_all(Path::new("data/dhatupatha.tsv")) {
         Ok(res) => res,
         Err(err) => {
             println!("{}", err);

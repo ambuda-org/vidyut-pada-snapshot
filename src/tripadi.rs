@@ -558,8 +558,9 @@ fn run_rules_for_nistha_t(p: &mut Prakriya) -> Option<()> {
     } else if dhatu.has_text("Suz") {
         // Suzka
         set_adi("8.2.51", p, "k");
-    } else if dhatu.has_text("pac") {
+    } else if dhatu.has_text("pak") {
         // pakva
+        // ("pac" becomes "pak" by 8.2.30.)
         set_adi("8.2.52", p, "v");
     } else if dhatu.has_text("kzA") {
         // kzAma

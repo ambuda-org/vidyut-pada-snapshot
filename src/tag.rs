@@ -225,6 +225,9 @@ pub enum Tag {
     Sat,
     /// Indicates the insertion of `na` through the Snam-vikarana.
     Snam,
+
+    // Indicates atidesha of `ciR`-pratyaya's behavior, per 6.4.62.
+    Cinvat,
 }
 
 impl Tag {

@@ -6,11 +6,11 @@
 //! $ cargo run --bin explain -- --code 01.0001 --pada BavAmi
 //! ```
 use clap::Parser;
-use std::collections::BTreeMap;
+use compact_str::CompactString;
+use std::collections::HashMap;
 use std::error::Error;
-use std::path::Path;
 use vidyut_prakriya::args::{Lakara, Prayoga, Purusha, TinantaArgs, Vacana};
-use vidyut_prakriya::dhatupatha as D;
+use vidyut_prakriya::dhatupatha;
 use vidyut_prakriya::Ashtadhyayi;
 use vidyut_prakriya::Prakriya;
 
@@ -21,18 +21,8 @@ struct Args {
     code: String,
     #[arg(long)]
     pada: String,
-}
-
-fn pretty_print_prakriya(p: &Prakriya) {
-    println!("------------------------------");
-    for step in p.history() {
-        println!("{:<10} | {}", step.rule(), step.result());
-    }
-    println!("------------------------------");
-    for choice in p.rule_choices() {
-        println!("{choice:?}");
-    }
-    println!("------------------------------");
+    #[arg(long)]
+    prayoga: Option<Prayoga>,
 }
 
 const LAKARA: &[Lakara] = &[
@@ -60,10 +50,39 @@ const PURUSHA_VACANA: &[(Purusha, Vacana)] = &[
     (Purusha::Uttama, Vacana::Bahu),
 ];
 
-fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    let dhatus = D::load_all(Path::new("data/dhatupatha.tsv"));
+const PRAYOGAS: &[Prayoga] = &[Prayoga::Kartari, Prayoga::Karmani];
 
-    let mut ordered_words = BTreeMap::new();
+fn pretty_print_prakriya(p: &Prakriya, lakara: Lakara, purusha: Purusha, vacana: Vacana) {
+    println!("{:?} {:?} {:?}", lakara, purusha, vacana);
+    println!("------------------------------");
+    for step in p.history() {
+        println!("{:<10} | {}", step.rule(), step.result());
+    }
+    println!("------------------------------");
+    for choice in p.rule_choices() {
+        println!("{choice:?}");
+    }
+    println!("------------------------------");
+}
+
+fn pretty_print_all_padas_for_dhatu(all_words: HashMap<(&Prayoga, &Lakara), Vec<CompactString>>) {
+    for prayoga in PRAYOGAS {
+        println!("{prayoga:?}:");
+        for lakara in LAKARA {
+            let key = (prayoga, lakara);
+            if let Some(padas) = all_words.get(&key) {
+                let data = padas.join(", ");
+                println!("- {lakara:?}: {data}");
+            }
+        }
+        println!();
+    }
+}
+
+fn run(args: Args) -> Result<(), Box<dyn Error>> {
+    let dhatus = dhatupatha::load_all("data/dhatupatha.tsv");
+
+    let mut ordered_words = HashMap::new();
     let a = Ashtadhyayi::new();
 
     let (gana, number) = match args.code.split_once('.') {
@@ -75,34 +94,31 @@ fn run(args: Args) -> Result<(), Box<dyn Error>> {
         if !(dhatu.gana == gana && *dhatu_number == number) {
             continue;
         }
-        for (i, lakara) in LAKARA.iter().enumerate() {
-            let mut words = vec![];
-            for (purusha, vacana) in PURUSHA_VACANA {
-                let tinanta_args = TinantaArgs::builder()
-                    .prayoga(Prayoga::Kartari)
-                    .purusha(*purusha)
-                    .vacana(*vacana)
-                    .lakara(*lakara)
-                    .build()?;
+        for prayoga in PRAYOGAS {
+            for lakara in LAKARA {
+                let mut words = vec![];
+                for (purusha, vacana) in PURUSHA_VACANA {
+                    let tinanta_args = TinantaArgs::builder()
+                        .prayoga(*prayoga)
+                        .purusha(*purusha)
+                        .vacana(*vacana)
+                        .lakara(*lakara)
+                        .build()?;
 
-                let ps = a.derive_tinantas(dhatu, &tinanta_args);
-                for p in ps {
-                    words.push(p.text());
-                    if p.text() == args.pada {
-                        println!("{:?} {:?} {:?}", lakara, purusha, vacana);
-                        pretty_print_prakriya(&p);
+                    let ps = a.derive_tinantas(dhatu, &tinanta_args);
+                    for p in ps {
+                        words.push(p.text());
+                        if p.text() == args.pada {
+                            pretty_print_prakriya(&p, *lakara, *purusha, *vacana);
+                        }
                     }
                 }
+                ordered_words.insert((prayoga, lakara), words);
             }
-            ordered_words.insert(i, words);
         }
     }
 
-    for (i, padas) in ordered_words.iter() {
-        let la = LAKARA[*i];
-        let data = padas.join(", ");
-        println!("{la:?}: {data}");
-    }
+    pretty_print_all_padas_for_dhatu(ordered_words);
     Ok(())
 }
 

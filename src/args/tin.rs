@@ -94,7 +94,7 @@ impl FromStr for Sanadi {
 }
 
 /// The prayoga of some tinanta.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Prayoga {
     /// Usage coreferent with the agent, e.g. "The horse *goes* to the village."
     Kartari,
@@ -219,7 +219,7 @@ impl FromStr for Vacana {
 }
 
 /// The tense/mood of some tinanta.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Lakara {
     /// Describes action in the present tense. Ssometimes called the *present indicative*.
     Lat,

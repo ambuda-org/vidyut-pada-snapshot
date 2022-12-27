@@ -2,10 +2,10 @@ use compact_str::CompactString;
 use vidyut_prakriya::args::*;
 use vidyut_prakriya::Ashtadhyayi;
 
-fn create_ktva(dhatu: &str, gana: u8) -> Vec<CompactString> {
+fn create_krdanta(dhatu: &str, gana: u8, krt: Krt) -> Vec<CompactString> {
     let a = Ashtadhyayi::new();
     let dhatu = Dhatu::new(dhatu, gana);
-    let args = KrdantaArgs::builder().krt(Krt::ktvA).build().unwrap();
+    let args = KrdantaArgs::builder().krt(krt).build().unwrap();
 
     let prakriyas = a.derive_krdantas(&dhatu, &args);
     prakriyas.iter().map(|p| p.text()).collect()
@@ -36,12 +36,44 @@ fn test_ktva() {
         ("va\\sa~", 1, vec!["uzitvA"]),
     ];
 
+    let create_ktva = |dhatu, gana| create_krdanta(dhatu, gana, Krt::ktvA);
     for (dhatu, gana, expected) in cases {
         let mut expected = expected.to_vec();
         let mut actual = create_ktva(dhatu, gana);
+
         expected.sort();
         actual.sort();
+        assert_eq!(actual, expected);
+    }
+}
 
+#[test]
+fn test_kta() {
+    let cases = vec![
+        // Basic
+        ("BU", 1, vec!["BUta"]),
+        ("eDa~\\", 1, vec!["eDita"]),
+        ("qukf\\Y", 8, vec!["kfta"]),
+        ("cura~", 10, vec!["corita"]),
+        // 1.2.19
+        ("SIN", 2, vec!["Sayita"]),
+        // The four below are allowed by 7.2.17.
+        // ("YizvidA~\\", 1, vec!["svedita"]),
+        // ("YimidA~", 1, vec!["medita"]),
+        // ("YikzvidA~", 1, vec!["kzvedita"]),
+        // ("YiDfzA~~", 5, vec!["Darzita"]),
+        // Irregular
+        ("qupa\\ca~^z", 1, vec!["pakva"]),
+        ("Su\\za~", 4, vec!["Suzka"]),
+    ];
+
+    let create_kta = |dhatu, gana| create_krdanta(dhatu, gana, Krt::kta);
+    for (dhatu, gana, expected) in cases {
+        let mut expected = expected.to_vec();
+        let mut actual = create_kta(dhatu, gana);
+
+        expected.sort();
+        actual.sort();
         assert_eq!(actual, expected);
     }
 }

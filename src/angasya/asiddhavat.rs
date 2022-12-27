@@ -26,6 +26,7 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     // The name has two Is for readability.
+    static ref LAGHU: SoundSet = SoundSet::from("aiufx");
     static ref II: SoundSet = s("i");
     static ref UU: SoundSet = s("u");
     static ref I_U: SoundSet = s("i u");
@@ -85,10 +86,42 @@ fn is_samyogapurva(p: &Prakriya, i: usize) -> bool {
     false
 }
 
+pub fn try_cinvat_for_bhave_and_karmani_prayoga(p: &mut Prakriya) -> Option<()> {
+    let i = p.find_last(T::Dhatu)?;
+    let i_n = i + 1;
+
+    let anga = p.get(i)?;
+    let next = p.get(i_n)?;
+
+    let bhavakarmanoh = p.any(&[T::Karmani, T::Bhave]);
+    let upadesha_ac = match &anga.u {
+        Some(x) => AC.contains(x.chars().last()?),
+        None => false,
+    };
+
+    let hana_graha_drza = anga.has_u_in(&["han\\na~", "graha~^", "df\\Si~r"]);
+    let ac_hana_graha_drza = upadesha_ac || hana_graha_drza;
+    if next.has_u_in(&["sya", "si~c", "sIyu~w", "tAs"]) && bhavakarmanoh && ac_hana_graha_drza {
+        let ran = p.op_optional("6.4.62", |p| {
+            p.set(i_n, |t| {
+                t.add_tag(T::cit);
+                t.add_tag(T::Rit);
+                t.add_tag(T::Cinvat);
+            });
+            p.insert_before(i_n, Term::make_agama("iw"));
+        });
+        if ran {
+            it_samjna::run(p, i_n).ok();
+        }
+    }
+
+    Some(())
+}
+
 /// Runs rules conditioned on a following knit ArdhadhAtuka suffix.
 ///
 /// (6.4.63 - 6.4.69)
-fn run_kniti_ardhadhatuka(p: &mut Prakriya, i: usize) -> Option<()> {
+fn run_before_knit_ardhadhatuka(p: &mut Prakriya, i: usize) -> Option<()> {
     let dhatu = p.get(i)?;
     let n = p.view(i + 1)?;
 
@@ -699,13 +732,23 @@ pub fn run_for_ni(p: &mut Prakriya) -> Option<()> {
 
     let i_dhatu = i_ni - 1;
     let n = p.view(i_ni + 1)?;
+    let iti = f::is_it_agama(n.first()?);
 
-    if !f::is_it_agama(n.first()?) && n.has_tag(T::Ardhadhatuka) {
+    if n.has_tag(T::Ardhadhatuka) {
+        let dhatu = p.get(i_dhatu)?;
+
         if n.first()?
             .has_text_in(&["Am", "anta", "Alu", "Ayya", "itnu", "iznu"])
         {
+            // corayAm, spfhayAlu, etc.
             p.op_term("6.4.55", i_ni, op::antya("ay"));
-        } else {
+        } else if n.has_u("lyap") && dhatu.has_upadha(&*LAGHU) {
+            // praRamayya, pratamayya, ...
+            p.op_term("6.4.56", i_ni, op::antya("ay"));
+        } else if n.has_tag(T::Nistha) && iti {
+            // corita, kArita, ...
+            p.op_term("6.4.52", i_ni, op::antya(""));
+        } else if !iti {
             // Apply ac_sandhi before lopa, since later rules depend on this
             // being done (e.g. cayyAt)
             // TODO: implement this excluding "ni" from the sandhi rules.
@@ -742,7 +785,7 @@ fn try_kr_rule(p: &mut Prakriya, i: usize) -> Option<()> {
 }
 
 pub fn run_after_guna(p: &mut Prakriya, i: usize) -> Option<()> {
-    run_kniti_ardhadhatuka(p, i);
+    run_before_knit_ardhadhatuka(p, i);
     run_for_final_i_or_u(p, i);
     try_run_kniti(p, i);
 
